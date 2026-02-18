@@ -67,7 +67,7 @@ export default function Home() {
         if (isAuth) {
           const me = await base44.auth.me();
           setUser(me);
-          if (me.role === 'admin' || me.has_access === true || me.plan_type === 'trial' || me.trial_start) {
+          if (me.role === 'admin' || me.has_access === true) {
             window.location.href = createPageUrl('Dashboard');
             return;
           }
@@ -165,11 +165,9 @@ export default function Home() {
               className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-8 text-sm">
               Get Access <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
-            <div className="flex items-center gap-3 text-sm text-gray-500">
-              <span className="flex items-center gap-1"><Crown className="w-3.5 h-3.5 text-yellow-500" /> $5/mo</span>
-              <span>·</span>
-              <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-cyan-400" /> $50 lifetime</span>
-            </div>
+            <a href={createPageUrl('Pricing')} className="text-sm text-gray-500 hover:text-cyan-400 underline underline-offset-2">
+              View Plans & Pricing →
+            </a>
           </div>
         ) : (
           <div className="max-w-sm mx-auto bg-[#0d0d1f] border border-[#1a1a3e] rounded-2xl p-6 text-left">
@@ -204,7 +202,7 @@ export default function Home() {
             )}
 
             <div className="mt-4 text-xs text-gray-600 text-center">
-              No key? Contact the platform admin.
+              No key? <a href={createPageUrl('Pricing')} className="text-cyan-400 hover:underline">View pricing →</a>
             </div>
           </div>
         )}
