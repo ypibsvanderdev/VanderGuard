@@ -54,11 +54,11 @@ import AdminPanel from './pages/AdminPanel';
 import Dashboard from './pages/Dashboard';
 import FileView from './pages/FileView';
 import Home from './pages/Home';
+import Pricing from './pages/Pricing';
 import Repo from './pages/Repo';
 import RepoView from './pages/RepoView';
 import ScriptEditor from './pages/ScriptEditor';
 import SecurityLogs from './pages/SecurityLogs';
-import Pricing from './pages/Pricing';
 import __Layout from './Layout.jsx';
 
 
@@ -70,11 +70,11 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "FileView": FileView,
     "Home": Home,
+    "Pricing": Pricing,
     "Repo": Repo,
     "RepoView": RepoView,
     "ScriptEditor": ScriptEditor,
     "SecurityLogs": SecurityLogs,
-    "Pricing": Pricing,
 }
 
 export const pagesConfig = {
