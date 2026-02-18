@@ -53,9 +53,10 @@ import ScriptEditor from './pages/ScriptEditor';
 import AdminKeys from './pages/AdminKeys';
 import Activate from './pages/Activate';
 import SecurityLogs from './pages/SecurityLogs';
-import Repo from './pages/Repo';
+import RepoView from './pages/RepoView';
 import FileView from './pages/FileView';
 import AdminPanel from './pages/AdminPanel';
+import AccessDenied from './pages/AccessDenied';
 import __Layout from './Layout.jsx';
 
 
@@ -66,9 +67,10 @@ export const PAGES = {
     "AdminKeys": AdminKeys,
     "Activate": Activate,
     "SecurityLogs": SecurityLogs,
-    "Repo": Repo,
+    "RepoView": RepoView,
     "FileView": FileView,
     "AdminPanel": AdminPanel,
+    "AccessDenied": AccessDenied,
 }
 
 export const pagesConfig = {
