@@ -175,6 +175,69 @@ export default function RepoView() {
           ))}
         </div>
 
+        {/* Issues Tab */}
+        {activeTab === "issues" && (
+          <IssuesTab repoId={repoId} user={user} />
+        )}
+
+        {/* Security Tab */}
+        {activeTab === "security" && (
+          <div className="space-y-4">
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Shield className="w-4 h-4 text-green-400" />
+                <h3 className="font-semibold text-white">Vander Secure Gate</h3>
+                <span className="text-[10px] bg-green-500/10 border border-green-500/30 text-green-400 px-2 py-0.5 rounded-full">Active</span>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">All scripts in this repository are protected by VSG v4.2. Browser access is blocked and decoy scripts are served to reverse engineers.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Browser fingerprinting", status: "Enabled" },
+                  { label: "Honeypot traps", status: "Enabled" },
+                  { label: "Executor validation", status: "Enabled" },
+                ].map((item, i) => (
+                  <div key={i} className="bg-[#0d1117] border border-[#30363d] rounded-lg p-3">
+                    <div className="text-xs text-gray-400 mb-1">{item.label}</div>
+                    <div className="text-xs text-green-400 font-semibold">{item.status}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+              <h3 className="font-semibold text-white mb-3">Security Advisories</h3>
+              <div className="text-xs text-gray-500">No security advisories published for this repository.</div>
+            </div>
+          </div>
+        )}
+
+        {/* Actions Tab */}
+        {activeTab === "actions" && (
+          <div className="space-y-4">
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-[#30363d] flex items-center justify-between">
+                <h3 className="font-semibold text-white text-sm">Workflow Runs</h3>
+                <span className="text-xs text-gray-500">{files.length} scripts active</span>
+              </div>
+              {files.length === 0 ? (
+                <div className="p-8 text-center text-gray-600 text-sm">No workflow runs yet.</div>
+              ) : (
+                files.map((file, idx) => (
+                  <div key={file.id} className={`flex items-center gap-3 px-5 py-3 ${idx !== files.length - 1 ? "border-b border-[#30363d]" : ""}`}>
+                    <div className="w-2 h-2 rounded-full bg-green-400 shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-white">{file.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {file.is_loadstring ? "Loadstring protected" : "Standard script"} · {file.fetch_count || 0} fetches
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-green-400 border border-green-500/30 bg-green-500/10 px-2 py-0.5 rounded-full">success</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Settings Tab */}
         {activeTab === "settings" && (
           <div className="space-y-6">
