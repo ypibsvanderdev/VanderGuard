@@ -49,16 +49,24 @@
  */
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
-import Activate from './pages/Activate';
+import ScriptEditor from './pages/ScriptEditor';
 import AdminKeys from './pages/AdminKeys';
+import Activate from './pages/Activate';
+import SecurityLogs from './pages/SecurityLogs';
+import Repo from './pages/Repo';
+import FileView from './pages/FileView';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Dashboard": Dashboard,
     "Home": Home,
-    "Activate": Activate,
+    "ScriptEditor": ScriptEditor,
     "AdminKeys": AdminKeys,
+    "Activate": Activate,
+    "SecurityLogs": SecurityLogs,
+    "Repo": Repo,
+    "FileView": FileView,
 }
 
 export const pagesConfig = {
