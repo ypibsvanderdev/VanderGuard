@@ -157,19 +157,18 @@ export default function RepoView() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-[#30363d] mb-5">
+        <div className="flex gap-1 border-b border-[#30363d] mb-5 overflow-x-auto">
           {[
             { id: "code", label: "Code", icon: <Code className="w-3.5 h-3.5" /> },
-            { id: "issues", label: "Issues (0)" },
-            { id: "pr", label: "Pull Requests" },
-            { id: "actions", label: "Actions" },
-            { id: "security", label: "Security" },
-            { id: "settings", label: "Settings" },
+            { id: "issues", label: `Issues`, icon: <CircleDot className="w-3.5 h-3.5" /> },
+            { id: "security", label: "Security", icon: <Shield className="w-3.5 h-3.5" /> },
+            { id: "actions", label: "Actions", icon: <Zap className="w-3.5 h-3.5" /> },
+            { id: "settings", label: "Settings", icon: <Settings className="w-3.5 h-3.5" /> },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm ${activeTab === tab.id ? "border-b-2 border-[#f78166] text-white font-semibold -mb-px" : "text-gray-500 hover:text-[#c9d1d9]"}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm whitespace-nowrap ${activeTab === tab.id ? "border-b-2 border-[#f78166] text-white font-semibold -mb-px" : "text-gray-500 hover:text-[#c9d1d9]"}`}
             >
               {tab.icon}{tab.label}
             </button>
