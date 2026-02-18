@@ -223,65 +223,65 @@ export default function RepoView() {
           </div>
         )}
 
-        {/* Branch + actions bar */}
-        {activeTab === "code" && <div className="flex items-center justify-between mb-4">
-          <button className="flex items-center gap-2 text-sm border border-[#30363d] bg-[#21262d] hover:bg-[#30363d] rounded-lg px-3 py-1.5">
-            <GitFork className="w-3.5 h-3.5" /> main <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setShowAddFile(true)}
-              size="sm"
-              className="bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#c9d1d9] gap-1.5 text-xs"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add file
-            </Button>
-            <Button
-              size="sm"
-              className="bg-[#238636] hover:bg-[#2ea043] text-white gap-1.5 text-xs font-semibold"
-            >
-              <Code className="w-3.5 h-3.5" /> Code <ChevronDown className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* File table */}
-        <div className="border border-[#30363d] rounded-xl overflow-hidden mb-6">
-          {/* Last commit row */}
-          <div className="flex items-center gap-3 px-4 py-2.5 bg-[#161b22] border-b border-[#30363d]">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#58a6ff] to-[#1f6feb] flex items-center justify-center text-white text-[9px] font-bold shrink-0">
-              {username[0]?.toUpperCase()}
-            </div>
-            <span className="text-sm text-[#c9d1d9] font-medium">{username}</span>
-            <span className="text-sm text-gray-500">Initial commit</span>
-            <span className="ml-auto text-xs text-gray-500 font-mono">{commitHash} · Just now</span>
-          </div>
-
-          {isLoading ? (
-            <div className="p-6 text-center text-gray-600 text-sm">Loading files...</div>
-          ) : files.length === 0 ? (
-            <div className="p-8 text-center text-gray-600 text-sm">
-              No files yet. <button onClick={() => setShowAddFile(true)} className="text-[#58a6ff] hover:underline">Add a file</button>
-            </div>
-          ) : (
-            files.map(file => (
-              <Link
-                key={file.id}
-                to={`${createPageUrl("FileView")}?id=${file.id}&repo=${repoId}`}
-                className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#161b22] border-b border-[#30363d] last:border-0 group"
-              >
-                <File className="w-4 h-4 text-[#8b949e] shrink-0" />
-                <span className="text-[#58a6ff] text-sm group-hover:underline flex-1">{file.name}</span>
-                <span className="text-xs text-gray-600 hidden sm:block">Add {file.name?.split(".")[0]}</span>
-              </Link>
-            ))
-          )}
-        </div>
-
+        {/* Branch + actions bar + File table (Code tab only) */}
         {activeTab === "code" && (
-          <Link to={createPageUrl("Dashboard")} className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-[#c9d1d9] border border-[#30363d] rounded-lg px-3 py-1.5">
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
-          </Link>
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <button className="flex items-center gap-2 text-sm border border-[#30363d] bg-[#21262d] hover:bg-[#30363d] rounded-lg px-3 py-1.5">
+                <GitFork className="w-3.5 h-3.5" /> main <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setShowAddFile(true)}
+                  size="sm"
+                  className="bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#c9d1d9] gap-1.5 text-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add file
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-[#238636] hover:bg-[#2ea043] text-white gap-1.5 text-xs font-semibold"
+                >
+                  <Code className="w-3.5 h-3.5" /> Code <ChevronDown className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="border border-[#30363d] rounded-xl overflow-hidden mb-6">
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-[#161b22] border-b border-[#30363d]">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#58a6ff] to-[#1f6feb] flex items-center justify-center text-white text-[9px] font-bold shrink-0">
+                  {username[0]?.toUpperCase()}
+                </div>
+                <span className="text-sm text-[#c9d1d9] font-medium">{username}</span>
+                <span className="text-sm text-gray-500">Initial commit</span>
+                <span className="ml-auto text-xs text-gray-500 font-mono">{commitHash} · Just now</span>
+              </div>
+
+              {isLoading ? (
+                <div className="p-6 text-center text-gray-600 text-sm">Loading files...</div>
+              ) : files.length === 0 ? (
+                <div className="p-8 text-center text-gray-600 text-sm">
+                  No files yet. <button onClick={() => setShowAddFile(true)} className="text-[#58a6ff] hover:underline">Add a file</button>
+                </div>
+              ) : (
+                files.map(file => (
+                  <Link
+                    key={file.id}
+                    to={`${createPageUrl("FileView")}?id=${file.id}&repo=${repoId}`}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#161b22] border-b border-[#30363d] last:border-0 group"
+                  >
+                    <File className="w-4 h-4 text-[#8b949e] shrink-0" />
+                    <span className="text-[#58a6ff] text-sm group-hover:underline flex-1">{file.name}</span>
+                    <span className="text-xs text-gray-600 hidden sm:block">Add {file.name?.split(".")[0]}</span>
+                  </Link>
+                ))
+              )}
+            </div>
+
+            <Link to={createPageUrl("Dashboard")} className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-[#c9d1d9] border border-[#30363d] rounded-lg px-3 py-1.5">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
+            </Link>
+          </>
         )}
       </div>
 
