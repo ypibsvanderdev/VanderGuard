@@ -10,14 +10,14 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { key: keyValue } = body;
+    const { key: keyValue, hwid } = body;
 
     if (!keyValue || typeof keyValue !== 'string') {
       return Response.json({ success: false, error: 'No key provided' });
     }
 
-    // Check if user already has access
-    if (user.has_access === true) {
+    // Already has active paid access
+    if (user.has_access && user.plan_type !== 'trial') {
       return Response.json({ success: false, error: 'You already have an active subscription' });
     }
 
@@ -29,19 +29,36 @@ Deno.serve(async (req) => {
     });
 
     if (keys.length === 0) {
-      // Add delay to slow brute force attempts
       await new Promise(r => setTimeout(r, 500 + Math.random() * 500));
       return Response.json({ success: false, error: 'Invalid or already used key' });
     }
 
     const key = keys[0];
 
-    // Check expiry for monthly keys
-    if (key.plan_type === 'monthly' && key.expires_at) {
-      const expiry = new Date(key.expires_at);
-      if (new Date() > expiry) {
+    // Check expiry
+    if (key.key_type === 'monthly' && key.expires_at) {
+      if (new Date() > new Date(key.expires_at)) {
         return Response.json({ success: false, error: 'This key has expired' });
       }
+    }
+
+    // Get IP
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                req.headers.get('cf-connecting-ip') ||
+                req.headers.get('x-real-ip') || 'unknown';
+
+    // HWID/IP binding: if user already has bound hwid/ip, validate it matches
+    if (user.hwid && hwid && user.hwid !== hwid) {
+      return Response.json({ success: false, error: 'HWID mismatch: key is bound to a different device' });
+    }
+    if (user.bound_ip && user.bound_ip !== ip && user.bound_ip !== 'unknown') {
+      return Response.json({ success: false, error: 'IP mismatch: key is bound to a different network' });
+    }
+
+    // Calculate expiry for monthly keys
+    let accessExpires = null;
+    if (key.key_type === 'monthly') {
+      accessExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     }
 
     // Mark key as used
@@ -50,16 +67,22 @@ Deno.serve(async (req) => {
       used_by_email: user.email,
     });
 
-    // Grant access on user record
-    await base44.asServiceRole.entities.User.update(user.id, {
+    // Grant access, bind HWID + IP
+    const updateData = {
       has_access: true,
-      plan_type: key.plan_type,
-    });
+      plan_type: key.key_type,
+      hwid: hwid || user.hwid || null,
+      bound_ip: ip,
+    };
+    if (accessExpires) updateData.access_expires = accessExpires;
 
+    await base44.asServiceRole.entities.User.update(user.id, updateData);
+
+    const planLabel = key.key_type === 'lifetime' ? '$50 Lifetime' : key.key_type === 'trial' ? '30-Day Free Trial' : '$5/Month';
     return Response.json({
       success: true,
-      plan_type: key.plan_type,
-      message: `Access granted! ${key.plan_type === 'lifetime' ? 'Lifetime access activated.' : 'Monthly access activated.'}`,
+      plan_type: key.key_type,
+      message: `Access granted! ${planLabel} activated.`,
     });
   } catch (error) {
     return Response.json({ success: false, error: error.message }, { status: 500 });

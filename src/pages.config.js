@@ -55,6 +55,7 @@ import Activate from './pages/Activate';
 import SecurityLogs from './pages/SecurityLogs';
 import Repo from './pages/Repo';
 import FileView from './pages/FileView';
+import AdminPanel from './pages/AdminPanel';
 import __Layout from './Layout.jsx';
 
 
@@ -67,6 +68,7 @@ export const PAGES = {
     "SecurityLogs": SecurityLogs,
     "Repo": Repo,
     "FileView": FileView,
+    "AdminPanel": AdminPanel,
 }
 
 export const pagesConfig = {
