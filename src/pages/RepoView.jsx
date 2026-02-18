@@ -223,7 +223,6 @@ export default function RepoView() {
           </div>
         )}
 
-        {/* Branch + actions bar + File table (Code tab only) */}
         {activeTab === "code" && (
           <>
             <div className="flex items-center justify-between mb-4">
