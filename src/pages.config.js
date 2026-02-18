@@ -47,22 +47,18 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
-import ScriptEditor from './pages/ScriptEditor';
-import AdminKeys from './pages/AdminKeys';
-import __Layout from './Layout.jsx';
+import Home from './pages/Home';
+import Activate from './pages/Activate';
 
 
 export const PAGES = {
-    "Home": Home,
     "Dashboard": Dashboard,
-    "ScriptEditor": ScriptEditor,
-    "AdminKeys": AdminKeys,
+    "Home": Home,
+    "Activate": Activate,
 }
 
 export const pagesConfig = {
-    mainPage: "Home",
+    mainPage: "Dashboard",
     Pages: PAGES,
-    Layout: __Layout,
 };
