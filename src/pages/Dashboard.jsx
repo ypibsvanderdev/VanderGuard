@@ -126,8 +126,6 @@ function NewRepoModal({ onClose, onCreated, userEmail, username }) {
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
-  const [trialDaysLeft, setTrialDaysLeft] = useState(null);
-  const [trialExpired, setTrialExpired] = useState(false);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [showNewRepo, setShowNewRepo] = useState(false);
   const [searchQ, setSearchQ] = useState("");
@@ -138,29 +136,10 @@ export default function Dashboard() {
       const me = await base44.auth.me();
       if (!me) { base44.auth.redirectToLogin(createPageUrl("Dashboard")); return; }
 
-      // Auto-start trial if brand new user
-      if (!me.has_access && !me.trial_start && me.plan_type !== "trial") {
-        const trialStart = new Date().toISOString();
-        const trialExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        await base44.auth.updateMe({ trial_start: trialStart, trial_expires: trialExpires, plan_type: "trial" });
-        me.trial_start = trialStart;
-        me.trial_expires = trialExpires;
-        me.plan_type = "trial";
-      }
-
-      // Calculate trial days
-      if (me.plan_type === "trial" && me.trial_expires && !me.has_access) {
-        const diff = new Date(me.trial_expires) - new Date();
-        const days = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-        setTrialDaysLeft(days);
-        setTrialExpired(days <= 0);
-        if (days <= 0) {
-          // Log out after short delay
-          setTimeout(() => base44.auth.logout(createPageUrl("Home")), 3000);
-        }
-      } else {
-        setTrialDaysLeft(null);
-        setTrialExpired(false);
+      // Require paid access (or admin)
+      if (me.role !== "admin" && !me.has_access) {
+        window.location.href = createPageUrl("Pricing");
+        return;
       }
 
       setUser(me);
@@ -197,10 +176,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9]">
-      {trialDaysLeft !== null && (
-        <TrialBanner daysLeft={trialDaysLeft} onKeyRedeem={() => setShowRedeemModal(true)} />
-      )}
-
       {/* GitHub-style Navbar */}
       <header className="bg-[#161b22] border-b border-[#30363d] px-6 h-14 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-4">
@@ -324,12 +299,6 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {showRedeemModal && (
-        <RedeemModal
-          onClose={() => setShowRedeemModal(false)}
-          onSuccess={() => { loadUser(); queryClient.invalidateQueries(["repos"]); }}
-        />
-      )}
       {showNewRepo && (
         <NewRepoModal
           onClose={() => setShowNewRepo(false)}
