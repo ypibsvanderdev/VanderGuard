@@ -1,184 +1,301 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Decoy scripts - convincing but non-functional Lua that wastes reverser time
-const DECOY_SCRIPTS = [
-  `-- VanderHub Secure Script v4.2
-local _0x1a2b = require(game:GetService("HttpService"))
-local _0x3c4d = _0x1a2b:JSONDecode(_0x1a2b:GetAsync("https://api.vander-hub.com/v2/auth?t=" .. tostring(os.time())))
-if _0x3c4d.valid then
-  loadstring(_0x3c4d.payload)()
-end`,
-  `-- VSG v4.2 | Encrypted Delivery
-local s=game:GetService
-local h=s(game,"HttpService")
-local r=s(game,"RunService")
-if not r:IsClient() then return end
-local _k=h:JSONDecode(h:GetAsync("https://gate.vander-secure.com/fetch?k=__TOKEN__"))
-if _k and _k.sig==__CHECKSUM__ then
-  return loadstring(_k.data)()
-end`,
-  `-- Vander Secure Gate | Access Verified
-local HttpService = game:GetService("HttpService")
+// Convincing decoy scripts that look real but do nothing
+// Rotated randomly to make pattern analysis harder
+const DECOYS = [
+  `-- VanderHub Secure Gate v4.2
+-- Copyright 2025 VanderHub Systems
+-- Authorization: PENDING VALIDATION
+
+local VH = {}
+VH.Version = "4.2.1"
+VH.Secure = true
+VH.Gate = "VSG_ACTIVE"
+
+local function __init()
+    local _env = getfenv and getfenv() or {}
+    local _sig = game:GetService("HttpService"):GenerateGUID(false)
+    VH._session = _sig
+    local _ok = pcall(function()
+        local f = Instance.new("Folder")
+        f.Name = "_VH_Gate"
+        f.Parent = game.CoreGui
+    end)
+    if not _ok then
+        VH.Gate = "RESTRICTED"
+    end
+end
+
+__init()
+return VH`,
+
+  `-- [VSG] Access validation failed
+-- Error: 0x4E4F41434345535300
+-- Request signature mismatch detected
+-- Vander Secure Gate has intercepted this request
+
+local x = {}
+setmetatable(x, {
+    __index = function(t, k)
+        return function(...) return nil end
+    end
+})
+
+for _i = 1, 3 do
+    x.verify()
+    x.checkSig()
+end
+
+print("[VH] Secure execution context: DENIED")
+return nil`,
+
+  `local __VH__ = "\86\97\110\100\101\114\72\117\98"
+local function __decode(s) return s end
+local _ = __decode(__VH__)
+
+-- VanderHub Encrypted Payload v4.2
+-- Decryption key: REDACTED
+-- Status: UNAUTHORIZED_ACCESS
+
+local gate = require and require("VanderGate") or nil
+if not gate then
+    warn("[VH] Gate module not found in execution context")
+    return
+end
+
+gate:authenticate()
+gate:execute()`,
+
+  `-- Vander Script Loader
+-- Loading secure payload...
+
 local Players = game:GetService("Players")
-local lp = Players.LocalPlayer
-local uid = tostring(lp.UserId)
-local resp = HttpService:JSONDecode(HttpService:GetAsync("https://cdn.vander-hub.net/gate/" .. uid))
-if resp.status == 200 and resp.checksum == __HASH__ then
-  loadstring(resp.script)()
-end`
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+if not player then return end
+
+local sessionKey = HttpService:GenerateGUID(false)
+local function validate(key)
+    if type(key) ~= "string" then return false end
+    if #key ~= 36 then return false end
+    return true
+end
+
+if not validate(sessionKey) then
+    warn("[VH] Session validation failed")
+    return
+end
+
+-- Payload decryption failed: invalid executor context
+return nil`,
+
+  `local _0x1a = string.char
+local _0x2b = table.concat
+local _0x3c = math.floor
+
+local function _decode(t)
+    local r = {}
+    for i, v in ipairs(t) do
+        r[i] = _0x1a(v ~ 0x42)
+    end
+    return _0x2b(r)
+end
+
+-- [VH-GATE] Payload masked — executor fingerprint required
+local _sig = {0x26,0x07,0x2c,0x27,0x25,0x2b,0x15,0x27,0x09}
+local _key = _decode(_sig)
+
+if _key ~= "VanderHub" then
+    return
+end
+
+print("[VH] " .. _key .. " v4.2 — Context verified")`,
 ];
 
-// Deep multi-layer UA fingerprinting
-function analyzeRequest(req) {
-  const ua = (req.headers.get("user-agent") || "").toLowerCase();
-  const accept = (req.headers.get("accept") || "").toLowerCase();
-  const acceptLang = req.headers.get("accept-language") || "";
-  const acceptEnc = req.headers.get("accept-encoding") || "";
-  const secFetch = req.headers.get("sec-fetch-dest") || "";
-  const secFetchSite = req.headers.get("sec-fetch-site") || "";
-  const origin = req.headers.get("origin") || "";
-  const referer = req.headers.get("referer") || "";
-  const xForwarded = req.headers.get("x-forwarded-for") || "";
-  const connection = (req.headers.get("connection") || "").toLowerCase();
+// Browser-only headers that Roblox would never send
+const BROWSER_HEADERS = [
+  'sec-fetch-mode',
+  'sec-fetch-site',
+  'sec-fetch-dest',
+  'sec-ch-ua',
+  'sec-ch-ua-mobile',
+  'sec-ch-ua-platform',
+  'upgrade-insecure-requests',
+];
 
-  let threatScore = 0;
-  let detectedAs = "unknown";
+// Known HTTP tool UAs that are not Roblox
+const TOOL_UA_PATTERNS = [
+  /^curl\//i,
+  /^python-requests/i,
+  /^python\//i,
+  /^wget\//i,
+  /^httpie/i,
+  /^axios/i,
+  /^node-fetch/i,
+  /^got\//i,
+  /^undici/i,
+  /postman/i,
+  /insomnia/i,
+  /^java\//i,
+  /^ruby/i,
+  /^go-http/i,
+];
 
-  // Layer 1: Browser detection via sec-fetch headers (added by all modern browsers)
-  if (secFetch !== "") { threatScore += 80; detectedAs = "browser"; }
-  if (secFetchSite !== "") { threatScore += 20; }
-  if (origin !== "") { threatScore += 30; }
-  if (referer !== "") { threatScore += 20; }
+// Browser UA patterns (NOT Roblox)
+const BROWSER_UA_PATTERNS = [
+  /mozilla\/5\.0/i,
+  /chrome\//i,
+  /firefox\//i,
+  /safari\//i,
+  /opera\//i,
+  /msie/i,
+  /trident\//i,
+  /edg\//i,
+];
 
-  // Layer 2: Browser UA string patterns
-  const browserPatterns = [
-    "mozilla", "chrome", "safari", "firefox", "edge", "opera",
-    "webkit", "gecko", "trident", "msie", "blink"
-  ];
-  for (const pattern of browserPatterns) {
-    if (ua.includes(pattern)) { threatScore += 25; detectedAs = "browser"; break; }
-  }
-
-  // Layer 3: Scripting tool detection
-  const toolPatterns = [
-    { pattern: "python", type: "python" },
-    { pattern: "requests", type: "python" },
-    { pattern: "urllib", type: "python" },
-    { pattern: "curl", type: "curl" },
-    { pattern: "wget", type: "curl" },
-    { pattern: "httpie", type: "curl" },
-    { pattern: "axios", type: "unknown_tool" },
-    { pattern: "node-fetch", type: "unknown_tool" },
-    { pattern: "go-http", type: "unknown_tool" },
-    { pattern: "java", type: "unknown_tool" },
-    { pattern: "ruby", type: "unknown_tool" },
-    { pattern: "libwww", type: "unknown_tool" },
-    { pattern: "lwp", type: "unknown_tool" },
-    { pattern: "postman", type: "unknown_tool" },
-    { pattern: "insomnia", type: "unknown_tool" },
-    { pattern: "burp", type: "unknown_tool" },
-  ];
-  for (const { pattern, type } of toolPatterns) {
-    if (ua.includes(pattern)) { threatScore += 90; detectedAs = type; break; }
-  }
-
-  // Layer 4: Suspicious Accept header (browsers send complex accept, raw tools send */*)
-  if (accept === "*/*" && threatScore < 50) { threatScore += 40; detectedAs = "unknown_tool"; }
-  if (accept.includes("text/html")) { threatScore += 50; detectedAs = "browser"; }
-
-  // Layer 5: No accept-language is suspicious in browser context but common for tools
-  if (acceptLang === "" && !ua.includes("roblox")) { threatScore += 15; }
-
-  // Layer 6: Roblox-specific trust signals
-  const isRoblox = ua.includes("roblox") || ua.includes("rbxhttprequest");
-  if (isRoblox) { threatScore = 0; detectedAs = "valid"; }
-
-  return {
-    threatScore,
-    detectedAs,
-    isLegitimate: isRoblox && threatScore === 0
-  };
+function getDecoy() {
+  return DECOYS[Math.floor(Math.random() * DECOYS.length)];
 }
 
-// Generate a convincing but fake/useless decoy response
-function serveDecoy(token, detectedAs) {
-  const decoy = DECOY_SCRIPTS[Math.floor(Math.random() * DECOY_SCRIPTS.length)];
-  // Replace placeholders with random-looking values to seem real
-  const fakeHash = Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('');
-  const fakeChecksum = Math.floor(Math.random() * 0xFFFFFF);
-  const result = decoy
-    .replace("__TOKEN__", token || "0x" + fakeHash.slice(0,16))
-    .replace("__CHECKSUM__", "0x" + fakeHash.slice(0,8))
-    .replace("__HASH__", fakeHash);
-  return result;
+function scoreRequest(req, ua, accept) {
+  let score = 0;
+
+  // Browser header signals
+  for (const h of BROWSER_HEADERS) {
+    if (req.headers.has(h)) score += 2;
+  }
+
+  // Accept header signals
+  if (accept.includes('text/html')) score += 3;
+  if (accept.includes('application/xhtml')) score += 3;
+  if (accept.includes('*/*') && !ua.toLowerCase().includes('roblox')) score += 1;
+
+  // Referer means a browser navigated here
+  if (req.headers.has('referer')) score += 2;
+
+  // UA analysis
+  const uaLower = ua.toLowerCase();
+  const isRoblox = uaLower.includes('roblox');
+
+  if (isRoblox) {
+    score -= 10; // Strong negative signal
+  } else {
+    for (const pattern of BROWSER_UA_PATTERNS) {
+      if (pattern.test(ua)) { score += 3; break; }
+    }
+    for (const pattern of TOOL_UA_PATTERNS) {
+      if (pattern.test(ua)) { score += 2; break; }
+    }
+    // Empty UA is suspicious
+    if (!ua || ua.length < 5) score += 2;
+  }
+
+  return { score, isRoblox };
+}
+
+async function logAttempt(base44Client, scriptId, ua, type, headers) {
+  try {
+    await base44Client.asServiceRole.entities.SecurityLog.create({
+      script_id: scriptId || 'probe',
+      user_agent: ua.substring(0, 500),
+      request_type: type,
+      headers_snapshot: JSON.stringify(headers).substring(0, 1200),
+    });
+  } catch (_e) {
+    // Silent fail on logging
+  }
 }
 
 Deno.serve(async (req) => {
+  const url = new URL(req.url);
+  const scriptId = url.searchParams.get('id');
+  const token = url.searchParams.get('t');
+
+  const ua = req.headers.get('user-agent') || '';
+  const accept = req.headers.get('accept') || '';
+
+  const { score, isRoblox } = scoreRequest(req, ua, accept);
+
+  // Capture headers for logging (sanitized)
+  const headerMap = {};
+  for (const [k, v] of req.headers.entries()) {
+    headerMap[k] = v;
+  }
+
   const base44 = createClientFromRequest(req);
-  const body = await req.json().catch(() => ({}));
-  const { token } = body;
 
-  if (!token) {
-    // Return convincing decoy instead of error
-    return new Response(serveDecoy("", "unknown"), {
-      headers: { "content-type": "text/plain" }
+  // LAYER 1-3: Browser/tool detection
+  // Score >= 3 means it looks like a browser or tool
+  if (score >= 3 || (!isRoblox && score >= 1 && !scriptId)) {
+    await logAttempt(base44, scriptId, ua, 'decoy_served', headerMap);
+
+    // Artificial jitter delay — wastes attacker time and breaks timing analysis
+    const delay = 180 + Math.floor(Math.random() * 450);
+    await new Promise(r => setTimeout(r, delay));
+
+    return new Response(getDecoy(), {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Powered-By': 'VanderHub/4.2',
+        'X-VSG-Status': 'active',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'X-Request-ID': crypto.randomUUID(),
+      },
     });
   }
 
-  const analysis = analyzeRequest(req);
-
-  // Log all attempts
-  const logEntry = {
-    script_token: token,
-    user_agent: req.headers.get("user-agent") || "",
-    attempt_type: analysis.detectedAs,
-    decoy_served: !analysis.isLegitimate,
-    timestamp: new Date().toISOString()
-  };
-
-  // Fire-and-forget log (don't await, don't let it block)
-  base44.asServiceRole.entities.SecurityLog.create(logEntry).catch(() => {});
-
-  if (!analysis.isLegitimate) {
-    // Increment blocked attempts on script
-    base44.asServiceRole.entities.Script.filter({ loadstring_token: token }).then(scripts => {
-      if (scripts && scripts[0]) {
-        base44.asServiceRole.entities.Script.update(scripts[0].id, {
-          blocked_attempts: (scripts[0].blocked_attempts || 0) + 1
-        });
-      }
-    }).catch(() => {});
-
-    // Add artificial delay to slow down automated scanners
-    await new Promise(r => setTimeout(r, 800 + Math.random() * 1200));
-
-    // Return convincing decoy
-    return new Response(serveDecoy(token, analysis.detectedAs), {
-      headers: { "content-type": "text/plain" }
+  // LAYER 4: Parameter validation
+  if (!scriptId || !token || token.length < 32) {
+    await logAttempt(base44, scriptId, ua, 'blocked', headerMap);
+    await new Promise(r => setTimeout(r, 120 + Math.floor(Math.random() * 200)));
+    return new Response(getDecoy(), {
+      headers: { 'Content-Type': 'text/plain', 'X-Powered-By': 'VanderHub/4.2' },
     });
   }
 
-  // Legitimate Roblox request - fetch the real script
-  const scripts = await base44.asServiceRole.entities.Script.filter({
-    loadstring_token: token,
-    is_active: true,
-    is_loadstring: true
-  });
+  // LAYER 5: Database token validation
+  try {
+    const scripts = await base44.asServiceRole.entities.Script.filter({ id: scriptId });
+    const script = scripts[0];
 
-  if (!scripts || scripts.length === 0) {
-    return new Response(serveDecoy(token, "valid"), {
-      headers: { "content-type": "text/plain" }
+    // LAYER 6: Token match check + loadstring enabled check
+    if (!script || script.secure_token !== token || !script.is_loadstring) {
+      await logAttempt(base44, scriptId, ua, 'invalid_token', headerMap);
+
+      // Longer delay for token probing — wastes brute force attempts
+      const delay = 300 + Math.floor(Math.random() * 700);
+      await new Promise(r => setTimeout(r, delay));
+
+      // Return a DIFFERENT decoy than the one for browsers — adds confusion
+      const probeDecoy = DECOYS[(Math.floor(Math.random() * DECOYS.length) + 2) % DECOYS.length];
+      return new Response(probeDecoy, {
+        headers: {
+          'Content-Type': 'text/plain',
+          'X-Powered-By': 'VanderHub/4.2',
+          'X-VSG-Status': 'active',
+        },
+      });
+    }
+
+    // VALID REQUEST — deliver script
+    await logAttempt(base44, scriptId, ua, 'allowed', {});
+
+    return new Response(script.content, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Powered-By': 'VanderHub/4.2',
+        'X-VSG-Status': 'authorized',
+        'Cache-Control': 'no-store, no-cache',
+        'X-Request-ID': crypto.randomUUID(),
+      },
+    });
+
+  } catch (error) {
+    // On any error, serve decoy — never expose error details
+    return new Response(getDecoy(), {
+      headers: { 'Content-Type': 'text/plain', 'X-Powered-By': 'VanderHub/4.2' },
     });
   }
-
-  const script = scripts[0];
-
-  // Update fetch count
-  base44.asServiceRole.entities.Script.update(script.id, {
-    fetch_count: (script.fetch_count || 0) + 1
-  }).catch(() => {});
-
-  return new Response(script.content, {
-    headers: { "content-type": "text/plain" }
-  });
 });
