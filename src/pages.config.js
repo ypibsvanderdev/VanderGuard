@@ -47,30 +47,34 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Dashboard from './pages/Dashboard';
-import Home from './pages/Home';
-import ScriptEditor from './pages/ScriptEditor';
-import AdminKeys from './pages/AdminKeys';
-import Activate from './pages/Activate';
-import SecurityLogs from './pages/SecurityLogs';
-import RepoView from './pages/RepoView';
-import FileView from './pages/FileView';
-import AdminPanel from './pages/AdminPanel';
 import AccessDenied from './pages/AccessDenied';
+import Activate from './pages/Activate';
+import AdminKeys from './pages/AdminKeys';
+import AdminPanel from './pages/AdminPanel';
+import Dashboard from './pages/Dashboard';
+import FileView from './pages/FileView';
+import Home from './pages/Home';
+import Repo from './pages/Repo';
+import RepoView from './pages/RepoView';
+import ScriptEditor from './pages/ScriptEditor';
+import SecurityLogs from './pages/SecurityLogs';
+import Pricing from './pages/Pricing';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Home": Home,
-    "ScriptEditor": ScriptEditor,
-    "AdminKeys": AdminKeys,
-    "Activate": Activate,
-    "SecurityLogs": SecurityLogs,
-    "RepoView": RepoView,
-    "FileView": FileView,
-    "AdminPanel": AdminPanel,
     "AccessDenied": AccessDenied,
+    "Activate": Activate,
+    "AdminKeys": AdminKeys,
+    "AdminPanel": AdminPanel,
+    "Dashboard": Dashboard,
+    "FileView": FileView,
+    "Home": Home,
+    "Repo": Repo,
+    "RepoView": RepoView,
+    "ScriptEditor": ScriptEditor,
+    "SecurityLogs": SecurityLogs,
+    "Pricing": Pricing,
 }
 
 export const pagesConfig = {
