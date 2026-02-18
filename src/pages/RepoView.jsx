@@ -66,6 +66,9 @@ export default function RepoView() {
   const [user, setUser] = useState(null);
   const [repo, setRepo] = useState(null);
   const [showAddFile, setShowAddFile] = useState(false);
+  const [activeTab, setActiveTab] = useState("code");
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
   const params = new URLSearchParams(window.location.search);
   const repoId = params.get("id");
@@ -88,10 +91,21 @@ export default function RepoView() {
     enabled: !!repoId
   });
 
-  const deleteMutation = useMutation({
+  const deleteFileMutation = useMutation({
     mutationFn: (id) => base44.entities.Script.delete(id),
     onSuccess: () => queryClient.invalidateQueries(["scripts", repoId])
   });
+
+  const handleDeleteRepo = async () => {
+    if (deleteConfirm !== repo.name) return;
+    setIsDeleting(true);
+    // Delete all files in repo first
+    for (const file of files) {
+      await base44.entities.Script.delete(file.id);
+    }
+    await base44.entities.Repo.delete(repoId);
+    window.location.href = createPageUrl("Dashboard");
+  };
 
   const username = user?.email?.split("@")[0] || "user";
   const commitHash = repo ? repo.id?.substring(0, 7) : "0000000";
@@ -144,21 +158,73 @@ export default function RepoView() {
         {/* Tabs */}
         <div className="flex gap-1 border-b border-[#30363d] mb-5">
           {[
-            { label: "Code", icon: <Code className="w-3.5 h-3.5" /> },
-            { label: "Issues (0)" },
-            { label: "Pull Requests" },
-            { label: "Actions" },
-            { label: "Security" },
-            { label: "Settings" },
-          ].map((tab, i) => (
-            <button key={i} className={`flex items-center gap-1.5 px-3 py-2 text-sm ${i === 0 ? "border-b-2 border-[#f78166] text-white font-semibold -mb-px" : "text-gray-500 hover:text-[#c9d1d9]"}`}>
+            { id: "code", label: "Code", icon: <Code className="w-3.5 h-3.5" /> },
+            { id: "issues", label: "Issues (0)" },
+            { id: "pr", label: "Pull Requests" },
+            { id: "actions", label: "Actions" },
+            { id: "security", label: "Security" },
+            { id: "settings", label: "Settings" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm ${activeTab === tab.id ? "border-b-2 border-[#f78166] text-white font-semibold -mb-px" : "text-gray-500 hover:text-[#c9d1d9]"}`}
+            >
               {tab.icon}{tab.label}
             </button>
           ))}
         </div>
 
+        {/* Settings Tab */}
+        {activeTab === "settings" && (
+          <div className="space-y-6">
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+              <h3 className="font-semibold text-white mb-1">Repository Name</h3>
+              <p className="text-xs text-gray-500 mb-3">This is the repository name.</p>
+              <div className="flex gap-3 items-center">
+                <input
+                  readOnly
+                  value={repo.name}
+                  className="bg-[#0d1117] border border-[#30363d] text-[#c9d1d9] rounded-lg px-3 py-2 text-sm font-mono flex-1 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="bg-[#161b22] border border-red-500/30 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-red-500/20 bg-red-500/5">
+                <h3 className="font-semibold text-red-400">Danger Zone</h3>
+              </div>
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-4 pb-5 border-b border-[#21262d] mb-5">
+                  <div>
+                    <div className="font-medium text-sm text-white mb-1">Delete this repository</div>
+                    <div className="text-xs text-gray-500">Once you delete a repository, there is no going back. All files will be permanently deleted.</div>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-400 mb-2">
+                  Please type <span className="font-mono text-white bg-[#0d1117] px-1.5 py-0.5 rounded border border-[#30363d]">{repo.name}</span> to confirm.
+                </p>
+                <input
+                  value={deleteConfirm}
+                  onChange={e => setDeleteConfirm(e.target.value)}
+                  placeholder={repo.name}
+                  className="bg-[#0d1117] border border-[#30363d] text-white rounded-lg px-3 py-2 text-sm font-mono w-full outline-none focus:border-red-500/50 mb-3"
+                />
+                <button
+                  onClick={handleDeleteRepo}
+                  disabled={deleteConfirm !== repo.name || isDeleting}
+                  className="bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                >
+                  {isDeleting ? "Deleting..." : "I understand, delete this repository"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Branch + actions bar */}
-        <div className="flex items-center justify-between mb-4">
+        {activeTab === "code" && <div className="flex items-center justify-between mb-4">
           <button className="flex items-center gap-2 text-sm border border-[#30363d] bg-[#21262d] hover:bg-[#30363d] rounded-lg px-3 py-1.5">
             <GitFork className="w-3.5 h-3.5" /> main <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -212,10 +278,11 @@ export default function RepoView() {
           )}
         </div>
 
-        {/* Back link */}
-        <Link to={createPageUrl("Dashboard")} className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-[#c9d1d9] border border-[#30363d] rounded-lg px-3 py-1.5">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
-        </Link>
+        {activeTab === "code" && (
+          <Link to={createPageUrl("Dashboard")} className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-[#c9d1d9] border border-[#30363d] rounded-lg px-3 py-1.5">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
+          </Link>
+        )}
       </div>
 
       {/* Footer */}
