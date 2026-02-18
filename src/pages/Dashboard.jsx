@@ -1,164 +1,123 @@
-import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { createPageUrl } from '@/utils';
-import { Plus, Shield, Search, Folder, Code2, GitBranch, RefreshCw, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import FileItem from '../components/dashboard/FileItem';
-import CreateScriptModal from '../components/dashboard/CreateScriptModal';
-import LoadstringModal from '../components/shared/LoadstringModal';
-import useVanderAuth from '../components/hooks/useVanderAuth';
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ScriptList from "@/components/dashboard/ScriptList.jsx";
+import ScriptEditor from "@/components/dashboard/ScriptEditor.jsx";
+import StatsBar from "@/components/dashboard/StatsBar.jsx";
+import { Button } from "@/components/ui/button";
+import { Shield, LogOut, Plus, Lock } from "lucide-react";
+import { createPageUrl } from "@/utils";
 
 export default function Dashboard() {
-  const { user, hasAccess, isLoading: authLoading } = useVanderAuth();
-  const [scripts, setScripts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [showCreate, setShowCreate] = useState(false);
-  const [loadstringScript, setLoadstringScript] = useState(null);
+  const [user, setUser] = useState(null);
+  const [selectedScript, setSelectedScript] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) { base44.auth.redirectToLogin(createPageUrl('Dashboard')); return; }
-    if (!hasAccess) { window.location.href = createPageUrl('Home'); return; }
-    loadScripts();
-  }, [authLoading, user, hasAccess]);
+    base44.auth.me().then(setUser).catch(() => {
+      base44.auth.redirectToLogin(createPageUrl("Dashboard"));
+    });
+  }, []);
 
-  const loadScripts = async () => {
-    setIsLoading(true);
-    try {
-      const data = await base44.entities.Script.filter(
-        { created_by: user.email },
-        '-updated_date',
-        200
-      );
-      setScripts(data);
-    } catch (_e) {}
-    setIsLoading(false);
+  const { data: scripts = [], isLoading } = useQuery({
+    queryKey: ["scripts"],
+    queryFn: () => base44.entities.Script.list("-created_date"),
+    enabled: !!user
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.Script.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["scripts"]);
+      setSelectedScript(null);
+    }
+  });
+
+  const handleLogout = () => base44.auth.logout(createPageUrl("Home"));
+
+  const handleNewScript = () => {
+    setSelectedScript(null);
+    setIsCreating(true);
   };
 
-  const handleCreate = async (scriptData) => {
-    try {
-      const newScript = await base44.entities.Script.create(scriptData);
-      setShowCreate(false);
-      window.location.href = createPageUrl(`ScriptEditor?id=${newScript.id}`);
-    } catch (_e) {}
+  const handleSelectScript = (script) => {
+    setIsCreating(false);
+    setSelectedScript(script);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this script permanently? This cannot be undone.')) return;
-    await base44.entities.Script.delete(id);
-    setScripts(prev => prev.filter(s => s.id !== id));
+  const handleSaved = () => {
+    queryClient.invalidateQueries(["scripts"]);
+    setIsCreating(false);
   };
 
-  const filtered = scripts.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    (s.description || '').toLowerCase().includes(search.toLowerCase())
+  if (!user) return (
+    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="flex items-center gap-3 text-cyan-400">
+        <Shield className="w-6 h-6 animate-pulse" />
+        <span className="font-mono">Authenticating...</span>
+      </div>
+    </div>
   );
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const protectedCount = scripts.filter(s => s.is_loadstring).length;
-
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {/* Repo header */}
-      <div className="flex items-start justify-between mb-6 gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
-            <GitBranch className="w-3.5 h-3.5" />
-            <span>{user?.email?.split('@')[0]}</span>
-            <span className="text-gray-700">/</span>
-            <span className="text-white font-medium">scripts</span>
+    <div className="min-h-screen bg-[#0a0a0f] text-gray-100 flex flex-col">
+      {/* Top Nav */}
+      <header className="border-b border-[#1e2433] bg-[#0d0d14] px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+            <Lock className="w-4 h-4 text-white" />
           </div>
-          <div className="flex items-center gap-3 text-xs text-gray-600">
-            <span>{scripts.length} file{scripts.length !== 1 ? 's' : ''}</span>
-            {protectedCount > 0 && (
-              <>
-                <span>·</span>
-                <span className="flex items-center gap-1 text-cyan-400">
-                  <Lock className="w-3 h-3" /> {protectedCount} protected
-                </span>
-              </>
-            )}
-          </div>
+          <span className="font-bold text-lg tracking-wide text-white">Vander<span className="text-cyan-400">Hub</span></span>
+          <span className="text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded font-mono">VSG v4.2</span>
         </div>
-        <Button onClick={() => setShowCreate(true)}
-          className="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs h-8 flex-shrink-0">
-          <Plus className="w-3.5 h-3.5 mr-1" /> New Script
-        </Button>
-      </div>
-
-      {/* File browser */}
-      <div className="bg-[#09091a] border border-[#1a1a3e] rounded-xl overflow-hidden">
-        {/* Toolbar */}
-        <div className="px-4 py-2.5 border-b border-[#1a1a3e] flex items-center gap-3 bg-[#0a0a1e]">
-          <Folder className="w-3.5 h-3.5 text-gray-600" />
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-700" />
-            <Input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search scripts..."
-              className="pl-7 h-7 text-xs bg-black/30 border-[#1a1a3e] text-white placeholder:text-gray-700 focus-visible:ring-0 focus-visible:border-cyan-500/30"
-            />
-          </div>
-          <button onClick={loadScripts} className="ml-auto text-gray-600 hover:text-gray-300 transition-colors" title="Refresh">
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-400 font-mono">{user.email}</span>
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-400 hover:text-red-400 hover:bg-red-400/10 gap-2">
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
         </div>
+      </header>
 
-        {/* Files list */}
-        {isLoading ? (
-          <div className="p-10 text-center text-gray-600 text-sm flex flex-col items-center gap-3">
-            <div className="w-5 h-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
-            Loading scripts...
-          </div>
-        ) : filtered.length === 0 && search ? (
-          <div className="p-10 text-center text-gray-600 text-sm">
-            No scripts match "<span className="text-gray-400">{search}</span>"
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="p-14 text-center">
-            <Code2 className="w-8 h-8 text-gray-800 mx-auto mb-3" />
-            <div className="text-sm text-gray-500 mb-1">No scripts yet</div>
-            <div className="text-xs text-gray-700 mb-4">Create your first Lua script to get started</div>
-            <Button onClick={() => setShowCreate(true)} size="sm"
-              className="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs">
-              <Plus className="w-3.5 h-3.5 mr-1" /> Create Script
+      {/* Stats */}
+      <StatsBar scripts={scripts} />
+
+      {/* Main Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-72 border-r border-[#1e2433] bg-[#0d0d14] flex flex-col">
+          <div className="p-4 border-b border-[#1e2433]">
+            <Button onClick={handleNewScript} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white gap-2 font-mono text-sm">
+              <Plus className="w-4 h-4" />
+              New Script
             </Button>
           </div>
-        ) : (
-          filtered.map(script => (
-            <FileItem
-              key={script.id}
-              script={script}
-              onDelete={handleDelete}
-              onShowLoadstring={setLoadstringScript}
+          <ScriptList
+            scripts={scripts}
+            isLoading={isLoading}
+            selectedId={selectedScript?.id}
+            onSelect={handleSelectScript}
+          />
+        </div>
+
+        {/* Editor Area */}
+        <div className="flex-1 overflow-auto">
+          {(isCreating || selectedScript) ? (
+            <ScriptEditor
+              script={selectedScript}
+              onSaved={handleSaved}
+              onDelete={selectedScript ? () => deleteMutation.mutate(selectedScript.id) : null}
+              onCancel={() => { setIsCreating(false); setSelectedScript(null); }}
             />
-          ))
-        )}
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-600">
+              <Shield className="w-16 h-16 opacity-20" />
+              <p className="font-mono text-sm">Select a script or create a new one</p>
+            </div>
+          )}
+        </div>
       </div>
-
-      <CreateScriptModal
-        isOpen={showCreate}
-        onClose={() => setShowCreate(false)}
-        onCreate={handleCreate}
-      />
-
-      {loadstringScript && (
-        <LoadstringModal
-          script={loadstringScript}
-          isOpen={!!loadstringScript}
-          onClose={() => setLoadstringScript(null)}
-        />
-      )}
     </div>
   );
 }
