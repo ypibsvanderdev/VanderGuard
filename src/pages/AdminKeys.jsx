@@ -1,188 +1,152 @@
-import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { createPageUrl } from '@/utils';
-import { Key, Plus, Copy, Check, Loader2, Trash2, Crown, Users, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import useVanderAuth from '../components/hooks/useVanderAuth';
-import { formatDistanceToNow } from 'date-fns';
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Shield, Plus, Copy, Trash2, Key, LogOut } from "lucide-react";
+import { createPageUrl } from "@/utils";
+
+function generateKey(type) {
+  const seg = () => Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `VANDER-${seg()}-${seg()}-${seg()}`;
+}
 
 export default function AdminKeys() {
-  const { user, isLoading: authLoading } = useVanderAuth();
-  const [keys, setKeys] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [planType, setPlanType] = useState('monthly');
-  const [count, setCount] = useState('1');
-  const [copiedId, setCopiedId] = useState(null);
+  const [user, setUser] = useState(null);
+  const [keyType, setKeyType] = useState("monthly");
+  const [copied, setCopied] = useState("");
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) { base44.auth.redirectToLogin(createPageUrl('AdminKeys')); return; }
-    if (user.role !== 'admin') { window.location.href = createPageUrl('Dashboard'); return; }
-    loadKeys();
-  }, [authLoading, user]);
-
-  const loadKeys = async () => {
-    setIsLoading(true);
-    try {
-      const data = await base44.entities.AccessKey.list('-created_date', 200);
-      setKeys(data);
-    } catch (_e) {}
-    setIsLoading(false);
-  };
-
-  const handleGenerate = async () => {
-    setIsGenerating(true);
-    try {
-      const res = await base44.functions.invoke('generateKey', {
-        plan_type: planType,
-        count: parseInt(count) || 1,
-      });
-      if (res.data.success) {
-        await loadKeys();
+    base44.auth.me().then(u => {
+      if (!u || u.role !== "admin") {
+        window.location.href = createPageUrl("Dashboard");
+      } else {
+        setUser(u);
       }
-    } catch (_e) {}
-    setIsGenerating(false);
+    }).catch(() => base44.auth.redirectToLogin(createPageUrl("AdminKeys")));
+  }, []);
+
+  const { data: keys = [] } = useQuery({
+    queryKey: ["access-keys"],
+    queryFn: () => base44.entities.AccessKey.list("-created_date"),
+    enabled: !!user
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.AccessKey.create(data),
+    onSuccess: () => queryClient.invalidateQueries(["access-keys"])
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.AccessKey.delete(id),
+    onSuccess: () => queryClient.invalidateQueries(["access-keys"])
+  });
+
+  const handleGenerate = () => {
+    const newKey = generateKey(keyType);
+    const expiresAt = keyType === "monthly"
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+    createMutation.mutate({ key_value: newKey, key_type: keyType, is_used: false, is_active: true, expires_at: expiresAt });
   };
 
-  const copyKey = async (keyValue, id) => {
-    await navigator.clipboard.writeText(keyValue);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  const handleCopy = (val) => {
+    navigator.clipboard.writeText(val);
+    setCopied(val);
+    setTimeout(() => setCopied(""), 2000);
   };
 
-  const deleteKey = async (id) => {
-    if (!window.confirm('Delete this key?')) return;
-    await base44.entities.AccessKey.delete(id);
-    setKeys(prev => prev.filter(k => k.id !== id));
-  };
-
-  if (authLoading || isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const available = keys.filter(k => !k.is_used);
-  const redeemed = keys.filter(k => k.is_used);
+  if (!user) return (
+    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <Shield className="w-6 h-6 text-cyan-400 animate-pulse" />
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-lg font-bold text-white flex items-center gap-2">
-            <Key className="w-4 h-4 text-cyan-400" /> Key Management
-          </h1>
-          <div className="flex gap-3 text-xs text-gray-600 mt-1">
-            <span className="text-green-400">{available.length} available</span>
-            <span>·</span>
-            <span className="text-gray-400">{redeemed.length} redeemed</span>
-          </div>
+    <div className="min-h-screen bg-[#0a0a0f] text-gray-100">
+      <header className="border-b border-[#1e2433] bg-[#0d0d14] px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Key className="w-5 h-5 text-cyan-400" />
+          <span className="font-bold text-white font-mono">Admin Key Manager</span>
         </div>
-        <button onClick={loadKeys} className="text-gray-600 hover:text-gray-300 transition-colors">
-          <RefreshCw className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Generator card */}
-      <div className="bg-[#09091a] border border-[#1a1a3e] rounded-xl p-5 mb-5">
-        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Plus className="w-3.5 h-3.5 text-cyan-400" /> Generate Keys
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <Select value={planType} onValueChange={setPlanType}>
-            <SelectTrigger className="w-44 bg-black/40 border-[#1a1a3e] text-white text-sm h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#0d0d1f] border-[#1a1a3e] text-white">
-              <SelectItem value="monthly">Monthly — $5/mo</SelectItem>
-              <SelectItem value="lifetime">Lifetime — $50</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={count} onValueChange={setCount}>
-            <SelectTrigger className="w-32 bg-black/40 border-[#1a1a3e] text-white text-sm h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#0d0d1f] border-[#1a1a3e] text-white">
-              {['1', '2', '5', '10', '20', '50'].map(n => (
-                <SelectItem key={n} value={n}>{n} key{parseInt(n) > 1 ? 's' : ''}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button onClick={handleGenerate} disabled={isGenerating}
-            className="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-sm h-9">
-            {isGenerating
-              ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> Generating...</>
-              : <><Key className="w-3.5 h-3.5 mr-1.5" /> Generate</>}
+        <div className="flex gap-3">
+          <a href={createPageUrl("Dashboard")} className="text-sm text-gray-400 hover:text-cyan-400 font-mono">← Dashboard</a>
+          <Button variant="ghost" size="sm" onClick={() => base44.auth.logout(createPageUrl("Home"))} className="text-gray-400 hover:text-red-400 gap-1">
+            <LogOut className="w-4 h-4" /> Logout
           </Button>
         </div>
-      </div>
+      </header>
 
-      {/* Keys table */}
-      <div className="bg-[#09091a] border border-[#1a1a3e] rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#1a1a3e] grid grid-cols-12 text-[10px] text-gray-600 uppercase tracking-widest font-medium">
-          <span className="col-span-5">Key</span>
-          <span className="col-span-2">Plan</span>
-          <span className="col-span-3">Status</span>
-          <span className="col-span-2 text-right">Actions</span>
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        {/* Generate */}
+        <div className="bg-[#0d0d14] border border-[#1e2433] rounded-xl p-5">
+          <h2 className="text-sm font-mono text-gray-400 mb-4">Generate New Key</h2>
+          <div className="flex gap-3 items-center">
+            <div className="flex gap-2">
+              {["monthly", "lifetime"].map(t => (
+                <button
+                  key={t}
+                  onClick={() => setKeyType(t)}
+                  className={`px-4 py-2 rounded-lg text-sm font-mono border transition-all ${keyType === t ? "bg-cyan-600 border-cyan-500 text-white" : "bg-[#0a0a0f] border-[#1e2433] text-gray-400"}`}
+                >
+                  {t === "monthly" ? "$5 / Month" : "$50 / Lifetime"}
+                </button>
+              ))}
+            </div>
+            <Button onClick={handleGenerate} className="bg-cyan-600 hover:bg-cyan-500 font-mono gap-2" disabled={createMutation.isPending}>
+              <Plus className="w-4 h-4" /> Generate Key
+            </Button>
+          </div>
         </div>
 
-        {keys.length === 0 ? (
-          <div className="p-10 text-center text-gray-600 text-sm">
-            No keys generated yet. Use the generator above.
+        {/* Keys Table */}
+        <div className="bg-[#0d0d14] border border-[#1e2433] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#1e2433] flex items-center justify-between">
+            <span className="font-mono text-sm text-gray-400">Access Keys ({keys.length})</span>
           </div>
-        ) : (
-          keys.map(k => (
-            <div key={k.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-[#1a1a3e] last:border-b-0 hover:bg-white/[0.02] items-center group transition-colors">
-              <code className="col-span-5 font-mono text-sm text-gray-300 truncate">{k.key_value}</code>
-
-              <div className="col-span-2">
-                <Badge className={`text-[10px] px-1.5 py-0 h-4 border ${
-                  k.plan_type === 'lifetime'
-                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                    : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                }`}>
-                  {k.plan_type === 'lifetime' ? <Crown className="w-2.5 h-2.5 mr-0.5 inline" /> : null}
-                  {k.plan_type}
-                </Badge>
-              </div>
-
-              <div className="col-span-3 flex items-center gap-1.5">
-                {k.is_used ? (
-                  <Badge className="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[10px] px-1.5 py-0 h-4 flex items-center gap-1">
-                    <Users className="w-2.5 h-2.5" />
-                    <span className="truncate max-w-[100px]">{k.used_by_email?.split('@')[0]}</span>
-                  </Badge>
-                ) : (
-                  <Badge className="bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] px-1.5 py-0 h-4">
-                    Available
-                  </Badge>
-                )}
-              </div>
-
-              <div className="col-span-2 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                {!k.is_used && (
-                  <Button size="sm" variant="ghost" onClick={() => copyKey(k.key_value, k.id)}
-                    title="Copy key"
-                    className="h-6 w-6 p-0 text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/5">
-                    {copiedId === k.id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  </Button>
-                )}
-                <Button size="sm" variant="ghost" onClick={() => deleteKey(k.id)}
-                  title="Delete key"
-                  className="h-6 w-6 p-0 text-gray-500 hover:text-red-400 hover:bg-red-500/5">
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
+          <Table>
+            <TableHeader>
+              <TableRow className="border-[#1e2433] hover:bg-transparent">
+                <TableHead className="text-gray-500 font-mono text-xs">Key</TableHead>
+                <TableHead className="text-gray-500 font-mono text-xs">Type</TableHead>
+                <TableHead className="text-gray-500 font-mono text-xs">Status</TableHead>
+                <TableHead className="text-gray-500 font-mono text-xs">Used By</TableHead>
+                <TableHead className="text-gray-500 font-mono text-xs">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {keys.map(k => (
+                <TableRow key={k.id} className="border-[#1e2433] hover:bg-white/[0.02]">
+                  <TableCell className="font-mono text-xs text-cyan-300">{k.key_value}</TableCell>
+                  <TableCell>
+                    <Badge className={k.key_type === "lifetime" ? "bg-purple-500/20 text-purple-300 border-purple-500/30 font-mono text-xs" : "bg-blue-500/20 text-blue-300 border-blue-500/30 font-mono text-xs"}>
+                      {k.key_type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={k.is_used ? "bg-red-500/20 text-red-400 border-red-500/30 font-mono text-xs" : "bg-green-500/20 text-green-400 border-green-500/30 font-mono text-xs"}>
+                      {k.is_used ? "Used" : "Available"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-gray-500 font-mono text-xs">{k.used_by_email || "—"}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="icon" variant="ghost" onClick={() => handleCopy(k.key_value)} className="w-7 h-7 text-gray-500 hover:text-cyan-400">
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(k.id)} className="w-7 h-7 text-gray-500 hover:text-red-400">
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

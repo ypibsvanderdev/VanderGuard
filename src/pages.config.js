@@ -50,12 +50,14 @@
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import Activate from './pages/Activate';
+import AdminKeys from './pages/AdminKeys';
 
 
 export const PAGES = {
     "Dashboard": Dashboard,
     "Home": Home,
     "Activate": Activate,
+    "AdminKeys": AdminKeys,
 }
 
 export const pagesConfig = {
