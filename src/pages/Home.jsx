@@ -67,7 +67,18 @@ export default function Home() {
         if (isAuth) {
           const me = await base44.auth.me();
           setUser(me);
-          if (me.role === 'admin' || me.has_access === true) {
+          // Admin goes straight to admin panel
+          if (me.role === 'admin') {
+            window.location.href = createPageUrl('AdminPanel');
+            return;
+          }
+          // Active paid/trial access goes to dashboard
+          const now = new Date();
+          const hasTrial = me.plan_type === 'trial' && me.trial_expires && new Date(me.trial_expires) > now;
+          const hasPaid = me.has_access && me.plan_type !== 'trial' && (
+            me.plan_type === 'lifetime' || (me.access_expires && new Date(me.access_expires) > now)
+          );
+          if (hasTrial || hasPaid) {
             window.location.href = createPageUrl('Dashboard');
             return;
           }
@@ -83,7 +94,9 @@ export default function Home() {
     setIsRedeeming(true);
     setMessage(null);
     try {
-      const res = await base44.functions.invoke('redeemKey', { key: key.trim() });
+      // Try to get a hardware fingerprint (best-effort in browser)
+    const hwid = btoa(`${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}`).substring(0, 32);
+    const res = await base44.functions.invoke('redeemKey', { key: key.trim(), hwid });
       if (res.data.success) {
         setMessage({ type: 'success', text: res.data.message || 'Access granted! Redirecting...' });
         setTimeout(() => { window.location.href = createPageUrl('Dashboard'); }, 1800);
