@@ -6,7 +6,7 @@ import { ArrowLeft, Copy, Edit2, Trash2, Lock, CheckCircle, Code, GitFork, Star,
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 
-const BASE_URL = "https://app.base44.com/api/functions/serveScript";
+const BASE_URL = `${window.location.origin}/api/functions/serveScript`;
 
 export default function FileView() {
   const [user, setUser] = useState(null);
