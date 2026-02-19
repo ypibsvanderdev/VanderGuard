@@ -61,6 +61,7 @@ import Repo from './pages/Repo';
 import RepoView from './pages/RepoView';
 import ScriptEditor from './pages/ScriptEditor';
 import SecurityLogs from './pages/SecurityLogs';
+import Raw from './pages/Raw';
 import __Layout from './Layout.jsx';
 
 
@@ -79,6 +80,7 @@ export const PAGES = {
     "RepoView": RepoView,
     "ScriptEditor": ScriptEditor,
     "SecurityLogs": SecurityLogs,
+    "Raw": Raw,
 }
 
 export const pagesConfig = {
