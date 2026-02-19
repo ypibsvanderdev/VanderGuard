@@ -59,6 +59,8 @@ import Repo from './pages/Repo';
 import RepoView from './pages/RepoView';
 import ScriptEditor from './pages/ScriptEditor';
 import SecurityLogs from './pages/SecurityLogs';
+import Access from './pages/Access';
+import Locked from './pages/Locked';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +77,8 @@ export const PAGES = {
     "RepoView": RepoView,
     "ScriptEditor": ScriptEditor,
     "SecurityLogs": SecurityLogs,
+    "Access": Access,
+    "Locked": Locked,
 }
 
 export const pagesConfig = {
