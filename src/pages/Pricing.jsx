@@ -226,7 +226,7 @@ export default function Pricing() {
               >
                 {checkingOut === "lifetime"
                   ? <div className="w-4 h-4 border-2 border-black/40 border-t-black rounded-full animate-spin" />
-                  : <><CreditCard className="w-4 h-4" /> Buy Lifetime — $50</>}
+                  : <><CreditCard className="w-4 h-4" /> Buy Lifetime — $200</>}
               </button>
             </div>
           </div>
