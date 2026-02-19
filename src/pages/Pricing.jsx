@@ -209,7 +209,7 @@ export default function Pricing() {
                 <span className="text-xl font-bold">Lifetime</span>
               </div>
               <div className="flex items-end gap-1 mb-6">
-                <span className="text-5xl font-bold">$50</span>
+                <span className="text-5xl font-bold">$200</span>
                 <span className="text-gray-400 mb-1.5">one-time</span>
               </div>
               <div className="space-y-2.5 flex-1 mb-7">
