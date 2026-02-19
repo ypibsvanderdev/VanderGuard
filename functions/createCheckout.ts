@@ -5,7 +5,7 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 const PRICES = {
   monthly: 'price_1T2MDjRmcVJm9IhUpnYWveAp',
-  lifetime: 'price_1T2MDjRmcVJm9IhUATip8pyK',
+  lifetime: 'price_1T2OAFRmcVJm9IhUykHYZL6i',
 };
 
 Deno.serve(async (req) => {
