@@ -67,6 +67,25 @@ export default function Access() {
     setStartingTrial(false);
   };
 
+  // Gate: validate key exists before redirecting to login
+  const handleGateLogin = async () => {
+    if (!key.trim()) return;
+    setRedeeming(true);
+    setMsg(null);
+    try {
+      const res = await base44.functions.invoke("validateKeyExists", { key: key.trim().toUpperCase() });
+      if (res.data.valid) {
+        // Key is valid — send them to login, pass key in URL so we can auto-redeem after
+        base44.auth.redirectToLogin(`${createPageUrl("Access")}?key=${encodeURIComponent(key.trim().toUpperCase())}`);
+      } else {
+        setMsg({ type: "error", text: res.data.error || "Invalid or already used key." });
+      }
+    } catch (_e) {
+      setMsg({ type: "error", text: "Something went wrong. Try again." });
+    }
+    setRedeeming(false);
+  };
+
   const handleRedeem = async () => {
     if (!key.trim()) return;
     setRedeeming(true);
