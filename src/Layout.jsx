@@ -1,6 +1,11 @@
 import React from "react";
 
 export default function Layout({ children, currentPageName }) {
+  // Redirect root/Home to Access page
+  if (currentPageName === "Home") {
+    window.location.replace(window.location.origin + "/access");
+    return null;
+  }
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
       <style>{`
