@@ -101,7 +101,7 @@ export default function Locked() {
           <div className="bg-[#09091a] border border-cyan-500/20 rounded-xl p-3 text-center">
             <Infinity className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
             <div className="text-sm font-semibold text-white">Lifetime</div>
-            <div className="text-xs text-gray-500">$50 one-time</div>
+            <div className="text-xs text-gray-500">$200 one-time</div>
           </div>
         </div>
 

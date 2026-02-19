@@ -10,7 +10,7 @@ const FEATURES = [
   { icon: Zap, title: "Honeypot Traps", desc: "Reverse engineers receive rotating fake scripts, wasting months of analysis time.", color: "yellow" },
   { icon: GitBranch, title: "GitHub-style Repos", desc: "Manage all your Lua scripts in a clean, professional file browser.", color: "purple" },
   { icon: Activity, title: "Security Logging", desc: "Every unauthorized access attempt logged with full headers and timestamps.", color: "red" },
-  { icon: Key, title: "Key-Based Access", desc: "$5/month or $50 lifetime. HWID + IP bound keys, cryptographically verified.", color: "green" },
+  { icon: Key, title: "Key-Based Access", desc: "$5/month or $200 lifetime. HWID + IP bound keys, cryptographically verified.", color: "green" },
 ];
 
 const COLOR_MAP = {
@@ -212,7 +212,7 @@ export default function Access() {
                 {redeeming ? "Activating..." : "Activate Key"}
               </button>
               <Link to={createPageUrl("Pricing")} className="text-center text-[11px] text-gray-600 hover:text-cyan-400 mt-3">
-                Buy a key → $5/mo · $50 lifetime
+                Buy a key → $5/mo · $200 lifetime
               </Link>
             </div>
           </div>
@@ -236,7 +236,7 @@ export default function Access() {
             <div className="bg-[#09091a] border border-cyan-500/20 rounded-xl p-4">
               <Infinity className="w-5 h-5 text-cyan-400 mx-auto mb-2" />
               <div className="text-sm font-semibold text-white mb-1">Lifetime</div>
-              <div className="text-xs text-gray-500">$50 one-time</div>
+              <div className="text-xs text-gray-500">$200 one-time</div>
             </div>
           </div>
         </div>
