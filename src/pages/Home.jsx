@@ -71,6 +71,9 @@ export default function Home() {
             window.location.href = createPageUrl('Dashboard');
             return;
           }
+          // Redirect logged-in users without access to the Access page
+          window.location.href = createPageUrl('Access');
+          return;
         }
       } catch (_e) {}
       setIsLoading(false);
