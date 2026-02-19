@@ -131,7 +131,7 @@ export default function FileView() {
           </Link>
           <span className="text-sm text-[#c9d1d9] font-mono ml-2">{file.name}</span>
           <div className="ml-auto flex gap-2">
-            <button onClick={() => copy(rawUrl, setCopiedUrl)} title="Copy Raw URL" className="flex items-center gap-1.5 text-xs border border-[#30363d] bg-[#21262d] hover:bg-[#30363d] rounded-lg px-3 py-1.5">
+            <button onClick={() => copy(displayRawUrl, setCopiedUrl)} title="Copy Raw URL" className="flex items-center gap-1.5 text-xs border border-[#30363d] bg-[#21262d] hover:bg-[#30363d] rounded-lg px-3 py-1.5">
               <ExternalLink className="w-3.5 h-3.5" /> Raw
             </button>
             {!trialExpired && (
