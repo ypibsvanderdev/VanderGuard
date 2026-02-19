@@ -140,38 +140,15 @@ export default function Access() {
 
         {/* Action Cards */}
         {!user ? (
-          /* Not logged in — require a key to proceed */
-          <div className="max-w-md mx-auto">
-            <div className="bg-[#0d0d1f] border border-cyan-500/20 rounded-2xl p-6 text-left">
-              <div className="flex items-center gap-2 mb-1">
-                <Key className="w-4 h-4 text-cyan-400" />
-                <span className="font-semibold text-white text-sm">Enter Access Key to Sign In</span>
-              </div>
-              <p className="text-xs text-gray-500 mb-4">You need a valid key to create an account or sign in. <Link to={createPageUrl("Pricing")} className="text-cyan-400 hover:underline">Buy a key →</Link></p>
-              <input
-                value={key}
-                onChange={e => setKey(e.target.value.toUpperCase())}
-                onKeyDown={e => e.key === "Enter" && handleGateLogin()}
-                placeholder="VH-XXXXXX-XXXXXX-XXXXXX"
-                className="w-full bg-black/40 border border-[#1a1a3e] text-white font-mono text-sm rounded-lg px-3 py-2.5 outline-none focus:border-cyan-500/50 mb-3 placeholder:text-gray-700"
-                autoFocus
-              />
-              {msg && (
-                <div className={`flex items-center gap-2 text-xs mb-3 ${msg.type === "success" ? "text-green-400" : "text-red-400"}`}>
-                  {msg.type === "success" ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <XCircle className="w-3.5 h-3.5 shrink-0" />}
-                  {msg.text}
-                </div>
-              )}
-              <button
-                onClick={handleGateLogin}
-                disabled={!key.trim() || redeeming}
-                className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-black font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-all"
-              >
-                {redeeming
-                  ? <div className="w-4 h-4 border-2 border-black/40 border-t-black rounded-full animate-spin" />
-                  : <>Continue <ChevronRight className="w-4 h-4" /></>}
-              </button>
-            </div>
+          /* Not logged in — show sign in CTA */
+          <div className="max-w-sm mx-auto">
+            <button
+              onClick={() => base44.auth.redirectToLogin(createPageUrl("Access"))}
+              className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-all"
+            >
+              Sign In / Create Account <ChevronRight className="w-4 h-4" />
+            </button>
+            <p className="text-xs text-gray-600 mt-3">Free 30-day trial available after sign up</p>
           </div>
         ) : (
           /* Logged in — show access options */
