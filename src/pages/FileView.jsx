@@ -161,8 +161,8 @@ export default function FileView() {
         {/* Raw URL bar */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl px-4 py-2.5 flex items-center gap-3 mb-2">
           <ExternalLink className="w-3.5 h-3.5 text-[#58a6ff] shrink-0" />
-          <span className="text-xs font-mono text-[#58a6ff] truncate flex-1">{rawUrl}</span>
-          <button onClick={() => copy(rawUrl, setCopiedUrl)} className="text-gray-500 hover:text-white shrink-0">
+          <span className="text-xs font-mono text-[#58a6ff] truncate flex-1">{displayRawUrl}</span>
+          <button onClick={() => copy(displayRawUrl, setCopiedUrl)} className="text-gray-500 hover:text-white shrink-0">
             {copiedUrl ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
           </button>
         </div>
