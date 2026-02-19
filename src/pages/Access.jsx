@@ -35,9 +35,31 @@ export default function Access() {
     (async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { setLoading(false); return; }
+        if (!isAuth) {
+          // Pre-fill key from URL if present (returning from login redirect)
+          const params = new URLSearchParams(window.location.search);
+          const urlKey = params.get("key");
+          if (urlKey) setKey(urlKey);
+          setLoading(false);
+          return;
+        }
         const me = await base44.auth.me();
         setUser(me);
+
+        // Auto-redeem key from URL if returning from login
+        const params = new URLSearchParams(window.location.search);
+        const urlKey = params.get("key");
+        if (urlKey) {
+          setKey(urlKey);
+          // Auto-trigger redeem
+          const hwid = btoa(`${navigator.userAgent}|${screen.width}x${screen.height}|${navigator.language}`).substring(0, 32);
+          const redeemRes = await base44.functions.invoke("redeemKey", { key: urlKey.toUpperCase(), hwid });
+          if (redeemRes.data.success) {
+            window.location.href = createPageUrl("Dashboard");
+            return;
+          }
+        }
+
         // Check access status
         const res = await base44.functions.invoke("checkAccess", {});
         setAccessInfo(res.data);
