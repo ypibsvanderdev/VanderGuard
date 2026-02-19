@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Access from './pages/Access';
 import AccessDenied from './pages/AccessDenied';
 import Activate from './pages/Activate';
 import AdminKeys from './pages/AdminKeys';
@@ -54,17 +55,17 @@ import AdminPanel from './pages/AdminPanel';
 import Dashboard from './pages/Dashboard';
 import FileView from './pages/FileView';
 import Home from './pages/Home';
+import Locked from './pages/Locked';
 import Pricing from './pages/Pricing';
 import Repo from './pages/Repo';
 import RepoView from './pages/RepoView';
 import ScriptEditor from './pages/ScriptEditor';
 import SecurityLogs from './pages/SecurityLogs';
-import Access from './pages/Access';
-import Locked from './pages/Locked';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "Access": Access,
     "AccessDenied": AccessDenied,
     "Activate": Activate,
     "AdminKeys": AdminKeys,
@@ -72,13 +73,12 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "FileView": FileView,
     "Home": Home,
+    "Locked": Locked,
     "Pricing": Pricing,
     "Repo": Repo,
     "RepoView": RepoView,
     "ScriptEditor": ScriptEditor,
     "SecurityLogs": SecurityLogs,
-    "Access": Access,
-    "Locked": Locked,
 }
 
 export const pagesConfig = {
