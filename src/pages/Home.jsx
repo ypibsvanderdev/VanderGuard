@@ -61,24 +61,7 @@ export default function Home() {
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (isAuth) {
-          const me = await base44.auth.me();
-          setUser(me);
-          if (me.role === 'admin' || me.has_access === true) {
-            window.location.href = createPageUrl('Dashboard');
-            return;
-          }
-          // Redirect logged-in users without access to the Access page
-          window.location.href = createPageUrl('Access');
-          return;
-        }
-      } catch (_e) {}
-      setIsLoading(false);
-    };
-    init();
+    window.location.replace(createPageUrl('Access'));
   }, []);
 
   const handleRedeem = async () => {
