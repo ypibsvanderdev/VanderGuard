@@ -133,18 +133,24 @@ export default function Dashboard() {
 
   const loadUser = async () => {
     try {
-      const me = await base44.auth.me();
-      if (!me) { base44.auth.redirectToLogin(createPageUrl("Dashboard")); return; }
+      const isAuth = await base44.auth.isAuthenticated();
+      if (!isAuth) { window.location.href = createPageUrl("Access"); return; }
 
-      // Require paid access (or admin)
-      if (me.role !== "admin" && !me.has_access) {
-        window.location.href = createPageUrl("Pricing");
+      const me = await base44.auth.me();
+      if (!me) { window.location.href = createPageUrl("Access"); return; }
+
+      if (me.role === "admin") { setUser(me); return; }
+
+      // Check access expiry via backend
+      const res = await base44.functions.invoke("checkAccess", {});
+      if (!res.data.has_access) {
+        window.location.href = res.data.expired ? createPageUrl("Locked") : createPageUrl("Access");
         return;
       }
 
       setUser(me);
     } catch (_e) {
-      base44.auth.redirectToLogin(createPageUrl("Dashboard"));
+      window.location.href = createPageUrl("Access");
     }
   };
 
