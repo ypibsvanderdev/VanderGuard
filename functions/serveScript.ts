@@ -2,9 +2,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
 // VANDER SECURE GATE v4.2 — Multi-Layer Script Protection
+// Modeled after the original vander-hub server.js /raw route:
+//   GET /raw/:repoId/:filename?key=<token>
+//   - Browser request → styled HTML ACCESS DENIED page
+//   - Tool/curl/wget + invalid/missing key → large garbage Lua payload + delay
+//   - Valid Roblox executor context + valid token → real script content
 // ============================================================
 
-// ~500KB garbage Lua payload for curl/wget/python fetch attempts
+// ~500KB garbage Lua payload (same style as original obfuscateLua output)
 function buildGarbagePayload(seed) {
   const r = (n) => Math.abs(Math.sin(seed * n) * 99999 | 0);
 
@@ -13,7 +18,7 @@ function buildGarbagePayload(seed) {
     `local _${r(i + 1).toString(36)} = ${i % 3 === 0 ? `"${Math.random().toString(36).slice(2)}"` : i % 3 === 1 ? r(i + 7) : 'nil'};`
   ).join('\n');
 
-  // 80 fake functions (doubled from before)
+  // 80 fake functions
   const fakeFuncs = Array.from({ length: 80 }, (_, i) => `
 local function __vsg_${r(i + 200).toString(36)}(a, b, c)
   local _x = a or ${r(i + 1)}
@@ -24,7 +29,7 @@ local function __vsg_${r(i + 200).toString(36)}(a, b, c)
   return c or _x * ${r(i + 4) % 100}
 end`).join('\n');
 
-  // Large fake data table — pads to ~500KB
+  // Large fake data table ~500KB
   const fakeTable = `local __vsg_data = {\n` +
     Array.from({ length: 3000 }, (_, i) =>
       `  [${i + 1}] = "${Array.from({ length: 32 }, (_, j) => r(i * 32 + j + seed).toString(16).padStart(2, '0')).join('')}",`
@@ -61,7 +66,7 @@ end
   return `-- VanderHub Secure Gate v4.2\n-- Request ID: ${r(seed + 999).toString(16).toUpperCase()}\n-- Status: UNAUTHORIZED\n\n${fakeVars}\n${fakeFuncs}\n${fakeTable}\n${fakeLoop}\n${fakeMetatable}\n${fakeFinalCheck}`;
 }
 
-// HTML block page shown to browsers (like your reference site)
+// HTML block page for browsers (exact style from original)
 function buildBrowserBlockPage() {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -72,7 +77,7 @@ function buildBrowserBlockPage() {
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #0a0a0f;
+    background: #0d1117;
     color: #e0e0e0;
     font-family: 'Courier New', monospace;
     display: flex;
@@ -80,41 +85,52 @@ function buildBrowserBlockPage() {
     justify-content: center;
     min-height: 100vh;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
   }
-  .shield { font-size: 2rem; }
-  .title { color: #ff4444; font-size: 1.1rem; font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
+  .shield { font-size: 3rem; }
+  .title { color: #ff4444; font-size: 1.2rem; font-weight: bold; letter-spacing: 4px; text-transform: uppercase; }
   .sub { color: #555; font-size: 0.8rem; }
+  .info { color: #333; font-size: 0.7rem; font-family: monospace; border: 1px solid #1a1a2e; padding: 8px 16px; border-radius: 6px; }
 </style>
 </head>
 <body>
   <div class="shield">🛡️</div>
   <div class="title">VANDERHUB: ACCESS DENIED</div>
   <div class="sub">Raw source code is protected. Browser access is forbidden.</div>
+  <div class="info">VSG v4.2 · Session: INVALIDATED · Gate: ACTIVE</div>
 </body>
 </html>`;
 }
 
-// Convincing short decoys for edge cases
+// Short convincing decoys for disabled/inactive scripts
 const DECOYS = [
   `-- [VSG] Access validation failed\n-- Error: 0x4E4F41434345535300\nlocal x = {}\nsetmetatable(x, {__index = function(t,k) return function(...) return nil end end})\nprint("[VH] Secure execution context: DENIED")\nreturn nil`,
   `local __VH__ = "\\86\\97\\110\\100\\101\\114\\72\\117\\98"\nlocal gate = require and require("VanderGate") or nil\nif not gate then warn("[VH] Gate module not found") return end\ngate:authenticate()\ngate:execute()`,
   `-- VanderHub Encrypted Payload v4.2\n-- Status: UNAUTHORIZED_ACCESS\nlocal Players = game:GetService("Players")\nif not Players.LocalPlayer then return end\nwarn("[VH] Session validation failed")\nreturn nil`,
 ];
 
-// Browser-only headers Roblox would never send
+// Browser-only headers that Roblox executor would never send
 const BROWSER_HEADERS = [
-  'sec-fetch-mode','sec-fetch-site','sec-fetch-dest',
-  'sec-ch-ua','sec-ch-ua-mobile','sec-ch-ua-platform',
+  'sec-fetch-mode', 'sec-fetch-site', 'sec-fetch-dest',
+  'sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform',
   'upgrade-insecure-requests',
 ];
 
-// HTTP tool user-agent patterns
-const TOOL_UA = [/^curl\//i,/^python/i,/^wget\//i,/^httpie/i,/^axios/i,/^node-fetch/i,/^got\//i,/^undici/i,/postman/i,/insomnia/i,/^java\//i,/^ruby/i,/^go-http/i,/discordbot/i,/discord/i,/bot\//i,/spider/i,/crawler/i,/scraper/i,/^okhttp/i,/^aiohttp/i,/^requests\//i];
-const BROWSER_UA = [/mozilla\/5\.0/i,/chrome\//i,/firefox\//i,/safari\//i,/opera\//i,/msie/i,/trident\//i,/edg\//i];
+// Known HTTP tool user-agent patterns (curl, wget, python, etc.)
+const TOOL_UA = [
+  /^curl\//i, /^python/i, /^wget\//i, /^httpie/i, /^axios/i,
+  /^node-fetch/i, /^got\//i, /^undici/i, /postman/i, /insomnia/i,
+  /^java\//i, /^ruby/i, /^go-http/i, /discordbot/i, /discord/i,
+  /bot\//i, /spider/i, /crawler/i, /scraper/i, /^okhttp/i,
+  /^aiohttp/i, /^requests\//i,
+];
+
+const BROWSER_UA = [
+  /mozilla\/5\.0/i, /chrome\//i, /firefox\//i, /safari\//i,
+  /opera\//i, /msie/i, /trident\//i, /edg\//i,
+];
 
 function isBrowserRequest(req, ua, accept) {
-  // Definitive browser signals
   let score = 0;
   for (const h of BROWSER_HEADERS) { if (req.headers.has(h)) score += 2; }
   if (accept.includes('text/html')) score += 5;
@@ -158,7 +174,7 @@ async function incrementBlocked(base44Client, scriptId) {
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   const scriptId = url.searchParams.get('id');
-  const token = url.searchParams.get('t');
+  const token = url.searchParams.get('t');    // per-script loadstring token
 
   const ua = req.headers.get('user-agent') || '';
   const accept = req.headers.get('accept') || '';
@@ -169,7 +185,8 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const seed = Date.now() % 99999;
 
-  // ── LAYER 1: Browser detection → styled HTML block page ──
+  // ── LAYER 1: Browser → styled HTML ACCESS DENIED page ──
+  // (mirrors original: browser hits the raw endpoint → gets the HTML block page)
   if (isBrowserRequest(req, ua, accept)) {
     await logAttempt(base44, scriptId, ua, ip, 'browser', true);
     if (scriptId) await incrementBlocked(base44, scriptId);
@@ -182,11 +199,12 @@ Deno.serve(async (req) => {
     });
   }
 
-  // ── LAYER 2: curl/python/wget/tool fetch → 500KB garbage flood ──
-  if (isToolRequest(ua) || ua.toLowerCase().includes('discord')) {
+  // ── LAYER 2: curl/wget/python/tool → 500KB garbage Lua flood + delay ──
+  // (mirrors original: rate limiter + tool detection → garbage payload)
+  if (isToolRequest(ua)) {
     await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
     if (scriptId) await incrementBlocked(base44, scriptId);
-    // Random delay to slow down scripted attacks
+    // Random delay to slow scripted attacks (mirrors original rate limiting intent)
     await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 700)));
     return new Response(buildGarbagePayload(seed), {
       headers: {
@@ -198,7 +216,8 @@ Deno.serve(async (req) => {
     });
   }
 
-  // ── LAYER 3: Parameter completeness check ──
+  // ── LAYER 3: Missing/invalid token → garbage flood ──
+  // (mirrors original: missing ?key param → garbage or block)
   if (!scriptId || !token || token.length < 32) {
     await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
     await new Promise(r => setTimeout(r, 200 + Math.floor(Math.random() * 400)));
@@ -221,7 +240,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // LAYER 5: Token must match exactly
+    // LAYER 5: Token must match exactly (per-script, stronger than original static key)
     if (script.loadstring_token !== token) {
       await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
       await incrementBlocked(base44, scriptId);
@@ -231,7 +250,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // LAYER 6: Loadstring must be enabled on the script
+    // LAYER 6: Loadstring must be enabled & script active
     if (!script.is_loadstring || !script.is_active) {
       await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', false);
       await new Promise(r => setTimeout(r, 200 + Math.floor(Math.random() * 300)));
@@ -241,6 +260,7 @@ Deno.serve(async (req) => {
     }
 
     // ── VALID — serve real script ──
+    // (mirrors original: valid ?key + non-browser/tool context → serve file content)
     await logAttempt(base44, scriptId, ua, ip, 'valid', false);
     try {
       await base44.asServiceRole.entities.Script.update(scriptId, {
