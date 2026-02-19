@@ -57,11 +57,11 @@ import FileView from './pages/FileView';
 import Home from './pages/Home';
 import Locked from './pages/Locked';
 import Pricing from './pages/Pricing';
+import Raw from './pages/Raw';
 import Repo from './pages/Repo';
 import RepoView from './pages/RepoView';
 import ScriptEditor from './pages/ScriptEditor';
 import SecurityLogs from './pages/SecurityLogs';
-import Raw from './pages/Raw';
 import __Layout from './Layout.jsx';
 
 
@@ -76,11 +76,11 @@ export const PAGES = {
     "Home": Home,
     "Locked": Locked,
     "Pricing": Pricing,
+    "Raw": Raw,
     "Repo": Repo,
     "RepoView": RepoView,
     "ScriptEditor": ScriptEditor,
     "SecurityLogs": SecurityLogs,
-    "Raw": Raw,
 }
 
 export const pagesConfig = {
