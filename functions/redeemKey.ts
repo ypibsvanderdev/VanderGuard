@@ -16,12 +16,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'No key provided' });
     }
 
-    // Already has active paid access
-    if (user.has_access && user.plan_type !== 'trial') {
-      return Response.json({ success: false, error: 'You already have an active subscription' });
+    // Already has lifetime - don't allow
+    if (user.has_access && user.plan_type === 'lifetime') {
+      return Response.json({ success: false, error: 'You already have a lifetime subscription.' });
     }
 
-    // Find the key
     const keys = await base44.asServiceRole.entities.AccessKey.filter({
       key_value: keyValue.trim().toUpperCase(),
       is_used: false,
@@ -30,32 +29,29 @@ Deno.serve(async (req) => {
 
     if (keys.length === 0) {
       await new Promise(r => setTimeout(r, 500 + Math.random() * 500));
-      return Response.json({ success: false, error: 'Invalid or already used key' });
+      return Response.json({ success: false, error: 'Invalid or already used key.' });
     }
 
     const key = keys[0];
 
-    // Check expiry
+    // Check if key itself is expired
     if (key.key_type === 'monthly' && key.expires_at) {
       if (new Date() > new Date(key.expires_at)) {
-        return Response.json({ success: false, error: 'This key has expired' });
+        return Response.json({ success: false, error: 'This key has expired.' });
       }
     }
 
     // Get IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-                req.headers.get('cf-connecting-ip') ||
-                req.headers.get('x-real-ip') || 'unknown';
+               req.headers.get('cf-connecting-ip') ||
+               req.headers.get('x-real-ip') || 'unknown';
 
-    // HWID/IP binding: if user already has bound hwid/ip, validate it matches
+    // HWID binding check (if user already has an hwid bound)
     if (user.hwid && hwid && user.hwid !== hwid) {
-      return Response.json({ success: false, error: 'HWID mismatch: key is bound to a different device' });
-    }
-    if (user.bound_ip && user.bound_ip !== ip && user.bound_ip !== 'unknown') {
-      return Response.json({ success: false, error: 'IP mismatch: key is bound to a different network' });
+      return Response.json({ success: false, error: 'HWID mismatch: key is bound to a different device.' });
     }
 
-    // Calculate expiry for monthly keys
+    // Calculate new expiry
     let accessExpires = null;
     if (key.key_type === 'monthly') {
       accessExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -67,7 +63,7 @@ Deno.serve(async (req) => {
       used_by_email: user.email,
     });
 
-    // Grant access, bind HWID + IP
+    // Grant access
     const updateData = {
       has_access: true,
       plan_type: key.key_type,
@@ -78,11 +74,12 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.entities.User.update(user.id, updateData);
 
-    const planLabel = key.key_type === 'lifetime' ? '$50 Lifetime' : key.key_type === 'trial' ? '30-Day Free Trial' : '$5/Month';
+    const planLabel = key.key_type === 'lifetime' ? '$50 Lifetime' : '$5/Month';
     return Response.json({
       success: true,
       plan_type: key.key_type,
-      message: `Access granted! ${planLabel} activated.`,
+      message: `Access granted! ${planLabel} plan activated.`,
+      expires: accessExpires,
     });
   } catch (error) {
     return Response.json({ success: false, error: error.message }, { status: 500 });
