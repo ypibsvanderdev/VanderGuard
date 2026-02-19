@@ -44,8 +44,9 @@ export default function FileView() {
     }
   }, [fileId, repoId]);
 
-  const rawUrl = file ? `${FUNC_URL}?t=${file.loadstring_token}&id=${file.id}` : "";
-  const loadstringUrl = file ? `loadstring(game:HttpGet("${rawUrl}"))()` : "";
+  const rawUrl = file ? `${BASE_URL}?t=${file.loadstring_token}&id=${file.id}` : "";
+  const displayRawUrl = file ? `https://vander-hub.onrender.com/raw/${file.loadstring_token}/${encodeURIComponent(file.name)}?key=vander2026` : "";
+  const loadstringUrl = file ? `loadstring(game:HttpGet("${displayRawUrl}"))()` : "";
   const username = user?.email?.split("@")[0] || "user";
 
   const handleSave = async () => {
