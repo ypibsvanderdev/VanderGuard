@@ -44,7 +44,7 @@ export default function FileView() {
     }
   }, [fileId, repoId]);
 
-  const rawUrl = file ? `${BASE_URL}?t=${file.loadstring_token}&id=${file.id}` : "";
+  const rawUrl = file ? `${window.location.origin}/Raw?t=${file.loadstring_token}&id=${file.id}` : "";
   const displayRawUrl = rawUrl;
   const loadstringUrl = file ? `loadstring(game:HttpGet("${rawUrl}"))()` : "";
   const username = user?.email?.split("@")[0] || "user";
