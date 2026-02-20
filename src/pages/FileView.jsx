@@ -219,19 +219,12 @@ export default function FileView() {
             <div className="overflow-x-auto">
               <table className="w-full font-mono text-sm">
                 <tbody>
-                  {lines.slice(0, MAX_PREVIEW_LINES).map((line, i) => (
+                  {lines.map((line, i) => (
                     <tr key={i} className="hover:bg-[#161b22]">
                       <td className="text-right pr-4 pl-3 py-0.5 text-xs text-gray-600 select-none w-12 border-r border-[#21262d]">{i + 1}</td>
                       <td className="pl-4 py-0.5 text-[#c9d1d9] whitespace-pre">{line || " "}</td>
                     </tr>
                   ))}
-                  {lines.length > MAX_PREVIEW_LINES && (
-                    <tr>
-                      <td colSpan={2} className="text-center py-3 text-xs text-gray-500 border-t border-[#21262d]">
-                        ... {lines.length - MAX_PREVIEW_LINES} more lines (edit to view full content)
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
