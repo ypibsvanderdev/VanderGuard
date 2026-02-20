@@ -53,7 +53,7 @@ export default function FileView() {
     if (!file) return;
     setSaving(true);
 
-    // Upload updated content to Firebase RTDB
+    // Upload content to Firebase RTDB
     const { data: uploadData } = await base44.functions.invoke('uploadScript', {
       content: editContent,
       filename: file.name,
