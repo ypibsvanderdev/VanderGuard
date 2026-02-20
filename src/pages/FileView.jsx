@@ -76,7 +76,7 @@ export default function FileView() {
     const contentToStore = uploadData.file_url;
 
     await base44.entities.Script.update(file.id, { content: contentToStore });
-    setFile(prev => ({ ...prev, content: contentToStore }));
+    setFile(prev => ({ ...prev, content: contentToStore, _resolvedContent: editContent }));
     setSaving(false);
     setIsEditing(false);
   };
