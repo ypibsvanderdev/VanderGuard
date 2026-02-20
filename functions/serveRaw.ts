@@ -248,7 +248,14 @@ Deno.serve(async (req) => {
       });
     } catch (_e) {}
 
-    return new Response(script.content, {
+    // If content is a URL (large file uploaded), fetch the actual content
+    let scriptContent = script.content;
+    if (scriptContent && (scriptContent.startsWith('http://') || scriptContent.startsWith('https://'))) {
+      const fileRes = await fetch(scriptContent);
+      scriptContent = await fileRes.text();
+    }
+
+    return new Response(scriptContent, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'X-Powered-By': 'VanderHub/4.2',
