@@ -93,7 +93,7 @@ export default function FileView() {
     setTimeout(() => setter(false), 2000);
   };
 
-  const lines = (file?.content || "").split("\n");
+  const lines = (file?._resolvedContent || "").split("\n");
 
   if (!user || !file) return (
     <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
