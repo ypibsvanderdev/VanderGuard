@@ -43,6 +43,10 @@ async function getFirebaseStorageToken() {
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
   });
   const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) {
+    console.error("Token error:", JSON.stringify(tokenData));
+    throw new Error("Failed to get Firebase access token");
+  }
   return tokenData.access_token;
 }
 
@@ -56,8 +60,11 @@ Deno.serve(async (req) => {
     if (!content) return Response.json({ error: 'No content provided' }, { status: 400 });
 
     const accessToken = await getFirebaseStorageToken();
+
+    // bucket should be just e.g. "vander--hub.firebasestorage.app"
     const bucket = Deno.env.get("FIREBASE_STORAGE_BUCKET");
-    const path = `scripts/${user.email}/${filename || Date.now()}.lua`;
+    const safeFilename = (filename || Date.now()).toString().replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `scripts/${safeFilename}.lua`;
     const encodedPath = encodeURIComponent(path);
 
     const uploadRes = await fetch(
@@ -75,13 +82,13 @@ Deno.serve(async (req) => {
     if (!uploadRes.ok) {
       const err = await uploadRes.text();
       console.error("Firebase upload error:", err);
-      return Response.json({ error: "Upload failed" }, { status: 500 });
+      return Response.json({ error: "Upload failed", detail: err }, { status: 500 });
     }
 
     const file_url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media`;
     return Response.json({ file_url });
   } catch (error) {
-    console.error("uploadScript error:", error);
+    console.error("uploadScript error:", error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
