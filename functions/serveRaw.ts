@@ -198,8 +198,11 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const seed = Date.now() % 99999;
 
+  // If valid-looking token + id present, skip UA checks — executor requests often spoof browser UAs
+  const hasToken = scriptId && token && token.length >= 32;
+
   // LAYER 1: Browser → styled HTML ACCESS DENIED page
-  if (isBrowserRequest(req, ua, accept)) {
+  if (!hasToken && isBrowserRequest(req, ua, accept)) {
     await logAttempt(base44, scriptId, ua, ip, 'browser', true);
     if (scriptId) await incrementBlocked(base44, scriptId);
     return new Response(buildBrowserBlockPage(), {
