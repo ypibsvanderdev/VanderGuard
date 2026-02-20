@@ -61,8 +61,10 @@ Deno.serve(async (req) => {
 
     const accessToken = await getFirebaseStorageToken();
 
-    // bucket should be just e.g. "vander--hub.firebasestorage.app"
-    const bucket = Deno.env.get("FIREBASE_STORAGE_BUCKET");
+    // Firebase Storage bucket: "vander--hub.firebasestorage.app" → use as-is for Google Storage API
+    let bucket = Deno.env.get("FIREBASE_STORAGE_BUCKET");
+    // Strip gs:// if present
+    bucket = bucket.replace(/^gs:\/\//, '');
     const safeFilename = (filename || Date.now()).toString().replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `scripts/${safeFilename}.lua`;
     const encodedPath = encodeURIComponent(path);
