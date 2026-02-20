@@ -18,19 +18,24 @@ function AddFileModal({ repoId, repoName, onClose, onCommitted }) {
     setSaving(true);
     const token = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2, "0")).join("");
 
-    // Always upload content as a file — no size limits this way
-    const blob = new Blob([content], { type: "text/plain" });
-    const uploadFile = new File([blob], fileName.trim() || "script.lua", { type: "text/plain" });
-    const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
-    const contentToStore = file_url;
-
-    await base44.entities.Script.create({
+    // Create the script record first to get an ID
+    const newScript = await base44.entities.Script.create({
       name: fileName.trim(),
-      content: contentToStore,
+      content: "",
       repo_id: repoId,
       is_loadstring: false,
       loadstring_token: token,
     });
+
+    // Upload content to Firebase RTDB using the script's ID
+    const { data: uploadData } = await base44.functions.invoke('uploadScript', {
+      content,
+      filename: fileName.trim(),
+      scriptId: newScript.id,
+    });
+    const contentToStore = uploadData.file_url;
+
+    await base44.entities.Script.update(newScript.id, { content: contentToStore });
     setSaving(false);
     onCommitted();
     onClose();
