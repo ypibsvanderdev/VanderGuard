@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
   }
 
   // LAYER 2: curl/wget/python/tool → 500KB garbage Lua + delay
-  if (isToolRequest(ua)) {
+  if (!hasToken && isToolRequest(ua)) {
     await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
     if (scriptId) await incrementBlocked(base44, scriptId);
     await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 700)));
