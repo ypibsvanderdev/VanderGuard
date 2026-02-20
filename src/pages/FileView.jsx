@@ -191,7 +191,7 @@ export default function FileView() {
         {/* Code viewer / editor */}
         <div className="border border-[#30363d] rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-[#30363d]">
-            <span className="text-xs text-gray-500">{lines.length} lines {lines.length > MAX_PREVIEW_LINES && <span className="text-yellow-500">(showing first {MAX_PREVIEW_LINES})</span>}</span>
+            <span className="text-xs text-gray-500">{lines.length} lines</span>
             {isEditing && (
               <div className="flex gap-2">
                 <button onClick={() => setIsEditing(false)} className="text-xs text-gray-500 hover:text-white px-3 py-1 border border-[#30363d] rounded-lg">Cancel</button>
