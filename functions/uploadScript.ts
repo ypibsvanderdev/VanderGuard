@@ -61,20 +61,15 @@ Deno.serve(async (req) => {
 
     const accessToken = await getFirebaseStorageToken();
 
-    // Firebase Storage bucket: "vander--hub.firebasestorage.app" → use as-is for Google Storage API
-    let bucket = Deno.env.get("FIREBASE_STORAGE_BUCKET");
-    // Strip gs:// if present
-    bucket = bucket.replace(/^gs:\/\//, '');
     const safeFilename = (filename || Date.now()).toString().replace(/[^a-zA-Z0-9._-]/g, '_');
-    const path = `scripts/${safeFilename}.lua`;
-    const encodedPath = encodeURIComponent(path);
+    const objectPath = `scripts/${safeFilename}.lua`;
+    const encodedPath = encodeURIComponent(objectPath);
 
-    // Firebase Storage REST API upload
-    const projectId = Deno.env.get("FIREBASE_PROJECT_ID");
-    // Try both bucket formats
-    console.log("Using bucket:", bucket);
+    // Use the bucket from secrets (e.g. "vander--hub.firebasestorage.app")
+    const bucket = Deno.env.get("FIREBASE_STORAGE_BUCKET").replace(/^gs:\/\//, '');
+
     const uploadRes = await fetch(
-      `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?name=${encodedPath}`,
+      `https://storage.googleapis.com/upload/storage/v1/b/${bucket}/o?uploadType=media&name=${encodedPath}`,
       {
         method: "POST",
         headers: {
@@ -85,13 +80,28 @@ Deno.serve(async (req) => {
       }
     );
 
-    const uploadBody = await uploadRes.text();
-    console.log("Upload status:", uploadRes.status, "body:", uploadBody.substring(0, 500));
     if (!uploadRes.ok) {
-      return Response.json({ error: "Upload failed", detail: uploadBody }, { status: 500 });
+      const err = await uploadRes.text();
+      console.error("Firebase upload error:", err);
+      return Response.json({ error: "Upload failed", detail: err }, { status: 500 });
     }
 
-    const file_url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media`;
+    // Make the object publicly readable
+    await fetch(
+      `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodedPath}/iam`,
+      {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bindings: [{ role: "roles/storage.objectViewer", members: ["allUsers"] }]
+        }),
+      }
+    ).catch(() => {});
+
+    const file_url = `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodedPath}?alt=media`;
     return Response.json({ file_url });
   } catch (error) {
     console.error("uploadScript error:", error.message);
