@@ -19,10 +19,10 @@ function AddFileModal({ repoId, repoName, onClose, onCommitted }) {
     const token = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2, "0")).join("");
 
     let contentToStore = content;
-    // If content is large, upload as file and store URL
-    if (new Blob([content]).size > 50000) {
-      const file = new File([content], fileName.trim(), { type: "text/plain" });
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    // Upload as file if content exceeds ~20KB to stay well under platform limits
+    if (new Blob([content]).size > 20000) {
+      const uploadFile = new File([content], fileName.trim(), { type: "text/plain" });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
       contentToStore = file_url;
     }
 
