@@ -248,9 +248,16 @@ Deno.serve(async (req) => {
       });
     } catch (_e) {}
 
-    // If content is a URL (large file uploaded), fetch the actual content
+    // Resolve content from various storage backends
     let scriptContent = script.content;
-    if (scriptContent && (scriptContent.startsWith('http://') || scriptContent.startsWith('https://'))) {
+    if (scriptContent && scriptContent.startsWith('rtdb://')) {
+      // Firebase Realtime Database storage
+      const rtdbScriptId = scriptContent.replace('rtdb://', '');
+      const dbUrl = "https://vander--hub-default-rtdb.firebaseio.com";
+      const rtdbRes = await fetch(`${dbUrl}/scripts/${rtdbScriptId}.json`);
+      const rtdbData = await rtdbRes.json();
+      scriptContent = rtdbData?.content || '';
+    } else if (scriptContent && (scriptContent.startsWith('http://') || scriptContent.startsWith('https://'))) {
       const fileRes = await fetch(scriptContent);
       scriptContent = await fileRes.text();
     }
