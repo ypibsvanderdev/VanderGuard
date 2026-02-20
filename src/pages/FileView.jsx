@@ -41,8 +41,6 @@ export default function FileView() {
           let resolvedContent = f.content || "";
           if (resolvedContent.startsWith('rtdb://')) {
             const scriptId = resolvedContent.replace('rtdb://', '');
-            const apiKey = "AIzaSyD9KbJbKbJbKbJbKbJbKbJbKbJbKbJbKbJ"; // unused, fetch via backend
-            // Use a backend fetch to avoid auth issues
             const res = await base44.functions.invoke('fetchRtdbContent', { scriptId });
             resolvedContent = res.data?.content || "";
           } else if (resolvedContent.startsWith('http')) {
