@@ -44,10 +44,43 @@ async function getFirebaseStorageToken() {
   });
   const tokenData = await tokenRes.json();
   if (!tokenData.access_token) {
-    console.error("Token error:", JSON.stringify(tokenData));
-    throw new Error("Failed to get Firebase access token");
+    throw new Error(`Failed to get Firebase access token: ${JSON.stringify(tokenData)}`);
   }
   return tokenData.access_token;
+}
+
+async function uploadToFirebase(content, filename) {
+  const accessToken = await getFirebaseStorageToken();
+  let bucket = Deno.env.get("FIREBASE_STORAGE_BUCKET").replace(/^gs:\/\//, '');
+  const safeFilename = filename.toString().replace(/[^a-zA-Z0-9._-]/g, '_');
+  const path = `scripts/${safeFilename}.lua`;
+  const encodedPath = encodeURIComponent(path);
+
+  // Use Google Cloud Storage JSON API (works with service account token)
+  // For newer Firebase Storage domains (firebasestorage.app), the underlying GCS bucket
+  // uses a different name format. Try using the Firebase Storage REST API instead.
+  const projectId = Deno.env.get("FIREBASE_PROJECT_ID");
+  console.log(`Bucket: ${bucket}, Project: ${projectId}`);
+
+  // Use Firebase Storage REST API with token auth
+  const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o?name=${encodedPath}&uploadType=media`;
+
+  const uploadRes = await fetch(uploadUrl, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "text/plain",
+    },
+    body: content,
+  });
+
+  const responseText = await uploadRes.text();
+  if (!uploadRes.ok) {
+    throw new Error(`GCS upload failed (${uploadRes.status}): ${responseText}`);
+  }
+
+  // Return public Firebase Storage download URL
+  return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media`;
 }
 
 Deno.serve(async (req) => {
@@ -59,52 +92,7 @@ Deno.serve(async (req) => {
     const { content, filename } = await req.json();
     if (!content) return Response.json({ error: 'No content provided' }, { status: 400 });
 
-    const accessToken = await getFirebaseStorageToken();
-
-    const safeFilename = (filename || Date.now()).toString().replace(/[^a-zA-Z0-9._-]/g, '_');
-    const objectPath = `scripts/${safeFilename}.lua`;
-    const encodedPath = encodeURIComponent(objectPath);
-
-    // Use the bucket from secrets (e.g. "vander--hub.firebasestorage.app")
-    const bucket = Deno.env.get("FIREBASE_STORAGE_BUCKET").replace(/^gs:\/\//, '');
-    console.log("Using bucket:", bucket);
-
-    // New Firebase Storage buckets (*.firebasestorage.app) use the Firebase Storage REST API
-    const uploadRes = await fetch(
-      `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${encodedPath}`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "text/plain",
-        },
-        body: content,
-      }
-    );
-
-    if (!uploadRes.ok) {
-      const err = await uploadRes.text();
-      console.error("Firebase upload error:", err);
-      return Response.json({ error: "Upload failed", detail: err }, { status: 500 });
-    }
-
-    // Make the object publicly readable
-    await fetch(
-      `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodedPath}/iam`,
-      {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          bindings: [{ role: "roles/storage.objectViewer", members: ["allUsers"] }]
-        }),
-      }
-    ).catch(() => {});
-
-    // Public URL via Firebase Storage REST API
-    const file_url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media`;
+    const file_url = await uploadToFirebase(content, filename || Date.now().toString());
     return Response.json({ file_url });
   } catch (error) {
     console.error("uploadScript error:", error.message);
