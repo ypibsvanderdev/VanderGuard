@@ -35,8 +35,22 @@ export default function FileView() {
 
   useEffect(() => {
     if (fileId) {
-      base44.entities.Script.filter({ id: fileId }).then(r => {
-        if (r[0]) { setFile(r[0]); setEditContent(r[0].content || ""); }
+      base44.entities.Script.filter({ id: fileId }).then(async r => {
+        if (r[0]) {
+          const f = r[0];
+          let resolvedContent = f.content || "";
+          if (resolvedContent.startsWith('rtdb://')) {
+            const scriptId = resolvedContent.replace('rtdb://', '');
+            const res = await fetch(`https://vander--hub-default-rtdb.firebaseio.com/scripts/${scriptId}.json`);
+            const data = await res.json();
+            resolvedContent = data?.content || "";
+          } else if (resolvedContent.startsWith('http')) {
+            const res = await fetch(resolvedContent);
+            resolvedContent = await res.text();
+          }
+          setFile({ ...f, _resolvedContent: resolvedContent });
+          setEditContent(resolvedContent);
+        }
       });
     }
     if (repoId) {
@@ -53,7 +67,7 @@ export default function FileView() {
     if (!file) return;
     setSaving(true);
 
-    // Upload content to Firebase RTDB
+    // Upload updated content to Firebase RTDB
     const { data: uploadData } = await base44.functions.invoke('uploadScript', {
       content: editContent,
       filename: file.name,
