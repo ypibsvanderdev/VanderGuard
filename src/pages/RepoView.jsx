@@ -23,7 +23,8 @@ function AddFileModal({ repoId, repoName, onClose, onCommitted }) {
       name: fileName.trim(),
       content: "",
       repo_id: repoId,
-      is_loadstring: false,
+      is_loadstring: true,
+      is_active: true,
       loadstring_token: token,
     });
 
