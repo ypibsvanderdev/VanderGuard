@@ -105,7 +105,7 @@ export default function Access() {
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
             <Shield className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="font-bold text-white">Vander Hub</span>
+          <span className="font-bold text-white">Vander Secure Hub</span>
           <span className="hidden sm:inline text-[10px] text-cyan-400 font-mono bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-full">VSG v4.2</span>
         </div>
         <div className="flex items-center gap-3">
