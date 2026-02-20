@@ -52,9 +52,17 @@ export default function FileView() {
   const handleSave = async () => {
     if (!file) return;
     setSaving(true);
-    // Only send the content field to avoid large payload issues
-    await base44.entities.Script.update(file.id, { content: editContent });
-    setFile(prev => ({ ...prev, content: editContent }));
+
+    let contentToStore = editContent;
+    // If content is large, upload as file and store the URL
+    if (new Blob([editContent]).size > 50000) {
+      const uploadFile = new File([editContent], file.name, { type: "text/plain" });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
+      contentToStore = file_url;
+    }
+
+    await base44.entities.Script.update(file.id, { content: contentToStore });
+    setFile(prev => ({ ...prev, content: contentToStore }));
     setSaving(false);
     setIsEditing(false);
   };
