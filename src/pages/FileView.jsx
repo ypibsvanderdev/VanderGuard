@@ -52,6 +52,7 @@ export default function FileView() {
   const handleSave = async () => {
     if (!file) return;
     setSaving(true);
+    // Only send the content field to avoid large payload issues
     await base44.entities.Script.update(file.id, { content: editContent });
     setFile(prev => ({ ...prev, content: editContent }));
     setSaving(false);
