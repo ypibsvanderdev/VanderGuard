@@ -72,6 +72,7 @@ export default function FileView() {
   };
 
   const lines = (file?.content || "").split("\n");
+  const MAX_PREVIEW_LINES = 500;
 
   if (!user || !file) return (
     <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
