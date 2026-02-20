@@ -54,7 +54,7 @@ export default function FileView() {
     setSaving(true);
 
     // Always upload content as a file — no size limits this way
-    const uploadFile = new File([editContent], file.name, { type: "text/plain" });
+    const uploadFile = new Blob([editContent], { type: "text/plain" });
     const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
     const contentToStore = file_url;
 
