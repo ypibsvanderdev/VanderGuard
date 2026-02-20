@@ -201,32 +201,23 @@ Deno.serve(async (req) => {
   // If valid-looking token + id present, skip UA checks — executor requests often spoof browser UAs
   const hasToken = scriptId && token && token.length >= 32;
 
-  // LAYER 1: Browser → styled HTML ACCESS DENIED page
-  if (!hasToken && isBrowserRequest(req, ua, accept)) {
-    await logAttempt(base44, scriptId, ua, ip, 'browser', true);
-    if (scriptId) await incrementBlocked(base44, scriptId);
-    return new Response(buildBrowserBlockPage(), {
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'X-Powered-By': 'VanderHub/4.2',
-        'Cache-Control': 'no-store',
-      },
-    });
-  }
-
-  // LAYER 2: curl/wget/python/tool → 500KB garbage Lua + delay
-  if (!hasToken && isToolRequest(ua)) {
-    await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
-    if (scriptId) await incrementBlocked(base44, scriptId);
-    await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 700)));
-    return new Response(buildGarbagePayload(seed), {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'X-Powered-By': 'VanderHub/4.2',
-        'X-VSG-Status': 'active',
-        'Cache-Control': 'no-store',
-      },
-    });
+  // LAYER 1 & 2: Only block browsers/tools if no valid token present
+  if (!hasToken) {
+    if (isBrowserRequest(req, ua, accept)) {
+      await logAttempt(base44, scriptId, ua, ip, 'browser', true);
+      if (scriptId) await incrementBlocked(base44, scriptId);
+      return new Response(buildBrowserBlockPage(), {
+        headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Powered-By': 'VanderHub/4.2', 'Cache-Control': 'no-store' },
+      });
+    }
+    if (isToolRequest(ua)) {
+      await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
+      if (scriptId) await incrementBlocked(base44, scriptId);
+      await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 700)));
+      return new Response(buildGarbagePayload(seed), {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'X-Powered-By': 'VanderHub/4.2', 'Cache-Control': 'no-store' },
+      });
+    }
   }
 
   // LAYER 3: Missing/invalid token → garbage flood
