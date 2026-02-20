@@ -69,8 +69,10 @@ Deno.serve(async (req) => {
     const path = `scripts/${safeFilename}.lua`;
     const encodedPath = encodeURIComponent(path);
 
+    // For new Firebase Storage (firebasestorage.app), use the Firebase Storage REST API directly
+    const projectId = Deno.env.get("FIREBASE_PROJECT_ID");
     const uploadRes = await fetch(
-      `https://storage.googleapis.com/upload/storage/v1/b/${bucket}/o?uploadType=media&name=${encodedPath}`,
+      `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?name=${encodedPath}`,
       {
         method: "POST",
         headers: {
