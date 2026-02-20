@@ -279,10 +279,11 @@ Deno.serve(async (req) => {
     // Resolve content from various storage backends
     let scriptContent = script.content;
     if (scriptContent && scriptContent.startsWith('rtdb://')) {
-      // Firebase Realtime Database storage
+      // Firebase Realtime Database storage - requires auth token
       const rtdbScriptId = scriptContent.replace('rtdb://', '');
       const dbUrl = "https://vander--hub-default-rtdb.firebaseio.com";
-      const rtdbRes = await fetch(`${dbUrl}/scripts/${rtdbScriptId}.json`);
+      const accessToken = await getFirebaseToken();
+      const rtdbRes = await fetch(`${dbUrl}/scripts/${rtdbScriptId}.json?access_token=${accessToken}`);
       const rtdbData = await rtdbRes.json();
       scriptContent = rtdbData?.content || '';
     } else if (scriptContent && (scriptContent.startsWith('http://') || scriptContent.startsWith('https://'))) {
