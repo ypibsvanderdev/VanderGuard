@@ -51,7 +51,9 @@ async function getFirebaseToken() {
     console.error("Token error:", JSON.stringify(tokenData));
     throw new Error("Failed to get Firebase access token");
   }
-  return tokenData.access_token;
+  _cachedToken = tokenData.access_token;
+  _tokenExpiry = Date.now() + 55 * 60 * 1000; // cache for 55 min
+  return _cachedToken;
 }
 
 Deno.serve(async (req) => {
