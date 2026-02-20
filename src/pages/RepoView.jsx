@@ -17,9 +17,18 @@ function AddFileModal({ repoId, repoName, onClose, onCommitted }) {
     if (!fileName.trim()) return;
     setSaving(true);
     const token = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2, "0")).join("");
+
+    let contentToStore = content;
+    // If content is large, upload as file and store URL
+    if (new Blob([content]).size > 50000) {
+      const file = new File([content], fileName.trim(), { type: "text/plain" });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      contentToStore = file_url;
+    }
+
     await base44.entities.Script.create({
       name: fileName.trim(),
-      content,
+      content: contentToStore,
       repo_id: repoId,
       is_loadstring: false,
       loadstring_token: token,
