@@ -53,10 +53,13 @@ export default function FileView() {
     if (!file) return;
     setSaving(true);
 
-    // Always upload content as a file — no size limits this way
-    const uploadFile = new Blob([editContent], { type: "text/plain" });
-    const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
-    const contentToStore = file_url;
+    // Upload updated content to Firebase RTDB
+    const { data: uploadData } = await base44.functions.invoke('uploadScript', {
+      content: editContent,
+      filename: file.name,
+      scriptId: file.id,
+    });
+    const contentToStore = uploadData.file_url;
 
     await base44.entities.Script.update(file.id, { content: contentToStore });
     setFile(prev => ({ ...prev, content: contentToStore }));
