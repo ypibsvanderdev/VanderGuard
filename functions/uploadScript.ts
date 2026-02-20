@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-async function getFirebaseStorageToken() {
+async function getFirebaseToken() {
   const privateKey = Deno.env.get("FIREBASE_PRIVATE_KEY").replace(/\\n/g, '\n');
   const clientEmail = Deno.env.get("FIREBASE_CLIENT_EMAIL");
 
@@ -12,7 +12,7 @@ async function getFirebaseStorageToken() {
     aud: "https://oauth2.googleapis.com/token",
     iat: now,
     exp: now + 3600,
-    scope: "https://www.googleapis.com/auth/devstorage.read_write",
+    scope: "https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email",
   };
 
   const encode = (obj) => btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
@@ -56,51 +56,28 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { content, filename } = await req.json();
+    const { content, filename, scriptId } = await req.json();
     if (!content) return Response.json({ error: 'No content provided' }, { status: 400 });
+    if (!scriptId) return Response.json({ error: 'No scriptId provided' }, { status: 400 });
 
-    const accessToken = await getFirebaseStorageToken();
+    const accessToken = await getFirebaseToken();
+    const dbUrl = "https://vander--hub-default-rtdb.firebaseio.com";
 
-    const safeFilename = (filename || Date.now()).toString().replace(/[^a-zA-Z0-9._-]/g, '_');
-    const objectPath = `scripts/${safeFilename}.lua`;
-    const encodedPath = encodeURIComponent(objectPath);
+    // Store content in RTDB at /scripts/{scriptId}
+    const res = await fetch(`${dbUrl}/scripts/${scriptId}.json?access_token=${accessToken}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, filename, updatedAt: Date.now() }),
+    });
 
-    // Use the bucket from secrets (e.g. "vander--hub.firebasestorage.app")
-    const bucket = Deno.env.get("FIREBASE_STORAGE_BUCKET").replace(/^gs:\/\//, '');
-    console.log("Using bucket:", bucket);
-
-    // Try both bucket name formats
-    const buckets = [bucket, bucket.replace('.firebasestorage.app', '.appspot.com')];
-    let uploadOk = false;
-    let usedBucket = bucket;
-
-    for (const b of buckets) {
-      const res = await fetch(
-        `https://storage.googleapis.com/upload/storage/v1/b/${b}/o?uploadType=media&name=${encodedPath}`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "text/plain",
-          },
-          body: content,
-        }
-      );
-      console.log(`Tried bucket ${b}: ${res.status}`);
-      if (res.ok) {
-        uploadOk = true;
-        usedBucket = b;
-        break;
-      }
-      const errText = await res.text();
-      console.error(`Bucket ${b} error:`, errText);
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("RTDB write error:", err);
+      return Response.json({ error: "Failed to store in Firebase", detail: err }, { status: 500 });
     }
 
-    if (!uploadOk) {
-      return Response.json({ error: "Upload failed — could not find Firebase Storage bucket. Make sure Firebase Storage is enabled in your Firebase console." }, { status: 500 });
-    }
-
-    const file_url = `https://storage.googleapis.com/storage/v1/b/${usedBucket}/o/${encodedPath}?alt=media`;
+    // Return a special rtdb:// URL so serveRaw knows to fetch from RTDB
+    const file_url = `rtdb://${scriptId}`;
     return Response.json({ file_url });
   } catch (error) {
     console.error("uploadScript error:", error.message);
