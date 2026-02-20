@@ -1,6 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+let _cachedToken = null;
+let _tokenExpiry = 0;
+
 async function getFirebaseToken() {
+  if (_cachedToken && Date.now() < _tokenExpiry) return _cachedToken;
   const privateKey = Deno.env.get("FIREBASE_PRIVATE_KEY").replace(/\\n/g, '\n');
   const clientEmail = Deno.env.get("FIREBASE_CLIENT_EMAIL");
 
