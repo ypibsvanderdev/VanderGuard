@@ -192,12 +192,14 @@ export default function FileView() {
         {/* Code viewer / editor */}
         <div className="border border-[#30363d] rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-[#30363d]">
-            <span className="text-xs text-gray-500">{lines.length} lines</span>
+            <span className="text-xs text-gray-500">{lines.length} lines {lines.length > MAX_PREVIEW_LINES && <span className="text-yellow-500">(showing first {MAX_PREVIEW_LINES})</span>}</span>
             {isEditing && (
               <div className="flex gap-2">
                 <button onClick={() => setIsEditing(false)} className="text-xs text-gray-500 hover:text-white px-3 py-1 border border-[#30363d] rounded-lg">Cancel</button>
-                <button onClick={handleSave} disabled={saving} className="text-xs bg-[#238636] hover:bg-[#2ea043] text-white px-3 py-1 rounded-lg font-semibold">
-                  {saving ? "Saving..." : "Commit changes"}
+                <button onClick={handleSave} disabled={saving} className="text-xs bg-[#238636] hover:bg-[#2ea043] text-white px-3 py-1 rounded-lg font-semibold flex items-center gap-1.5">
+                  {saving ? (
+                    <><div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                  ) : "Commit changes"}
                 </button>
               </div>
             )}
@@ -218,12 +220,19 @@ export default function FileView() {
             <div className="overflow-x-auto">
               <table className="w-full font-mono text-sm">
                 <tbody>
-                  {lines.map((line, i) => (
+                  {lines.slice(0, MAX_PREVIEW_LINES).map((line, i) => (
                     <tr key={i} className="hover:bg-[#161b22]">
                       <td className="text-right pr-4 pl-3 py-0.5 text-xs text-gray-600 select-none w-12 border-r border-[#21262d]">{i + 1}</td>
                       <td className="pl-4 py-0.5 text-[#c9d1d9] whitespace-pre">{line || " "}</td>
                     </tr>
                   ))}
+                  {lines.length > MAX_PREVIEW_LINES && (
+                    <tr>
+                      <td colSpan={2} className="text-center py-3 text-xs text-gray-500 border-t border-[#21262d]">
+                        ... {lines.length - MAX_PREVIEW_LINES} more lines (edit to view full content)
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
