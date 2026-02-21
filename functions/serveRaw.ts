@@ -144,6 +144,10 @@ const BROWSER_UA = [
 ];
 
 function isBrowserRequest(req, ua, accept) {
+  // Immediate block: any browser-like UA is a browser
+  for (const p of BROWSER_UA) { if (p.test(ua)) return true; }
+
+  // Also block by headers/accept
   let score = 0;
   for (const h of BROWSER_HEADERS) { if (req.headers.has(h)) score += 2; }
   if (accept.includes('text/html')) score += 5;
@@ -151,8 +155,7 @@ function isBrowserRequest(req, ua, accept) {
   if (req.headers.has('referer')) score += 3;
   if (req.headers.has('cookie')) score += 2;
   if (req.headers.has('origin')) score += 1;
-  for (const p of BROWSER_UA) { if (p.test(ua)) { score += 4; break; } }
-  return score >= 4;
+  return score >= 3;
 }
 
 function isToolRequest(ua) {
