@@ -12,6 +12,10 @@ export default function Raw() {
   useEffect(() => {
     if (!token && !id) { setNotFound(true); return; }
 
+    // Key gate — must match the shared secret
+    const key = params.get("key");
+    if (key !== "vander2026") { setNotFound(true); return; }
+
     const query = id ? { id } : { loadstring_token: token };
     base44.entities.Script.filter(query).then(r => {
       if (r[0] && r[0].is_active !== false) {
