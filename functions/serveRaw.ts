@@ -205,16 +205,17 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const seed = Date.now() % 99999;
 
-  // LAYER 1: Shared secret must be present and correct — this is the primary gate.
-  // Anyone without the key (browsers, scrapers, curious people) gets a browser block or garbage.
+  // BLOCK BROWSERS FIRST — regardless of key, no browser ever gets the script
+  if (isBrowserRequest(req, ua, accept)) {
+    await logAttempt(base44, scriptId, ua, ip, 'browser', true);
+    if (scriptId) await incrementBlocked(base44, scriptId);
+    return new Response(buildBrowserBlockPage(), {
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Powered-By': 'VanderHub/4.2', 'Cache-Control': 'no-store' },
+    });
+  }
+
+  // LAYER 1: Shared secret must be present and correct
   if (key !== SHARED_SECRET) {
-    if (isBrowserRequest(req, ua, accept)) {
-      await logAttempt(base44, scriptId, ua, ip, 'browser', true);
-      if (scriptId) await incrementBlocked(base44, scriptId);
-      return new Response(buildBrowserBlockPage(), {
-        headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Powered-By': 'VanderHub/4.2', 'Cache-Control': 'no-store' },
-      });
-    }
     await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
     if (scriptId) await incrementBlocked(base44, scriptId);
     await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 700)));
