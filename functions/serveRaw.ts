@@ -184,10 +184,14 @@ async function incrementBlocked(base44Client, scriptId) {
   } catch (_e) {}
 }
 
+// The shared secret appended to every loadstring URL — must match exactly
+const SHARED_SECRET = Deno.env.get("SERVE_SECRET") || "vander2026";
+
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   const scriptId = url.searchParams.get('id');
   const token = url.searchParams.get('t');
+  const key = url.searchParams.get('key'); // shared secret gate
 
   const ua = req.headers.get('user-agent') || '';
   const accept = req.headers.get('accept') || '';
@@ -198,23 +202,9 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const seed = Date.now() % 99999;
 
-  const hasToken = scriptId && token && token.length >= 32;
-
-  // ROBLOX CHECK: if token is present, require Roblox-specific headers
-  // Roblox HttpService always sends "Roblox-Id" header — regular HTTP clients don't
-  const robloxId = req.headers.get('roblox-id') || req.headers.get('exploitid') || req.headers.get('x-roblox');
-  if (hasToken && !robloxId) {
-    // Has token but not coming from Roblox → serve garbage
-    await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
-    if (scriptId) await incrementBlocked(base44, scriptId);
-    await new Promise(r => setTimeout(r, 400 + Math.floor(Math.random() * 600)));
-    return new Response(buildGarbagePayload(seed), {
-      headers: { 'Content-Type': 'text/plain', 'X-Powered-By': 'VanderHub/4.2' },
-    });
-  }
-
-  // LAYER 1 & 2: Block browsers/tools for tokenless requests
-  if (!hasToken) {
+  // LAYER 1: Shared secret must be present and correct — this is the primary gate.
+  // Anyone without the key (browsers, scrapers, curious people) gets a browser block or garbage.
+  if (key !== SHARED_SECRET) {
     if (isBrowserRequest(req, ua, accept)) {
       await logAttempt(base44, scriptId, ua, ip, 'browser', true);
       if (scriptId) await incrementBlocked(base44, scriptId);
@@ -222,17 +212,15 @@ Deno.serve(async (req) => {
         headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Powered-By': 'VanderHub/4.2', 'Cache-Control': 'no-store' },
       });
     }
-    if (isToolRequest(ua)) {
-      await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
-      if (scriptId) await incrementBlocked(base44, scriptId);
-      await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 700)));
-      return new Response(buildGarbagePayload(seed), {
-        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'X-Powered-By': 'VanderHub/4.2', 'Cache-Control': 'no-store' },
-      });
-    }
+    await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
+    if (scriptId) await incrementBlocked(base44, scriptId);
+    await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 700)));
+    return new Response(buildGarbagePayload(seed), {
+      headers: { 'Content-Type': 'text/plain', 'X-Powered-By': 'VanderHub/4.2', 'Cache-Control': 'no-store' },
+    });
   }
 
-  // LAYER 3: Missing/invalid token → garbage flood
+  // LAYER 2: Token must be present and correct length
   if (!scriptId || !token || token.length < 32) {
     await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
     await new Promise(r => setTimeout(r, 200 + Math.floor(Math.random() * 400)));
