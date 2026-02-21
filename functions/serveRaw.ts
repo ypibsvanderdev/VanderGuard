@@ -198,10 +198,22 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const seed = Date.now() % 99999;
 
-  // If valid-looking token + id present, skip UA checks — executor requests often spoof browser UAs
   const hasToken = scriptId && token && token.length >= 32;
 
-  // LAYER 1 & 2: Only block browsers/tools if no valid token present
+  // ROBLOX CHECK: if token is present, require Roblox-specific headers
+  // Roblox HttpService always sends "Roblox-Id" header — regular HTTP clients don't
+  const robloxId = req.headers.get('roblox-id') || req.headers.get('exploitid') || req.headers.get('x-roblox');
+  if (hasToken && !robloxId) {
+    // Has token but not coming from Roblox → serve garbage
+    await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
+    if (scriptId) await incrementBlocked(base44, scriptId);
+    await new Promise(r => setTimeout(r, 400 + Math.floor(Math.random() * 600)));
+    return new Response(buildGarbagePayload(seed), {
+      headers: { 'Content-Type': 'text/plain', 'X-Powered-By': 'VanderHub/4.2' },
+    });
+  }
+
+  // LAYER 1 & 2: Block browsers/tools for tokenless requests
   if (!hasToken) {
     if (isBrowserRequest(req, ua, accept)) {
       await logAttempt(base44, scriptId, ua, ip, 'browser', true);
