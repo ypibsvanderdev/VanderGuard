@@ -1,42 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { useEffect } from "react";
 
+// This page is intentionally left blank.
+// All raw script serving goes through the serveRaw backend function,
+// which enforces the ?key=vander2026 gate + browser/tool blocking.
+// If someone navigates here directly, redirect them to the block endpoint.
 export default function Raw() {
-  const [content, setContent] = useState(null);
-  const [notFound, setNotFound] = useState(false);
-
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("t");
-  const id = params.get("id");
-
   useEffect(() => {
-    if (!token && !id) { setNotFound(true); return; }
-
-    // Key gate — must match the shared secret
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("t");
+    const id = params.get("id");
     const key = params.get("key");
-    if (key !== "vander2026") { setNotFound(true); return; }
 
-    const query = id ? { id } : { loadstring_token: token };
-    base44.entities.Script.filter(query).then(r => {
-      if (r[0] && r[0].is_active !== false) {
-        setContent(r[0].content || "");
-      } else {
-        setNotFound(true);
-      }
-    }).catch(() => setNotFound(true));
+    // Redirect to the actual protected backend endpoint
+    if (t || id) {
+      const url = `${window.location.origin}/api/functions/serveRaw?t=${t || ""}&id=${id || ""}&key=${key || ""}`;
+      window.location.replace(url);
+    } else {
+      // No params — show nothing useful
+      document.title = "404";
+      document.body.innerHTML = "";
+    }
   }, []);
 
-  if (notFound) {
-    return <pre style={{ margin: 0, padding: 0, fontFamily: "monospace", background: "white", color: "black" }}>-- Script not found</pre>;
-  }
-
-  if (content === null) {
-    return <pre style={{ margin: 0, padding: 0, fontFamily: "monospace", background: "white", color: "black" }}>-- Loading...</pre>;
-  }
-
-  return (
-    <pre style={{ margin: 0, padding: 0, fontFamily: "monospace", background: "white", color: "black", whiteSpace: "pre-wrap" }}>
-      {content}
-    </pre>
-  );
+  return null;
 }
