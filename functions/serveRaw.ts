@@ -143,37 +143,16 @@ const BROWSER_UA = [
   /opera\//i, /msie/i, /trident\//i, /edg\//i,
 ];
 
-// Roblox executor user-agent patterns — these must NEVER be blocked
-const EXECUTOR_UA = [
-  /roblox/i, /synapse/i, /script-ware/i, /scriptware/i,
-  /krnl/i, /electron/i, /fluxus/i, /hydrogen/i, /arceus/i,
-  /oxygen/i, /sentinel/i, /celery/i, /coco/i, /delta/i,
-  /wave/i, /zorara/i, /evon/i, /trigon/i, /solara/i,
-];
-
-function isExecutorUA(ua) {
-  for (const p of EXECUTOR_UA) { if (p.test(ua)) return true; }
-  return false;
-}
-
 function isBrowserRequest(req, ua, accept) {
-  // Executors are NEVER browsers — whitelist them first
-  if (isExecutorUA(ua)) return false;
+  // sec-fetch-mode is ONLY sent by browsers — strongest signal, instant block
+  if (req.headers.has('sec-fetch-mode')) return true;
+  if (req.headers.has('sec-fetch-dest')) return true;
+  if (req.headers.has('sec-fetch-site')) return true;
 
-  // sec-fetch headers are the most reliable browser signal
-  for (const h of BROWSER_HEADERS) {
-    if (req.headers.has(h)) return true;
-  }
-
-  // text/html accept is a strong browser signal
+  // If accept explicitly wants HTML, it's a browser
   if (accept.includes('text/html') || accept.includes('application/xhtml')) return true;
 
-  // Browser-like UA + referer/cookie combo
-  let score = 0;
-  for (const p of BROWSER_UA) { if (p.test(ua)) { score += 4; break; } }
-  if (req.headers.has('referer')) score += 3;
-  if (req.headers.has('cookie')) score += 2;
-  return score >= 6;
+  return false;
 }
 
 function isToolRequest(ua) {
