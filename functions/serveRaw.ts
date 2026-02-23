@@ -151,13 +151,6 @@ Deno.serve(async (req) => {
 
   // BLOCK KNOWN TOOLS/BOTS — serve garbage
   if (isBlacklisted(ua)) {
-    return new Response(buildGarbagePayload(seed), {
-      headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
-    });
-  }
-
-  // UA MUST MATCH EXECUTOR WHITELIST — anything else gets garbage
-  if (!isWhitelisted(ua)) {
     await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 500)));
     return new Response(buildGarbagePayload(seed), {
       headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
