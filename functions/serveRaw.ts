@@ -138,19 +138,53 @@ const TOOL_UA = [
   /^aiohttp/i, /^requests\//i,
 ];
 
+// Known bot/scraper/Discord UA patterns
 const DISCORD_UA = [
-  /discord/i, /discordbot/i, /discordscraper/i, /discord\.js/i,
-  /discord-fetch/i, /discord-fetcher/i, /eris/i, /oceanic/i,
-  /serenity/i, /^got\//i, /^undici/i, /^node-fetch/i,
-  /^axios/i, /^python/i, /^aiohttp/i, /^requests\//i,
+  /discord/i,
+  /discordbot/i,
+  /discordscraper/i,
+  /discord\.js/i,
+  /discord-fetch/i,
+  /discord-fetcher/i,
+  /^eris/i,
+  /^oceanic/i,
+  /^serenity/i,
+  /^got\//i,
+  /^undici\//i,
+  /^node-fetch/i,
+  /^axios\//i,
+  /^python/i,
+  /^aiohttp/i,
+  /^requests\//i,
+  /^java\//i,
+  /^okhttp/i,
+  /^ruby/i,
+  /^go-http/i,
+  /^wget\//i,
+  /^curl\//i,
+  /^libwww/i,
+  /bot\b/i,
+  /scraper/i,
+  /spider/i,
 ];
 
 function isDiscordBot(ua, req) {
+  // Empty UA = bot
+  if (!ua || ua.trim() === '') return true;
+
+  // UA pattern match
   for (const p of DISCORD_UA) { if (p.test(ua)) return true; }
+
+  // No browser fingerprint headers at all + bare accept = bot
   const accept = req.headers.get('accept') || '';
-  const hasNoBrowserSignals = !req.headers.has('sec-fetch-mode') && !req.headers.has('sec-ch-ua');
-  const acceptStar = accept === '*/*' || accept === '';
-  if (acceptStar && hasNoBrowserSignals && ua.length < 80) return true;
+  const hasBrowserSignal = req.headers.has('sec-fetch-mode') ||
+    req.headers.has('sec-fetch-dest') ||
+    req.headers.has('sec-ch-ua') ||
+    req.headers.has('upgrade-insecure-requests');
+  const bareAccept = accept === '*/*' || accept === '' || accept === 'text/plain';
+
+  if (!hasBrowserSignal && bareAccept) return true;
+
   return false;
 }
 
