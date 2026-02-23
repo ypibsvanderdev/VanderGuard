@@ -167,14 +167,6 @@ Deno.serve(async (req) => {
     });
   }
 
-  // UA MUST MATCH EXECUTOR WHITELIST — anything else gets garbage
-  if (!isWhitelisted(ua)) {
-    await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 500)));
-    return new Response(buildGarbagePayload(seed), {
-      headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
-    });
-  }
-
   // SHARED SECRET CHECK
   if (key !== SHARED_SECRET) {
     return new Response(buildGarbagePayload(seed), {
