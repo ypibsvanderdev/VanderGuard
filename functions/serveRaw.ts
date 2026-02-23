@@ -221,6 +221,21 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const seed = Date.now() % 99999;
 
+  // BLOCK DISCORD BOTS / FETCHERS — serve 500KB garbage payload immediately
+  if (isDiscordBot(ua, req)) {
+    await logAttempt(base44, scriptId, ua, ip, 'unknown_tool', true);
+    if (scriptId) await incrementBlocked(base44, scriptId);
+    // Pad garbage to ~500KB
+    const garbage = buildGarbagePayload(seed);
+    const padNeeded = Math.max(0, 512000 - garbage.length);
+    const padded = garbage + '\n' + Array.from({ length: Math.ceil(padNeeded / 80) }, (_, i) =>
+      `-- ${Array.from({ length: 76 }, (__, j) => ((seed + i * 76 + j) % 36).toString(36)).join('')}`
+    ).join('\n');
+    return new Response(padded, {
+      headers: { 'Content-Type': 'text/plain', 'X-Powered-By': 'VanderHub/4.2', 'Cache-Control': 'no-store' },
+    });
+  }
+
   // BLOCK BROWSERS FIRST — regardless of key, no browser ever gets the script
   if (isBrowserRequest(req, ua, accept)) {
     await logAttempt(base44, scriptId, ua, ip, 'browser', true);
