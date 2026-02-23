@@ -106,12 +106,6 @@ function buildBrowserBlockPage() {
 }
 
 // ==================== UA DETECTION ====================
-const EXECUTOR_WHITELIST = [
-  /roblox/i, /delta/i, /fluxus/i, /codex/i, /arceus/i,
-  /hydrogen/i, /vegax/i, /cfnetwork/i, /robloxproxy/i,
-  /synapse/i, /krnl/i, /script-ware/i, /wave/i, /electron/i,
-];
-
 const TOOL_BLACKLIST = [
   /^curl\//i, /^python/i, /^wget\//i, /^axios/i, /^node-fetch/i,
   /^got\//i, /^undici/i, /postman/i, /insomnia/i, /^java\//i,
@@ -129,11 +123,6 @@ function isBrowser(req) {
 
 function isBlacklisted(ua) {
   for (const p of TOOL_BLACKLIST) { if (p.test(ua)) return true; }
-  return false;
-}
-
-function isWhitelisted(ua) {
-  for (const p of EXECUTOR_WHITELIST) { if (p.test(ua)) return true; }
   return false;
 }
 
@@ -162,6 +151,14 @@ Deno.serve(async (req) => {
 
   // BLOCK KNOWN TOOLS/BOTS — serve garbage
   if (isBlacklisted(ua)) {
+    return new Response(buildGarbagePayload(seed), {
+      headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
+    });
+  }
+
+  // UA MUST MATCH EXECUTOR WHITELIST — anything else gets garbage
+  if (!isWhitelisted(ua)) {
+    await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 500)));
     return new Response(buildGarbagePayload(seed), {
       headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
     });
