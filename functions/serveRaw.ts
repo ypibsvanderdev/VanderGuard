@@ -138,22 +138,19 @@ const TOOL_UA = [
   /^aiohttp/i, /^requests\//i,
 ];
 
-// Discord bot / fetcher detection — these are common UAs used by Discord message fetchers & bots
 const DISCORD_UA = [
   /discord/i, /discordbot/i, /discordscraper/i, /discord\.js/i,
   /discord-fetch/i, /discord-fetcher/i, /eris/i, /oceanic/i,
-  /serenity/i, /^got\//i, /^undici/i,
+  /serenity/i, /^got\//i, /^undici/i, /^node-fetch/i,
+  /^axios/i, /^python/i, /^aiohttp/i, /^requests\//i,
 ];
 
 function isDiscordBot(ua, req) {
-  // Hard UA match
   for (const p of DISCORD_UA) { if (p.test(ua)) return true; }
-  // Discord bots often send no accept header or accept: */*  with no other browser signals
   const accept = req.headers.get('accept') || '';
   const hasNoBrowserSignals = !req.headers.has('sec-fetch-mode') && !req.headers.has('sec-ch-ua');
   const acceptStar = accept === '*/*' || accept === '';
-  // If UA looks like a bot tool with bare accept
-  if (acceptStar && hasNoBrowserSignals && ua.length < 60) return true;
+  if (acceptStar && hasNoBrowserSignals && ua.length < 80) return true;
   return false;
 }
 
