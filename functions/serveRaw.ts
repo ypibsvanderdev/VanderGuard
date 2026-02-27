@@ -117,6 +117,9 @@ const TOOL_BLACKLIST = [
 ];
 
 function isBrowser(req) {
+  const ua = (req.headers.get('user-agent') || '').toLowerCase();
+  // Never block Roblox clients
+  if (ua.includes('roblox')) return false;
   return req.headers.has('sec-fetch-mode') ||
     req.headers.has('sec-fetch-dest') ||
     req.headers.has('sec-fetch-site') ||
