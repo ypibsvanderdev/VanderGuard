@@ -127,6 +127,8 @@ function isBrowser(req) {
 }
 
 function isBlacklisted(ua) {
+  // Never block Roblox clients
+  if (ua.toLowerCase().includes('roblox')) return false;
   for (const p of TOOL_BLACKLIST) { if (p.test(ua)) return true; }
   return false;
 }
