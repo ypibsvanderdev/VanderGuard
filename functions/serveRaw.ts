@@ -151,26 +151,20 @@ Deno.serve(async (req) => {
     });
   }
 
-  // BLOCK KNOWN TOOLS/BOTS — serve garbage
+  // BLOCK KNOWN TOOLS/BOTS — serve 512KB garbage dump
   if (isBlacklisted(ua)) {
-    await new Promise(r => setTimeout(r, 300 + Math.floor(Math.random() * 500)));
-    return new Response(buildGarbagePayload(seed), {
-      headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
-    });
+    console.warn(`[VANDER-TRAP] Bot detected: ${ua} — sending 512KB garbage`);
+    return buildGarbageResponse();
   }
 
   // SHARED SECRET CHECK
   if (key !== SHARED_SECRET) {
-    return new Response(buildGarbagePayload(seed), {
-      headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
-    });
+    return buildGarbageResponse();
   }
 
   // TOKEN + ID MUST BE PRESENT
   if (!scriptId || !token || token.length < 32) {
-    return new Response(buildGarbagePayload(seed), {
-      headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
-    });
+    return buildGarbageResponse();
   }
 
   // DB VALIDATION
