@@ -173,16 +173,12 @@ Deno.serve(async (req) => {
     const script = scripts[0];
 
     if (!script) {
-      return new Response(buildGarbagePayload(seed), {
-        headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
-      });
+      return buildGarbageResponse();
     }
 
     if (script.loadstring_token !== token) {
       await new Promise(r => setTimeout(r, 800 + Math.floor(Math.random() * 1200)));
-      return new Response(buildGarbagePayload(seed + 1), {
-        headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
-      });
+      return buildGarbageResponse();
     }
 
     if (!script.is_loadstring || !script.is_active) {
