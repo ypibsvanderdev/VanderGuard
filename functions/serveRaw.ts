@@ -223,8 +223,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('serveRaw error:', error.message);
-    return new Response(buildGarbagePayload(seed), {
-      headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
-    });
+    return buildGarbageResponse();
   }
 });
