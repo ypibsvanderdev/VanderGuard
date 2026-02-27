@@ -81,21 +81,23 @@ function obfuscateLua(source) {
   return finalOutput;
 }
 
-// ==================== GARBAGE PAYLOAD ====================
-function buildGarbagePayload(seed) {
-  const r = (n) => Math.abs(Math.sin(seed * n) * 99999 | 0);
-  const fakeVars = Array.from({ length: 80 }, (_, i) =>
-    `local _${r(i+1).toString(36)} = ${i%3===0 ? `"${(seed*i).toString(36)}"` : i%3===1 ? r(i+7) : 'nil'};`
-  ).join('\n');
-  const fakeFuncs = Array.from({ length: 40 }, (_, i) => `
-local function __vsg_${r(i+200).toString(36)}(a,b,c)
-  local _x=a or ${r(i+1)} local _y=b and tostring(b) or "${r(i+2).toString(36)}"
-  if _x>${r(i+3)} then return _y end return c or _x*${r(i+4)%100}
-end`).join('\n');
-  const fakeTable = `local __vsg_data={\n` +
-    Array.from({length:1000},(_,i)=>`  [${i+1}]="${Array.from({length:16},(_,j)=>r(i*16+j+seed).toString(16).padStart(2,'0')).join('')}",`).join('\n') +
-    `\n}`;
-  return `-- VanderHub Secure Gate v4.2\n-- Status: UNAUTHORIZED\n\n${fakeVars}\n${fakeFuncs}\n${fakeTable}\n-- [VSG] Session: INVALIDATED`;
+// ==================== GARBAGE PAYLOAD (512KB random binary) ====================
+// Pre-generate once at cold start, reuse for all blocked requests
+const TRASH_DATA = (() => {
+  const buf = new Uint8Array(512 * 1024);
+  crypto.getRandomValues(buf);
+  return buf;
+})();
+
+function buildGarbageResponse() {
+  return new Response(TRASH_DATA, {
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': String(TRASH_DATA.length),
+      'X-Shield-Action': 'Intercepted',
+      'Cache-Control': 'no-store',
+    },
+  });
 }
 
 // HTML block page for browsers
