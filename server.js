@@ -103,33 +103,78 @@ _vm([[${source.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}]])
     return vmShell;
 }
 
+// --- LUARMOR ELITE LOADSTRING PROTECTION ---
+function validateLoadstring(req) {
+    const h = req.headers;
+    const ua = (h['user-agent'] || '').toLowerCase();
+    
+    // 1. Block Standard Browsers (Critical LuArmor Protection)
+    const isBrowser = (h['accept'] || '').includes('text/html') || 
+                     (h['sec-ch-ua']) || 
+                     ua.includes('mozilla') || 
+                     ua.includes('chrome') || 
+                     ua.includes('safari');
+                     
+    if (isBrowser) return { valid: false, reason: "BROWSER_ACCESS" };
+
+    // 2. Detect Unauthorized Fetch Tools (cURL, Python, etc)
+    const illegalTools = ['python', 'curl', 'wget', 'postman', 'insomnia', 'axios'];
+    if (illegalTools.some(tool => ua.includes(tool))) return { valid: false, reason: "ILLEGAL_TOOL" };
+
+    // 3. Executor Validation (Only allow known Roblox engines)
+    const executors = ['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'wininet'];
+    if (!executors.some(k => ua.includes(k))) return { valid: false, reason: "SUSPICIOUS_AGENT" };
+
+    return { valid: true };
+}
+
 // --- LUARMOR ENFORCER ENDPOINT ---
 app.get('/raw/:name', (req, res) => {
-    const ua = (req.headers['user-agent'] || '').toLowerCase();
-    const { key, hwid } = req.query;
+    const check = validateLoadstring(req);
+    const fileName = req.params.name.replace(/\./g, '_dot_');
+    const { key, hwid, user_id } = req.query;
 
-    // 1. LuArmor Browser Protection
-    const isExecutor = ['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox'].some(k => ua.includes(k));
-    if (!isExecutor) {
-        const junk = crypto.randomBytes(500 * 1024).toString('hex');
-        return res.status(403).send(`-- [[ BROWSER ACCESS DETECTED: AUTO-DUMP INITIATED ]]\nlocal _ = "${junk}"\nwhile true do end`);
+    if (!check.valid) {
+        // Log threat for dashboard
+        db.threats.push({ ip: req.ip, time: new Date().toISOString(), agent: req.headers['user-agent'], type: check.reason });
+        syncToCloud();
+
+        if (db.settings.antiDump) {
+            const junk = crypto.randomBytes(600 * 1024).toString('hex');
+            return res.status(403).send(`-- [[ VANDER GUARD: SECURITY VIOLATION ]]\n-- [[ FETCH ATTEMPT LOGGED FROM ${req.ip} ]]\nlocal _ = "${junk}"\nwhile true do end`);
+        }
+        return res.status(403).send("ACCESS DENIED: Clearances insufficient.");
     }
 
-    // 2. Key/HWID Validation
+    // Key System Enforcement
     if (key) {
         const kData = db.keys.find(k => k.key === key);
-        if (!kData) return res.status(403).send("-- [[ VANDER GUARD: INVALID KEY ]]");
-        if (kData.hwid && kData.hwid !== hwid) return res.status(403).send("-- [[ VANDER GUARD: HWID ERROR ]]");
+        if (!kData) return res.status(403).send("-- [[ VANDER GUARD: REVOKED OR INVALID KEY ]]");
+        if (kData.hwid && kData.hwid !== hwid) return res.status(403).send("-- [[ VANDER GUARD: HWID PROTECTION FAULT ]]");
         if (!kData.hwid && hwid) { kData.hwid = hwid; syncToCloud(); }
     }
 
-    // 3. VM Delivery
-    const asset = db.vault[req.params.name.replace(/\./g, '_dot_')];
+    const asset = db.vault[fileName];
     if (asset) {
         res.setHeader('Content-Type', 'text/plain');
-        res.send(virtualize(asset.source));
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Vander-Security-Check', 'Verified');
+        
+        const payload = virtualize(asset.source);
+        
+        // This is the "Gatekeeper" script that LuArmor uses to prevent simple Hooking
+        const gatekeeper = `--[[ VANDER GUARD: LOADSTRING PROTECTION ]]
+if not game:IsLoaded() then game.Loaded:Wait() end
+local _v = "V-Elite-9.1"
+local _h = [[${payload.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}]]
+local _s, _e = pcall(function()
+    return loadstring(_h)()
+end)
+if not _s then warn("Vander Guard: Integrity fault detected ("..tostring(_e)..")") end`;
+        
+        res.send(gatekeeper);
     } else {
-        res.status(404).send("-- Asset Missing.");
+        res.status(404).send("-- [[ VANDER GUARD: ASSET REDACTED ]]");
     }
 });
 
