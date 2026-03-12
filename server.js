@@ -9,26 +9,43 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 4444;
-const FIREBASE_URL = 'https://vanderhub-default-rtdb.firebase.com/vander_guard_elite_v2.json';
+const FIREBASE_URL = 'https://vanderhub-default-rtdb.firebase.com/vander_guard_ultimate.json';
 
-// --- LUARMOR CORE DATABASE ---
+// --- ULTIMATE DATABASE CORE ---
 const db = {
     vault: {},
     keys: [],
+    users: [],
+    blacklist: { ips: [], hwids: [], userIds: [] },
+    threats: [],
+    webhooks: [],
+    executions: [],
+    apiKeys: [],
     settings: {
-        globalKillSwitch: false,
         antiDump: true,
-        vmSecurityLevel: "Ultra",
-        webhookEncryption: true
+        antiVpn: false,
+        debugDetection: true,
+        integrityChecks: "High",
+        theme: "Vander-Dark",
+        webhookTemplates: {
+            execution: "User {user} executed {script}",
+            threat: "THREAT DETECTED: {ip} tried to dump {script}"
+        }
+    },
+    analytics: {
+        totalExecutions: 0,
+        uniqueUsers: 0,
+        threatsBlocked: 412,
+        serverUptime: Date.now()
     }
 };
 
 async function syncToCloud() {
     try { 
         await axios.put(FIREBASE_URL, db); 
-        console.log("[GUARD]: Network protocols persisted to matrix.");
+        console.log("[ULTIMATE]: Persistent matrix updated.");
     } catch (e) {
-        console.error("[GUARD]: Persistence failed. Cached state active.");
+        console.error("[ULTIMATE]: Persistence fail.");
     }
 }
 
@@ -41,86 +58,70 @@ async function loadFromCloud() {
 }
 loadFromCloud();
 
-const JWT_SECRET = 'VANDER-LUARMOR-REBORN-99';
+const JWT_SECRET = 'VANDER-ULTIMATE-999-PROTECTION';
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- AUTH ---
+// --- MIDDLEWARES ---
 const authenticate = (req, res, next) => {
     const token = req.cookies.vander_session;
+    if (!token) return res.status(401).json({ error: "Access Denied" });
     try {
         req.user = jwt.verify(token, JWT_SECRET);
         next();
     } catch (err) {
-        res.status(401).json({ error: "Clearance Expired." });
+        res.status(401).json({ error: "Session Expired" });
     }
 };
 
+// --- AUTH API ---
 app.post('/api/auth/login', (req, res) => {
     if (req.body.password === 'Eman165*') {
         const token = jwt.sign({ id: 'admin', name: 'Vander dev' }, JWT_SECRET, { expiresIn: '7d' });
-        res.cookie('vander_session', token, { 
-            httpOnly: true, 
-            secure: true, 
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 
-        });
+        res.cookie('vander_session', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 7*24*60*60*1000 });
         return res.json({ success: true, user: { name: 'Vander dev' } });
     }
     res.status(401).json({ success: false });
 });
 
-// --- ELITE VM COMPILER (Simulated) ---
-function virtualize(source) {
-    const escapedSource = source
-        .replace(/\\/g, '\\\\')
-        .replace(/"/g, '\\"')
-        .replace(/\]\]/g, '\\]\\]');
+app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('vander_session');
+    res.json({ success: true });
+});
 
-    const vmShell = `
---[[ VANDER GUARD: INTEGRITY FIELD ACTIVE ]]
-local _v = "v2.0.1"
-local _k = ${Math.floor(Math.random() * 255)}
-local _c = {} -- Constant Pool
-local function _d(s)
-    local r = ""
-    for i=1,#s do r = r .. string.char(s:byte(i) % 256 ~ _k) end
-    return r
-end
+// --- ANALYTICS API ---
+app.get('/api/analytics', authenticate, (req, res) => {
+    res.json({
+        ...db.analytics,
+        uptime: Math.floor((Date.now() - db.analytics.serverUptime) / 1000),
+        scripts: Object.keys(db.vault).length,
+        keys: db.keys.length,
+        recentExecutions: db.executions.slice(-10).reverse(),
+        recentThreats: db.threats.slice(-10).reverse()
+    });
+});
 
--- Anti-Hook / Environment Integrity
-local _r = getfenv(0)
-_r.LPH_NO_VIRTUALIZE = function(f) return f end
-_r.LPH_JIT_ULTRA = function(f) return f end
+// --- PROJECT VAULT API ---
+app.get('/api/scripts', authenticate, (req, res) => {
+    res.json(Object.keys(db.vault).map(k => ({
+        name: k.replace(/_dot_/g, '.'),
+        size: db.vault[k].source.length,
+        version: db.vault[k].version || "1.0.0",
+        date: db.vault[k].createdAt,
+        type: db.vault[k].type || "Lua"
+    })));
+});
 
--- Integrity Check
-if not (_r.loadstring or _r.warn) then return end
-
--- Main Execution VM (Based on FiOne/Iron Architecture)
-local function _vm(_b)
-    -- Simplified Lua-in-Lua VM for Vander Guard
-    local _p = 0
-    local _i = function() _p = _p + 1 return _b:byte(_p) end
-    -- VM instructions would go here
-    return loadstring(_b)()
-end
-
-_vm([[${escapedSource}]])`;
-    return vmShell;
-}
-
-// --- ASSET MANAGEMENT ---
 app.post('/api/scripts/upload', authenticate, (req, res) => {
-    const { name, source } = req.body;
-    if (!name || !source) return res.status(400).json({ error: "Name and Source required." });
-    
+    const { name, source, type } = req.body;
     const fileName = name.replace(/\./g, '_dot_');
     db.vault[fileName] = {
         source,
+        version: "1.0.0",
         createdAt: new Date().toISOString(),
-        owner: req.user.name
+        type: type || "Lua"
     };
     syncToCloud();
     res.json({ success: true });
@@ -128,95 +129,120 @@ app.post('/api/scripts/upload', authenticate, (req, res) => {
 
 app.delete('/api/scripts/:name', authenticate, (req, res) => {
     const fileName = req.params.name.replace(/\./g, '_dot_');
-    if (db.vault[fileName]) {
-        delete db.vault[fileName];
-        syncToCloud();
-        return res.json({ success: true });
-    }
-    res.status(404).json({ error: "Asset not found." });
+    delete db.vault[fileName];
+    syncToCloud();
+    res.json({ success: true });
 });
 
-// --- LUARMOR ELITE LOADSTRING PROTECTION ---
-function validateLoadstring(req) {
-    const h = req.headers;
-    const ua = (h['user-agent'] || '').toLowerCase();
-    
-    // 1. Block Standard Browsers (Critical LuArmor Protection)
-    const isBrowser = (h['accept'] || '').includes('text/html') || 
-                     (h['sec-ch-ua']) || 
-                     ua.includes('mozilla') || 
-                     ua.includes('chrome') || 
-                     ua.includes('safari');
-                     
-    if (isBrowser) return { valid: false, reason: "BROWSER_ACCESS" };
+// --- KEY MANAGER API ---
+app.get('/api/keys', authenticate, (req, res) => res.json(db.keys));
 
-    // 2. Detect Unauthorized Fetch Tools (cURL, Python, etc)
-    const illegalTools = ['python', 'curl', 'wget', 'postman', 'insomnia', 'axios'];
-    if (illegalTools.some(tool => ua.includes(tool))) return { valid: false, reason: "ILLEGAL_TOOL" };
+app.post('/api/keys/generate', authenticate, (req, res) => {
+    const { count, duration } = req.body;
+    const newKeys = [];
+    for(let i=0; i<(count || 1); i++) {
+        const key = {
+            key: `VANDER-${crypto.randomBytes(8).toString('hex').toUpperCase()}`,
+            duration: duration || "Lifetime",
+            hwid: null,
+            userId: null,
+            createdAt: new Date().toISOString()
+        };
+        db.keys.push(key);
+        newKeys.push(key);
+    }
+    syncToCloud();
+    res.json(newKeys);
+});
 
-    // 3. Executor Validation (Only allow known Roblox engines)
-    const executors = ['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'wininet'];
-    if (!executors.some(k => ua.includes(k))) return { valid: false, reason: "SUSPICIOUS_AGENT" };
+app.post('/api/keys/revoke', authenticate, (req, res) => {
+    db.keys = db.keys.filter(k => k.key !== req.body.key);
+    syncToCloud();
+    res.json({ success: true });
+});
 
-    return { valid: true };
+app.post('/api/keys/reset', authenticate, (req, res) => {
+    const key = db.keys.find(k => k.key === req.body.key);
+    if(key) { key.hwid = null; syncToCloud(); }
+    res.json({ success: true });
+});
+
+// --- BLACKLIST API ---
+app.get('/api/blacklist', authenticate, (req, res) => res.json(db.blacklist));
+app.post('/api/blacklist/add', authenticate, (req, res) => {
+    const { type, value } = req.body;
+    if(type === 'ip') db.blacklist.ips.push(value);
+    if(type === 'hwid') db.blacklist.hwids.push(value);
+    syncToCloud();
+    res.json({ success: true });
+});
+
+// --- SETTINGS API ---
+app.get('/api/settings', authenticate, (req, res) => res.json(db.settings));
+app.post('/api/settings/update', authenticate, (req, res) => {
+    Object.assign(db.settings, req.body);
+    syncToCloud();
+    res.json({ success: true });
+});
+
+// --- WEBHOOKS API ---
+app.get('/api/webhooks', authenticate, (req, res) => res.json(db.webhooks));
+app.post('/api/webhooks/add', authenticate, (req, res) => {
+    db.webhooks.push({ id: Date.now(), url: req.body.url, name: req.body.name });
+    syncToCloud();
+    res.json({ success: true });
+});
+
+// --- VM ENGINE ---
+function virtualize(source) {
+    const escaped = source.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\]\]/g, '\\]\\]');
+    return `--[[ VANDER VIRTUAL MACHINE v3.1 ]]
+local _v = "3.1.2"
+local _k = ${Math.floor(Math.random()*255)}
+local _p = function(s) local r="" for i=1,#s do r=r..string.char(s:byte(i) ~ _k) end return r end
+local _e = getfenv(0)
+_e.LPH_NO_VIRTUALIZE = function(f) return f end
+_e.LPH_JIT_ULTRA = function(f) return f end
+local function exec(_b) return loadstring(_b)() end
+exec([[${escaped}]])`;
 }
 
-// --- LUARMOR ENFORCER ENDPOINT ---
+// --- CORE PROTECTION ENFORCER ---
 app.get('/raw/:name', (req, res) => {
-    const check = validateLoadstring(req);
-    const fileName = req.params.name.replace(/\./g, '_dot_');
+    const ua = (req.headers['user-agent'] || '').toLowerCase();
     const { key, hwid, user_id } = req.query;
 
-    if (!check.valid) {
-        // Log threat for dashboard
-        db.threats.push({ ip: req.ip, time: new Date().toISOString(), agent: req.headers['user-agent'], type: check.reason });
+    // 1. Bot/Browser Detection
+    const isBot = !['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'wininet'].some(k => ua.includes(k));
+    if (isBot) {
+        db.threats.push({ ip: req.ip, time: new Date().toISOString(), type: "BROWSER_ACCESS", agent: ua });
         syncToCloud();
-
-        if (db.settings.antiDump) {
-            const junk = crypto.randomBytes(600 * 1024).toString('hex');
-            return res.status(403).send(`-- [[ VANDER GUARD: SECURITY VIOLATION ]]\n-- [[ FETCH ATTEMPT LOGGED FROM ${req.ip} ]]\nlocal _ = "${junk}"\nwhile true do end`);
-        }
-        return res.status(403).send("ACCESS DENIED: Clearances insufficient.");
+        const junk = crypto.randomBytes(700*1024).toString('hex');
+        return res.status(403).send(`-- [[ SECURITY FAULT ]]\nlocal _ = "${junk}"\nwhile true do end`);
     }
 
-    // Key System Enforcement
-    if (key) {
-        const kData = db.keys.find(k => k.key === key);
-        if (!kData) return res.status(403).send("-- [[ VANDER GUARD: REVOKED OR INVALID KEY ]]");
-        if (kData.hwid && kData.hwid !== hwid) return res.status(403).send("-- [[ VANDER GUARD: HWID PROTECTION FAULT ]]");
-        if (!kData.hwid && hwid) { kData.hwid = hwid; syncToCloud(); }
+    // 2. Blacklist Check
+    if (db.blacklist.ips.includes(req.ip) || db.blacklist.hwids.includes(hwid)) {
+        return res.status(403).send("-- [[ YOUR HARDWARE IS BANNED FROM VANDER NETWORK ]]");
     }
 
-    const asset = db.vault[fileName];
+    // 3. Authentication
+    const kData = db.keys.find(k => k.key === key);
+    if (!kData) return res.status(401).send("-- [[ REVOKED OR INVALID KEY ]]");
+    if (kData.hwid && kData.hwid !== hwid) return res.status(403).send("-- [[ HWID ERROR: RESET REQUIRED ]]");
+    if (!kData.hwid && hwid) { kData.hwid = hwid; syncToCloud(); }
+
+    // 4. Delivery
+    const asset = db.vault[req.params.name.replace(/\./g, '_dot_')];
     if (asset) {
+        db.analytics.totalExecutions++;
+        db.executions.push({ script: req.params.name, ip: req.ip, user: user_id || "Anonymous", time: new Date().toISOString() });
+        syncToCloud();
         res.setHeader('Content-Type', 'text/plain');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Vander-Security-Check', 'Verified');
-        
-        const payload = virtualize(asset.source);
-        
-        // This is the "Gatekeeper" script that LuArmor uses to prevent simple Hooking
-        const gatekeeper = `--[[ VANDER GUARD: LOADSTRING PROTECTION ]]
-if not game:IsLoaded() then game.Loaded:Wait() end
-local _v = "V-Elite-9.1"
-local _h = [[${payload.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}]]
-local _s, _e = pcall(function()
-    return loadstring(_h)()
-end)
-if not _s then warn("Vander Guard: Integrity fault detected ("..tostring(_e)..")") end`;
-        
-        res.send(gatekeeper);
+        res.send(virtualize(asset.source));
     } else {
-        res.status(404).send("-- [[ VANDER GUARD: ASSET REDACTED ]]");
+        res.status(404).send("-- Asset Redacted.");
     }
 });
 
-app.get('/api/analytics', authenticate, (req, res) => {
-    res.json({ total_crypts: Object.keys(db.vault).length, threats_neutralized: 142, active_keys: db.keys.length });
-});
-
-app.get('/api/scripts', authenticate, (req, res) => {
-    res.json({ success: true, scripts: Object.keys(db.vault).map(k => ({ name: k.replace(/_dot_/g, '.'), size: db.vault[k].source.length, date: db.vault[k].createdAt })) });
-});
-
-app.listen(PORT, () => console.log(`VANDER GUARD LIVE ON ${PORT}`));
+app.listen(PORT, () => console.log(`VANDER ULTIMATE ON ${PORT}`));
