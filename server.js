@@ -24,7 +24,12 @@ const db = {
 };
 
 async function syncToCloud() {
-    try { await axios.put(FIREBASE_URL, db); } catch (e) {}
+    try { 
+        await axios.put(FIREBASE_URL, db); 
+        console.log("[GUARD]: Network protocols persisted to matrix.");
+    } catch (e) {
+        console.error("[GUARD]: Persistence failed. Cached state active.");
+    }
 }
 
 async function loadFromCloud() {
@@ -55,8 +60,13 @@ const authenticate = (req, res, next) => {
 
 app.post('/api/auth/login', (req, res) => {
     if (req.body.password === 'Eman165*') {
-        const token = jwt.sign({ id: 'admin', name: 'Vander dev' }, JWT_SECRET);
-        res.cookie('vander_session', token, { httpOnly: true, secure: true });
+        const token = jwt.sign({ id: 'admin', name: 'Vander dev' }, JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('vander_session', token, { 
+            httpOnly: true, 
+            secure: true, 
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 
+        });
         return res.json({ success: true, user: { name: 'Vander dev' } });
     }
     res.status(401).json({ success: false });
@@ -64,12 +74,11 @@ app.post('/api/auth/login', (req, res) => {
 
 // --- ELITE VM COMPILER (Simulated) ---
 function virtualize(source) {
-    // LuArmor/Luraph logic: 
-    // 1. Encrypt strings into a constant pool
-    // 2. Wrap in a VM shell (FiOne based)
-    // 3. Add integrity checks
-    
-    // This is a professional-grade VM shell template used by high-end protectors
+    const escapedSource = source
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\]\]/g, '\\]\\]');
+
     const vmShell = `
 --[[ VANDER GUARD: INTEGRITY FIELD ACTIVE ]]
 local _v = "v2.0.1"
@@ -98,10 +107,34 @@ local function _vm(_b)
     return loadstring(_b)()
 end
 
-_vm([[${source.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}]])
-    `;
+_vm([[${escapedSource}]])`;
     return vmShell;
 }
+
+// --- ASSET MANAGEMENT ---
+app.post('/api/scripts/upload', authenticate, (req, res) => {
+    const { name, source } = req.body;
+    if (!name || !source) return res.status(400).json({ error: "Name and Source required." });
+    
+    const fileName = name.replace(/\./g, '_dot_');
+    db.vault[fileName] = {
+        source,
+        createdAt: new Date().toISOString(),
+        owner: req.user.name
+    };
+    syncToCloud();
+    res.json({ success: true });
+});
+
+app.delete('/api/scripts/:name', authenticate, (req, res) => {
+    const fileName = req.params.name.replace(/\./g, '_dot_');
+    if (db.vault[fileName]) {
+        delete db.vault[fileName];
+        syncToCloud();
+        return res.json({ success: true });
+    }
+    res.status(404).json({ error: "Asset not found." });
+});
 
 // --- LUARMOR ELITE LOADSTRING PROTECTION ---
 function validateLoadstring(req) {

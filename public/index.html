@@ -163,6 +163,7 @@
 
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-danger { background: var(--danger); }
 
         .badge {
             padding: 4px 8px;
@@ -185,7 +186,7 @@
             padding: 50px; border-radius: 20px; width: 400px; text-align: center;
         }
 
-        input {
+        input, select {
             width: 100%; background: #010409; border: 1px solid var(--border);
             padding: 12px; border-radius: 6px; color: #fff; margin-bottom: 20px;
             outline: none;
@@ -257,7 +258,7 @@
                 </div>
             </header>
 
-            <!-- DASHBOARD -->
+            <!-- DASHBOARD PANEL -->
             <section id="panel-dashboard" class="panel active">
                 <div class="stats">
                     <div class="stat-card">
@@ -284,7 +285,50 @@
                 </div>
             </section>
 
-            <!-- MACROS -->
+            <!-- SCRIPTS PANEL -->
+            <section id="panel-projects" class="panel">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                    <h2 style="margin: 0;">Scripts Vault</h2>
+                    <button class="btn" onclick="openUploadModal()"><i class="fas fa-plus"></i> UPLOAD SCRIPT</button>
+                </div>
+                <div class="card" style="padding: 0;">
+                    <table id="scripts-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Size</th>
+                                <th>Protection</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- KEYS PANEL -->
+            <section id="panel-keys" class="panel">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                    <h2 style="margin: 0;">Key Management</h2>
+                    <button class="btn" onclick="generateKey()"><i class="fas fa-plus"></i> GENERATE KEY</button>
+                </div>
+                <div class="card" style="padding: 0;">
+                    <table id="keys-table">
+                        <thead>
+                            <tr>
+                                <th>Key Signature</th>
+                                <th>HWID Bound</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- MACROS PANEL -->
             <section id="panel-macros" class="panel">
                 <div class="card">
                     <h3>Protection Macros</h3>
@@ -311,52 +355,81 @@
                 </div>
             </section>
 
-            <!-- PROJECTS -->
-            <section id="panel-projects" class="panel">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-                    <h2 style="margin: 0;">Scripts Vault</h2>
-                    <button class="btn"><i class="fas fa-plus"></i> UPLOAD SCRIPT</button>
-                </div>
-
-                <div class="card" style="padding: 0;">
-                    <table id="scripts-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Size</th>
-                                <th>Protection</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Injected -->
-                        </tbody>
-                    </table>
+            <!-- SECURITY PANEL -->
+            <section id="panel-security" class="panel">
+                <div class="card">
+                    <h3>Global Security Configuration</h3>
+                    <div style="margin-bottom: 25px;">
+                        <label>Anti-Dump Pulse</label>
+                        <select id="config-antidump" onchange="updateSettings()">
+                            <option value="true">Matrix Active (700KB Payload)</option>
+                            <option value="false">Disabled (Vulnerable)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Emergency Kill-Switch</label>
+                        <button class="btn btn-danger" style="width: 100%; justify-content: center;" onclick="toggleKillSwitch()">INITIATE GLOBAL SHUTDOWN</button>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
+    <!-- MODALS -->
+    <div id="upload-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h3>Upload New Asset</h3>
+            <label>Asset Filename (e.g. main.lua)</label>
+            <input type="text" id="upload-name" placeholder="script.lua">
+            <label>Lua Source Code</label>
+            <textarea id="upload-source" style="width: 100%; height: 300px; background: #010409; border: 1px solid var(--border); color: #fff; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 12px; margin-bottom: 20px;"></textarea>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="submitUpload()">ENFORCE & UPLOAD</button>
+                <button class="btn btn-outline" onclick="closeUploadModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
     <script>
+        function notify(m) {
+            const t = document.getElementById('toast');
+            t.innerText = m;
+            t.style.display = 'block';
+            t.style.position = 'fixed';
+            t.style.bottom = '20px';
+            t.style.right = '20px';
+            t.style.background = 'var(--card)';
+            t.style.border = '1px solid var(--accent)';
+            t.style.padding = '15px 25px';
+            t.style.borderRadius = '8px';
+            t.style.zIndex = '9999';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
         async function doLogin() {
             const pass = document.getElementById('login-pass').value;
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pass })
-            });
-
-            if (res.ok) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app').style.display = 'flex';
-                loadData();
-            }
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass })
+                });
+                if (res.ok) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                    loadData();
+                } else {
+                    notify("Unauthorized Access Key.");
+                }
+            } catch (e) { notify("Matrix unreachable."); }
         }
 
         function setPanel(id, el) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.getElementById('panel-' + id).classList.add('active');
+            const target = document.getElementById('panel-' + id);
+            if (target) target.classList.add('active');
             
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             if (el) el.classList.add('active');
@@ -364,29 +437,71 @@
             document.getElementById('panel-title').innerText = id.charAt(0).toUpperCase() + id.slice(1);
         }
 
-        async function loadData() {
-            const res = await fetch('/api/analytics');
-            const data = await res.json();
-            document.getElementById('count-scripts').innerText = data.total_crypts;
-            document.getElementById('count-keys').innerText = data.active_keys;
-            
-            const sRes = await fetch('/api/scripts');
-            const sData = await sRes.json();
-            const tbody = document.querySelector('#scripts-table tbody');
-            tbody.innerHTML = "";
-            sData.scripts.forEach(s => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight: 700;">${s.name}</td>
-                        <td>${(s.size / 1024).toFixed(1)} KB</td>
-                        <td><span class="badge badge-purple">Elite VM</span></td>
-                        <td>${new Date(s.date).toLocaleDateString()}</td>
-                        <td><button class="btn btn-outline" style="padding: 5px 10px;">Enforce</button></td>
-                    </tr>
-                   `;
+        function openUploadModal() { document.getElementById('upload-modal').style.display = 'flex'; }
+        function closeUploadModal() { document.getElementById('upload-modal').style.display = 'none'; }
+
+        async function submitUpload() {
+            const name = document.getElementById('upload-name').value;
+            const source = document.getElementById('upload-source').value;
+            if (!name || !source) return notify("Data incomplete.");
+
+            const res = await fetch('/api/scripts/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, source })
             });
+
+            if (res.ok) {
+                notify("Asset virtualized & protected.");
+                closeUploadModal();
+                loadData();
+            }
+        }
+
+        async function deleteScript(name) {
+            if (!confirm("Permanently redact " + name + "?")) return;
+            const res = await fetch('/api/scripts/' + name, { method: 'DELETE' });
+            if (res.ok) {
+                notify("Asset purged.");
+                loadData();
+            }
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/analytics');
+                const data = await res.json();
+                document.getElementById('count-scripts').innerText = data.total_crypts;
+                document.getElementById('count-keys').innerText = data.active_keys;
+                
+                const sRes = await fetch('/api/scripts');
+                const sData = await sRes.json();
+                const tbody = document.querySelector('#scripts-table tbody');
+                tbody.innerHTML = "";
+                sData.scripts.forEach(s => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-weight: 700;">${s.name}</td>
+                            <td>${(s.size / 1024).toFixed(1)} KB</td>
+                            <td><span class="badge badge-purple">Elite VM</span></td>
+                            <td>${new Date(s.date).toLocaleDateString()}</td>
+                            <td style="display: flex; gap: 10px;">
+                                <button class="btn btn-outline" style="padding: 5px 10px;" onclick="copyLoader('${s.name}')">Loader</button>
+                                <button class="btn btn-danger" style="padding: 5px 10px;" onclick="deleteScript('${s.name}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                notify("Data sync failed.");
+            }
+        }
+
+        function copyLoader(name) {
+            const url = `loadstring(game:HttpGet("https://vander-guard.onrender.com/raw/${name}"))()`;
+            navigator.clipboard.writeText(url);
+            notify("Elite loader copied.");
         }
     </script>
 </body>
-
 </html>
