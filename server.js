@@ -76,6 +76,20 @@ const authenticate = (req, res, next) => {
     }
 };
 
+function validateLoadstring(req) {
+    const h = req.headers;
+    const ua = (h['user-agent'] || '').toLowerCase();
+    
+    // Block standard browsers
+    const isBot = !['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'wininet'].some(k => ua.includes(k));
+    if (isBot) return { valid: false, reason: "BROWSER_ACCESS" };
+    
+    // Check Blacklist
+    if (db.blacklist.ips.includes(req.ip)) return { valid: false, reason: "IP_BANNED" };
+    
+    return { valid: true };
+}
+
 // --- AUTH API ---
 app.post('/api/auth/login', (req, res) => {
     if (req.body.password === 'Eman165*') {
@@ -110,18 +124,20 @@ app.get('/api/scripts', authenticate, (req, res) => {
         size: db.vault[k].source.length,
         version: db.vault[k].version || "1.0.0",
         date: db.vault[k].createdAt,
-        type: db.vault[k].type || "Lua"
+        type: db.vault[k].type || "Lua",
+        useKeySystem: db.vault[k].useKeySystem !== false
     })));
 });
 
 app.post('/api/scripts/upload', authenticate, (req, res) => {
-    const { name, source, type } = req.body;
+    const { name, source, type, useKeySystem } = req.body;
     const fileName = name.replace(/\./g, '_dot_');
     db.vault[fileName] = {
         source,
         version: "1.0.0",
         createdAt: new Date().toISOString(),
-        type: type || "Lua"
+        type: type || "Lua",
+        useKeySystem: useKeySystem !== false
     };
     syncToCloud();
     res.json({ success: true });
@@ -129,9 +145,13 @@ app.post('/api/scripts/upload', authenticate, (req, res) => {
 
 app.delete('/api/scripts/:name', authenticate, (req, res) => {
     const fileName = req.params.name.replace(/\./g, '_dot_');
-    delete db.vault[fileName];
-    syncToCloud();
-    res.json({ success: true });
+    if (db.vault[fileName]) {
+        delete db.vault[fileName];
+        syncToCloud();
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: "Script not found" });
+    }
 });
 
 // --- KEY MANAGER API ---
@@ -207,7 +227,7 @@ local function exec(_b) return loadstring(_b)() end
 exec([[${escaped}]])`;
 }
 
-// --- DYNAMIC LOADER ENGINE (LUARMOR PATTERN) ---
+// --- DYNAMIC LOADER ENGINE ---
 app.get('/raw/:name', (req, res) => {
     const check = validateLoadstring(req);
     const fileName = req.params.name.replace(/\./g, '_dot_');
@@ -216,13 +236,35 @@ app.get('/raw/:name', (req, res) => {
     if (!check.valid) {
         db.threats.push({ ip: req.ip, time: new Date().toISOString(), type: check.reason });
         syncToCloud();
-        return res.status(403).send(`-- [[ SECURITY EXCEPTION FROM ${req.ip} ]]`);
+        // Use a generic security error to avoid leaking system info
+        const junk = crypto.randomBytes(500).toString('hex');
+        return res.status(403).send(`-- [[ SECURITY EXCEPTION ]]\n-- Blocked ID: ${junk}`);
     }
 
-    // --- CASE 1: NO KEY PROVIDED -> SERVE AUTOMATED GUI ---
-    if (!key) {
-        const host = `${req.protocol}://${req.get('host')}`;
-        const guiScript = `--[[ VANDER GUARD | AUTOMATED KEY SYSTEM ]]
+    const asset = db.vault[fileName];
+    if (!asset) return res.status(404).send("-- Asset Redacted.");
+
+    // --- CASE 1: KEY SYSTEM DISABLED OR VALID KEY PROVIDED ---
+    const bypassKey = asset.useKeySystem === false;
+    
+    if (bypassKey || key) {
+        if (!bypassKey) {
+            const kData = db.keys.find(k => k.key === key);
+            if (!kData) return res.status(401).send("-- [[ REVOKED OR INVALID KEY ]]");
+            if (kData.hwid && kData.hwid !== hwid) return res.status(403).send("-- [[ HWID ERROR: RESET REQUIRED ]]");
+            if (!kData.hwid && hwid) { kData.hwid = hwid; syncToCloud(); }
+        }
+
+        db.analytics.totalExecutions++;
+        db.executions.push({ script: req.params.name, ip: req.ip, user: user_id || "Anonymous", time: new Date().toISOString() });
+        syncToCloud();
+        res.setHeader('Content-Type', 'text/plain');
+        return res.send(virtualize(asset.source));
+    }
+
+    // --- CASE 2: KEY SYSTEM ENABLED BUT NO KEY -> SERVE GUI ---
+    const host = `${req.protocol}://${req.get('host')}`;
+    const guiScript = `--[[ VANDER GUARD | AUTOMATED KEY SYSTEM ]]
 if _G.VanderGuard_Active then return end
 _G.VanderGuard_Active = true
 
@@ -271,10 +313,10 @@ local function Init()
         local target = "${host}/raw/${req.params.name}?key="..k.."&hwid="..h
         local res = game:HttpGet(target)
         
-        if res:find("REVOKED") or res:find("INVALID") or res:find("ERROR") then
+        if res:find("REVOKED") or res:find("INVALID") or res:find("ERROR") or res:find("EXCEPTION") then
             btn.Text = "INVALID KEY"
             btn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
-            wait(2)
+            task.wait(2)
             btn.Text = "VALIDATE LICENSE"
             btn.BackgroundColor3 = Color3.fromRGB(167, 139, 250)
         else
@@ -286,26 +328,8 @@ local function Init()
 end
 
 Init()`;
-        res.setHeader('Content-Type', 'text/plain');
-        return res.send(guiScript);
-    }
-
-    // --- CASE 2: KEY PROVIDED -> VALIDATE & SERVE VIRTUALIZED SCRIPT ---
-    const kData = db.keys.find(k => k.key === key);
-    if (!kData) return res.status(401).send("-- [[ REVOKED OR INVALID KEY ]]");
-    if (kData.hwid && kData.hwid !== hwid) return res.status(403).send("-- [[ HWID ERROR: RESET REQUIRED ]]");
-    if (!kData.hwid && hwid) { kData.hwid = hwid; syncToCloud(); }
-
-    const asset = db.vault[fileName];
-    if (asset) {
-        db.analytics.totalExecutions++;
-        db.executions.push({ script: req.params.name, ip: req.ip, user: user_id || "Anonymous", time: new Date().toISOString() });
-        syncToCloud();
-        res.setHeader('Content-Type', 'text/plain');
-        res.send(virtualize(asset.source));
-    } else {
-        res.status(404).send("-- Asset Redacted.");
-    }
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(guiScript);
 });
 
 app.listen(PORT, () => console.log(`VANDER ULTIMATE ON ${PORT}`));

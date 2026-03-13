@@ -34,12 +34,10 @@
             overflow: hidden;
         }
 
-        /* --- MICRON ANIMATIONS --- */
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulseGlow { 0% { box-shadow: 0 0 10px var(--accent-glow); } 50% { box-shadow: 0 0 25px var(--accent-glow); } 100% { box-shadow: 0 0 10px var(--accent-glow); } }
 
-        /* --- SIDEBAR --- */
         .sidebar {
             width: 290px;
             background: var(--sidebar);
@@ -82,7 +80,6 @@
         .nav-item.active { background: linear-gradient(135deg, var(--accent), #7c3aed); color: #fff; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2); }
         .nav-item.active::after { content: ''; position: absolute; right: 15px; width: 6px; height: 6px; background: #fff; border-radius: 50%; }
 
-        /* --- MAIN CONTENT --- */
         .main {
             flex: 1;
             padding: 50px 70px;
@@ -104,7 +101,6 @@
         .header h2 { font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1px; }
         .header p { color: var(--text-dim); margin: 5px 0 0; }
 
-        /* --- STAT CARDS --- */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -130,7 +126,6 @@
         .stat-card i { position: absolute; right: 25px; bottom: 25px; font-size: 40px; opacity: 0.1; transition: 0.5s; }
         .stat-card:hover i { opacity: 0.3; transform: scale(1.2); color: var(--accent); }
 
-        /* --- WORKING COMPONENTS --- */
         .card {
             background: var(--card);
             border: 1px solid var(--border);
@@ -163,7 +158,6 @@
         .btn-outline:hover { background: var(--border); }
         .btn-danger { background: var(--danger); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); }
 
-        /* --- TABLE STYLE --- */
         .table-container { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
         th { text-align: left; padding: 15px 25px; font-size: 12px; text-transform: uppercase; color: var(--text-dim); }
@@ -172,7 +166,6 @@
         td:last-child { border-right: 1px solid var(--border); border-radius: 0 12px 12px 0; }
         tr:hover td { background: rgba(255,255,255,0.05); }
 
-        /* --- MODAL --- */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; display: none; align-items: center; justify-content: center; }
         .modal { background: var(--card); border: 1px solid var(--border); border-radius: 30px; width: 680px; padding: 45px; transform: scale(0.9); transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .modal.active { transform: scale(1); }
@@ -183,20 +176,16 @@
 
         input:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
 
-        /* --- LOGIN --- */
         #login-screen { position: fixed; inset: 0; background: #010101; z-index: 2000; display: flex; align-items: center; justify-content: center; background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); }
         .login-box { background: var(--card); border: 1px solid var(--border); width: 450px; padding: 60px; border-radius: 35px; text-align: center; animation: fadeIn 1s; }
 
-        /* --- SCROLLBAR --- */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        /* --- TOAST --- */
         .toast { position: fixed; bottom: 40px; right: 40px; background: var(--card); border: 1px solid var(--accent); border-left: 5px solid var(--accent); padding: 20px 30px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 3000; display: none; animation: slideUp 0.4s; }
         
-        /* --- UTILS --- */
         .badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .badge-purple { background: rgba(167, 139, 250, 0.2); color: var(--accent); border: 1px solid var(--accent-glow); }
         .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--success); }
@@ -204,7 +193,6 @@
 </head>
 <body>
 
-    <!-- LOGIN SCREEN -->
     <div id="login-screen">
         <div class="login-box">
             <img src="logo.png" style="width: 70px; margin-bottom: 30px;">
@@ -215,7 +203,6 @@
         </div>
     </div>
 
-    <!-- MAIN APP STRUCTURE -->
     <div id="app" style="display: none; width: 100%;">
         <aside class="sidebar">
             <div class="brand">
@@ -252,7 +239,6 @@
         </aside>
 
         <main class="main">
-            <!-- DASHBOARD PANEL -->
             <section id="panel-dashboard" class="panel active">
                 <div class="header">
                     <div>
@@ -266,7 +252,6 @@
                     <div class="stat-card">
                         <span class="label">Total Encryptions</span>
                         <div class="value" id="stats-total-crypts">0</div>
-                        <div class="trend up"><i class="fas fa-arrow-up"></i> +12% this week</div>
                         <i class="fas fa-fingerprint"></i>
                     </div>
                     <div class="stat-card">
@@ -293,14 +278,11 @@
                     </div>
                     <div class="card">
                         <h3><i class="fas fa-satellite" style="color: var(--accent);"></i> Feed</h3>
-                        <div id="live-feed" style="font-size: 13px; display: flex; flex-direction: column; gap: 15px;">
-                            <!-- Injected Feed -->
-                        </div>
+                        <div id="live-feed" style="font-size: 13px; display: flex; flex-direction: column; gap: 15px;"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- PROJECT VAULT -->
             <section id="panel-projects" class="panel">
                 <div class="header">
                     <div>
@@ -317,30 +299,24 @@
                                 <tr>
                                     <th>Asset Name</th>
                                     <th>Size</th>
-                                    <th>Version</th>
+                                    <th>License</th>
                                     <th>Integrity</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="scripts-table">
-                                <!-- Injected -->
-                            </tbody>
+                            <tbody id="scripts-table"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- KEY MANAGER -->
             <section id="panel-keys" class="panel">
                 <div class="header">
                     <div>
                         <h2>License Matrix</h2>
                         <p>Control user access and HWID bindings.</p>
                     </div>
-                    <div style="display: flex; gap: 15px;">
-                        <button class="btn btn-outline" onclick="exportKeys()"><i class="fas fa-file-export"></i> Export All</button>
-                        <button class="btn" onclick="openModal('keygen-modal')"><i class="fas fa-magic"></i> Batch Generator</button>
-                    </div>
+                    <button class="btn" onclick="openModal('keygen-modal')"><i class="fas fa-magic"></i> Batch Generator</button>
                 </div>
 
                 <div class="card" style="padding: 0; overflow: hidden;">
@@ -355,15 +331,12 @@
                                     <th>Options</th>
                                 </tr>
                             </thead>
-                            <tbody id="keys-table">
-                                <!-- Injected -->
-                            </tbody>
+                            <tbody id="keys-table"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- INTELLIGENCE (ANALYTICS) -->
             <section id="panel-analytics" class="panel">
                 <div class="header">
                     <h2>Advanced Intelligence</h2>
@@ -381,11 +354,10 @@
                 </div>
             </section>
 
-            <!-- BLACKLIST -->
             <section id="panel-blacklist" class="panel">
                 <div class="header">
                     <h2>Restriction Matrix</h2>
-                    <p>Ban specific IPs, HWIDs, or User IDs from your scripts.</p>
+                    <p>Ban specific IPs, HWIDs, or User IDs.</p>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
                     <div class="card">
@@ -409,11 +381,10 @@
                 </div>
             </section>
 
-            <!-- WEBHOOKS -->
             <section id="panel-webhooks" class="panel">
                 <div class="header">
                     <h2>Data Satellites</h2>
-                    <p>Configure Discord logging and thread alerts.</p>
+                    <p>Configure Discord logging.</p>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                     <div class="card">
@@ -433,64 +404,30 @@
                 </div>
             </section>
 
-            <!-- CONFIGURATION -->
             <section id="panel-settings" class="panel">
                 <div class="header">
                     <h2>Matrix Configuration</h2>
                     <p>Tune core protection kernels.</p>
                 </div>
                 <div class="card">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                        <div>
-                            <h3>Protection Kernels</h3>
-                            <div style="margin-bottom: 25px;">
-                                <label>Anti-Dump Pulse</label>
-                                <select id="set-antidump">
-                                    <option value="true">Active (700KB Corrupt Bait)</option>
-                                    <option value="false">Inactive</option>
-                                </select>
-                            </div>
-                            <div style="margin-bottom: 25px;">
-                                <label>VM Metamethod Check</label>
-                                <select id="set-meta">
-                                    <option value="High">Aggressive (High Performance Impact)</option>
-                                    <option value="Medium">Standard</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <h3>Environment Tuning</h3>
-                            <div style="margin-bottom: 25px;">
-                                <label>Anti-VPN Shield</label>
-                                <select id="set-vpn">
-                                    <option value="true">Enabled (Block Shared Hostings)</option>
-                                    <option value="false">Disabled</option>
-                                </select>
-                            </div>
-                            <div style="margin-bottom: 25px;">
-                                <label>Matrix Theme</label>
-                                <select id="set-theme">
-                                    <option value="Vander-Dark">Vander Dark (Recommended)</option>
-                                    <option value="Onyx">Onyx Stealth</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn" style="width: 100%; margin-top: 20px;" onclick="saveSettings()">SAVE CORE CONFIGURATION</button>
+                    <button class="btn" style="width: 100%;" onclick="saveSettings()">SAVE CORE CONFIGURATION</button>
                 </div>
             </section>
-
         </main>
     </div>
 
-    <!-- MODALS SECTION -->
     <div id="upload-modal" class="modal-overlay">
         <div class="modal">
             <h3><i class="fas fa-shield-alt"></i> Virtualize Asset</h3>
             <label>Filename</label>
             <input type="text" id="up-name" placeholder="main.lua">
             <label>Source Code</label>
-            <textarea id="up-source" style="height: 300px; font-family: 'JetBrains Mono';" placeholder="Paste your Lua code here..."></textarea>
+            <textarea id="up-source" style="height: 250px; font-family: 'JetBrains Mono';" placeholder="Paste your Lua code here..."></textarea>
+            <label>License Security</label>
+            <select id="up-keysystem">
+                <option value="true">Enable Key System (Strict)</option>
+                <option value="false">Disable Key System (Open)</option>
+            </select>
             <div style="display: flex; gap: 15px; margin-top: 20px;">
                 <button class="btn" style="flex: 1;" onclick="submitUpload()">INITIATE ENCRYPTION</button>
                 <button class="btn btn-outline" onclick="closeModal('upload-modal')">CANCEL</button>
@@ -508,7 +445,7 @@
                 <option value="1 Month">30 Days</option>
                 <option value="Lifetime">Lifetime</option>
             </select>
-            <label>Quantity (Max 50)</label>
+            <label>Quantity</label>
             <input type="number" id="gen-count" value="1" max="50">
             <div style="display: flex; gap: 15px; margin-top: 20px;">
                 <button class="btn" style="flex: 1;" onclick="submitKeygen()">GENERATE MATRIX KEYS</button>
@@ -520,7 +457,6 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // --- CORE CORE LOGIC (50+ FEATURES SYSTEM) ---
         let mainChart, geoChart, loadChart;
 
         function notify(msg) {
@@ -567,52 +503,40 @@
             setTimeout(() => m.style.display = 'none', 300);
         }
 
-        // --- DATA SYNC ---
         async function loadData() {
             try {
-                const [analytics, scripts, keys, blacklist, webhooks, settings] = await Promise.all([
+                const [analytics, scripts, keys, blacklist, webhooks] = await Promise.all([
                     fetch('/api/analytics').then(r => r.json()),
                     fetch('/api/scripts').then(r => r.json()),
                     fetch('/api/keys').then(r => r.json()),
                     fetch('/api/blacklist').then(r => r.json()),
-                    fetch('/api/webhooks').then(r => r.json()),
-                    fetch('/api/settings').then(r => r.json())
+                    fetch('/api/webhooks').then(r => r.json())
                 ]);
 
-                // Stats
                 document.getElementById('stats-total-crypts').innerText = analytics.totalExecutions;
-                document.getElementById('stats-active-keys').innerText = keys.filter(k => !k.expired).length;
+                document.getElementById('stats-active-keys').innerText = keys.length;
                 document.getElementById('stats-uptime').innerText = analytics.uptime + "s";
 
-                // Feed
-                const feed = document.getElementById('live-feed');
-                feed.innerHTML = analytics.recentExecutions.map(e => `
-                    <div style="display: flex; justify-content: space-between; border-left: 2px solid var(--accent); padding-left: 10px;">
-                        <span><b style="color: var(--accent);">${e.user}</b> run ${e.script}</span>
-                        <span style="color: var(--text-dim); font-size: 11px;">${new Date(e.time).toLocaleTimeString()}</span>
+                document.getElementById('live-feed').innerHTML = analytics.recentExecutions.map(e => `
+                    <div style="display: flex; justify-content: space-between; border-left: 2px solid var(--accent); padding-left: 10px; margin-bottom: 10px;">
+                        <span><b style="color: var(--accent);">${e.user}</b>: ${e.script}</span>
                     </div>
-                `).join('') || "No recent activity.";
+                `).join('') || "Standby...";
 
-                // Tables
                 renderScripts(scripts);
                 renderKeys(keys);
                 renderBlacklist(blacklist);
                 renderWebhooks(webhooks);
-
-                // Update Charts
-                updateCharts(analytics);
-            } catch (e) {
-                console.error("Matrix Sync Error", e);
-            }
+                mainChart.update();
+            } catch (e) {}
         }
 
         function renderScripts(data) {
-            const tbody = document.getElementById('scripts-table');
-            tbody.innerHTML = data.map(s => `
+            document.getElementById('scripts-table').innerHTML = data.map(s => `
                 <tr>
                     <td style="font-weight: 800;">${s.name}</td>
-                    <td>${(s.size / 1024).toFixed(2)} KB</td>
-                    <td><span class="badge badge-purple">${s.version}</span></td>
+                    <td>${(s.size / 1024).toFixed(1)} KB</td>
+                    <td><span class="badge ${s.useKeySystem ? 'badge-purple' : 'badge-green'}">${s.useKeySystem ? 'REQUIRED' : 'OPEN'}</span></td>
                     <td><span class="badge badge-green">VERIFIED</span></td>
                     <td style="display: flex; gap: 10px;">
                         <button class="btn btn-outline" style="padding: 8px;" onclick="copyLoader('${s.name}')"><i class="fas fa-terminal"></i></button>
@@ -623,16 +547,15 @@
         }
 
         function renderKeys(data) {
-            const tbody = document.getElementById('keys-table');
-            tbody.innerHTML = data.map(k => `
+            document.getElementById('keys-table').innerHTML = data.map(k => `
                 <tr>
-                    <td style="font-family: 'JetBrains Mono'; font-size: 12px; color: var(--accent);">${k.key}</td>
+                    <td style="font-family: 'JetBrains Mono'; color: var(--accent);">${k.key}</td>
                     <td>${k.duration}</td>
-                    <td>${k.hwid ? '<span style="color: var(--success);">LOCKED</span>' : '<span style="color: var(--text-dim);">OPEN</span>'}</td>
+                    <td>${k.hwid ? 'LOCKED' : 'OPEN'}</td>
                     <td><span class="badge badge-green">ACTIVE</span></td>
-                    <td style="display: flex; gap: 10px;">
-                        <button class="btn btn-outline" style="padding: 8px;" title="Reset HWID" onclick="resetKey('${k.key}')"><i class="fas fa-undo"></i></button>
-                        <button class="btn btn-danger" style="padding: 8px;" onclick="revokeKey('${k.key}')"><i class="fas fa-ban"></i></button>
+                    <td>
+                        <button class="btn btn-outline" style="padding: 5px;" onclick="resetKey('${k.key}')"><i class="fas fa-undo"></i></button>
+                        <button class="btn btn-danger" style="padding: 5px;" onclick="revokeKey('${k.key}')"><i class="fas fa-ban"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -640,107 +563,59 @@
 
         function renderBlacklist(data) {
             const tbody = document.querySelector('#blacklist-table tbody');
-            let rows = "";
-            data.ips.forEach(i => rows += `<tr><td>${i}</td><td><span class="badge badge-purple">IP</span></td><td><button class="btn btn-outline" style="padding: 5px;"><i class="fas fa-trash"></i></button></td></tr>`);
-            data.hwids.forEach(h => rows += `<tr><td>${h.slice(0,20)}...</td><td><span class="badge badge-purple">HWID</span></td><td><button class="btn btn-outline" style="padding: 5px;"><i class="fas fa-trash"></i></button></td></tr>`);
-            tbody.innerHTML = rows || "<tr><td colspan='3' style='text-align: center; color: var(--text-dim);'>Safe zone. No active bans.</td></tr>";
+            tbody.innerHTML = data.ips.map(i => `<tr><td>${i}</td><td>IP</td><td>-</td></tr>`).join('') + 
+                             data.hwids.map(h => `<tr><td>${h.slice(0,10)}...</td><td>HWID</td><td>-</td></tr>`).join('');
         }
 
         function renderWebhooks(data) {
-            const tbody = document.getElementById('webhooks-table');
-            tbody.innerHTML = data.map(w => `
-                <tr>
-                    <td>${w.name}</td>
-                    <td><span class="badge badge-green">ONLINE</span></td>
-                    <td><button class="btn btn-outline" style="padding: 8px;" onclick="testWebhook()"><i class="fas fa-vial"></i></button></td>
-                </tr>
-            `).join('') || "<tr><td colspan='3' style='text-align: center;'>No satallites linked.</td></tr>";
+            document.getElementById('webhooks-table').innerHTML = data.map(w => `<tr><td>${w.name}</td><td>ACTIVE</td><td>-</td></tr>`).join('');
         }
 
-        // --- WORKING FEATURES ---
         async function submitUpload() {
             const name = document.getElementById('up-name').value;
             const source = document.getElementById('up-source').value;
-            if(!name || !source) return notify("Matrix Data Incomplete.");
+            const useKeySystem = document.getElementById('up-keysystem').value === 'true';
+            if(!name || !source) return notify("Incomplete data.");
             const res = await fetch('/api/scripts/upload', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({name, source})
+                body: JSON.stringify({name, source, useKeySystem})
             });
-            if(res.ok) { notify("Asset Protected & Stored."); closeModal('upload-modal'); loadData(); }
+            if(res.ok) { notify("Shield Active."); closeModal('upload-modal'); loadData(); }
+        }
+
+        async function deleteScript(name) {
+            if(!confirm("Purge Asset?")) return;
+            const res = await fetch('/api/scripts/' + encodeURIComponent(name), { method: 'DELETE' });
+            if(res.ok) { notify("Asset Redacted."); loadData(); }
+        }
+
+        function copyLoader(name) {
+            const loaderCode = `loadstring(game:HttpGet("${window.location.origin}/raw/${name}"))()`;
+            navigator.clipboard.writeText(loaderCode);
+            notify("Loader Hash Copied.");
         }
 
         async function submitKeygen() {
             const count = document.getElementById('gen-count').value;
             const duration = document.getElementById('gen-duration').value;
-            const res = await fetch('/api/keys/generate', {
+            await fetch('/api/keys/generate', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({count, duration})
             });
-            if(res.ok) { notify(`${count} Keys Materialized.`); closeModal('keygen-modal'); loadData(); }
-        }
-
-        async function resetKey(key) {
-            await fetch('/api/keys/reset', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({key}) });
-            notify("HWID Protocol Disengaged.");
+            notify("Keys Materialized.");
+            closeModal('keygen-modal');
             loadData();
         }
 
-        async function revokeKey(key) {
-            if(!confirm("Purge License?")) return;
-            await fetch('/api/keys/revoke', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({key}) });
-            notify("License Purged.");
-            loadData();
-        }
+        async function resetKey(key) { await fetch('/api/keys/reset', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({key}) }); loadData(); }
+        async function revokeKey(key) { await fetch('/api/keys/revoke', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({key}) }); loadData(); }
 
-        async function addBlacklist() {
-            const type = document.getElementById('bl-type').value;
-            const value = document.getElementById('bl-value').value;
-            if(!value) return;
-            await fetch('/api/blacklist/add', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({type, value}) });
-            notify("Target Blockaded.");
-            loadData();
-        }
-
-        function copyLoader(name) {
-            const host = window.location.origin;
-            const loaderCode = `loadstring(game:HttpGet("${host}/raw/${name}"))()`;
-            navigator.clipboard.writeText(loaderCode);
-            notify("Elite Loadstring Copied! (Key System Integrated)");
-        }
-
-        function testWebhook() { notify("Test Pulse Transmitted."); }
-
-        // --- CHARTS ---
         function initCharts() {
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            mainChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: ['M','T','W','T','F','S','S'], datasets: [{ label: 'Executions', borderColor: '#a78bfa', backgroundColor: 'rgba(167, 139, 250, 0.1)', fill: true, data: [65, 59, 80, 81, 56, 55, 40], tension: 0.4 }] },
-                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#0d111a' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
-            });
-
-            const geoCtx = document.getElementById('geoChart').getContext('2d');
-            geoChart = new Chart(geoCtx, {
-                type: 'doughnut',
-                data: { labels: ['NA','EU','ASIA','OTHER'], datasets: [{ data: [40, 30, 20, 10], backgroundColor: ['#a78bfa','#7c3aed','#4c1d95','#1e1b4b'], borderWidth: 0 }] },
-                options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
-            });
-
-            const loadCtx = document.getElementById('loadChart').getContext('2d');
-            loadChart = new Chart(loadCtx, {
-                type: 'bar',
-                data: { labels: ['Delta','Fluxus','Codex','Hydrogen'], datasets: [{ label: 'Inbound', data: [12, 19, 3, 5], backgroundColor: '#a78bfa' }] },
-                options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#0d111a' } } } }
-            });
-        }
-
-        function updateCharts(data) {
-            // Simulated update logic
-            mainChart.data.datasets[0].data.push(Math.random() * 100);
-            mainChart.data.datasets[0].data.shift();
-            mainChart.update();
+            mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), { type: 'line', data: { labels: ['','','','','','',''], datasets: [{ borderColor: '#a78bfa', data: [0,0,0,0,0,0,0], tension: 0.4 }] }, options: { plugins: { legend: { display: false } } } });
+            geoChart = new Chart(document.getElementById('geoChart').getContext('2d'), { type: 'doughnut', data: { labels: ['NA','EU','Other'], datasets: [{ data: [60,30,10], backgroundColor: ['#a78bfa','#7c3aed','#1e1b4b'] }] } });
+            loadChart = new Chart(document.getElementById('loadChart').getContext('2d'), { type: 'bar', data: { labels: ['D','F','C','H'], datasets: [{ data: [10,5,8,3], backgroundColor: '#a78bfa' }] } });
         }
 
         function logout() { location.reload(); }
