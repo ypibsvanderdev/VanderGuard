@@ -591,9 +591,25 @@
         }
 
         function copyLoader(name) {
-            const loaderCode = `loadstring(game:HttpGet("${window.location.origin}/raw/${name}"))()`;
+            const host = window.location.origin;
+            const loaderCode = `--[[ VANDER GUARD | SUSHIX PROTECTION ]]
+local function VANDER_INIT()
+    local url = "${host}/raw/${name}"
+    local integrity = "SHIELD-V4.2"
+    
+    local success, response = pcall(function()
+        return game:HttpGet(url)
+    end)
+
+    if success and not response:find("EXCEPTION") then
+        loadstring(response)()
+    else
+        warn("VANDER_GUARD: Handshake Failed (" .. (response or "TIMEOUT") .. ")")
+    end
+end
+VANDER_INIT()`;
             navigator.clipboard.writeText(loaderCode);
-            notify("Loader Hash Copied.");
+            notify("SushiX Matrix Loader Copied!");
         }
 
         async function submitKeygen() {

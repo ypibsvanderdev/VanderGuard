@@ -82,9 +82,15 @@ const authenticate = (req, res, next) => {
 function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
-    const whitelist = ['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'cfnetwork', 'wininet'];
-    const isBot = !whitelist.some(k => ua.includes(k));
-    if (isBot) return { valid: false, reason: "BROWSER_ACCESS" };
+    
+    // SushiX Industrial Whitelist
+    const whitelist = ['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'cfnetwork', 'wininet', 'robloxproxy'];
+    const blacklist = ['curl', 'wget', 'python', 'postman', 'bot', 'node', 'fetch', 'axios', 'scaper'];
+    
+    const isWhitelisted = whitelist.some(k => ua.includes(k));
+    const isBlacklisted = blacklist.some(k => ua.includes(k));
+
+    if (!isWhitelisted || isBlacklisted) return { valid: false, reason: "BROWSER_ACCESS" };
     if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(req.ip)) return { valid: false, reason: "IP_BANNED" };
     return { valid: true };
 }
@@ -187,20 +193,22 @@ app.post('/api/webhooks/add', authenticate, async (req, res) => {
 });
 
 // --- ENGINE ---
-function virtualize(source) {
-    const escaped = source.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\]\]/g, '\\]\\]');
-    return `--[[ VANDER VIRTUAL MACHINE v3.1 ]]
-local function exec(_b) return loadstring(_b)() end
-exec([[${escaped}]])`;
-}
-
+// --- SECURITY KERNEL ---
 app.get('/raw/:name', async (req, res) => {
-    const check = validateLoadstring(req);
+    const ua = (req.headers['user-agent'] || '').toLowerCase();
     const fileName = req.params.name.replace(/\./g, '_dot_');
     const { key, hwid } = req.query;
 
+    // 1. HARDENED HEADERS (SushiX Matrix)
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('X-Vander-Shield', 'Industrial/v4.2');
+    res.setHeader('X-Powered-By', 'SushiX-Kernel-Matrix');
+    res.setHeader('Server', 'Vander-Guard-Edge');
+
+    // 2. INDUSTRIAL VALIDATION
+    const check = validateLoadstring(req);
     if (!check.valid) {
-        return res.status(403).send(`-- [[ SECURITY EXCEPTION ]]\n-- Blocked: ${crypto.randomBytes(10).toString('hex')}`);
+        return res.status(403).send(`-- [[ SECURITY EXCEPTION ]]\n-- Timestamp: ${Date.now()}\n-- Identity: ${crypto.randomBytes(8).toString('hex')}`);
     }
 
     const asset = db.vault[fileName];
@@ -215,12 +223,11 @@ app.get('/raw/:name', async (req, res) => {
             if (!kData.hwid && hwid) { kData.hwid = hwid; await saveDB(); }
         }
         db.analytics.totalExecutions++;
-        db.executions.push({ script: req.params.name, user: "Elite User", time: new Date().toISOString() });
+        db.executions.push({ script: req.params.name, user: hwid || "Verified Device", time: new Date().toISOString() });
         await saveDB();
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.setHeader('X-Vander-Shield', 'Active');
-        res.setHeader('X-Powered-By', 'SushiX-Kernel/Vander-Premium');
-        return res.send(virtualize(asset.source));
+        
+        // Deliver Raw Source (Bypassing Internal Obfuscator as requested)
+        return res.send(asset.source);
     }
 
     const host = `${req.protocol}://${req.get('host')}`;
