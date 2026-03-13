@@ -207,33 +207,96 @@ local function exec(_b) return loadstring(_b)() end
 exec([[${escaped}]])`;
 }
 
-// --- CORE PROTECTION ENFORCER ---
+// --- DYNAMIC LOADER ENGINE (LUARMOR PATTERN) ---
 app.get('/raw/:name', (req, res) => {
-    const ua = (req.headers['user-agent'] || '').toLowerCase();
+    const check = validateLoadstring(req);
+    const fileName = req.params.name.replace(/\./g, '_dot_');
     const { key, hwid, user_id } = req.query;
 
-    // 1. Bot/Browser Detection
-    const isBot = !['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'wininet'].some(k => ua.includes(k));
-    if (isBot) {
-        db.threats.push({ ip: req.ip, time: new Date().toISOString(), type: "BROWSER_ACCESS", agent: ua });
+    if (!check.valid) {
+        db.threats.push({ ip: req.ip, time: new Date().toISOString(), type: check.reason });
         syncToCloud();
-        const junk = crypto.randomBytes(700*1024).toString('hex');
-        return res.status(403).send(`-- [[ SECURITY FAULT ]]\nlocal _ = "${junk}"\nwhile true do end`);
+        return res.status(403).send(`-- [[ SECURITY EXCEPTION FROM ${req.ip} ]]`);
     }
 
-    // 2. Blacklist Check
-    if (db.blacklist.ips.includes(req.ip) || db.blacklist.hwids.includes(hwid)) {
-        return res.status(403).send("-- [[ YOUR HARDWARE IS BANNED FROM VANDER NETWORK ]]");
+    // --- CASE 1: NO KEY PROVIDED -> SERVE AUTOMATED GUI ---
+    if (!key) {
+        const host = `${req.protocol}://${req.get('host')}`;
+        const guiScript = `--[[ VANDER GUARD | AUTOMATED KEY SYSTEM ]]
+if _G.VanderGuard_Active then return end
+_G.VanderGuard_Active = true
+
+local function Init()
+    local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
+    local fr = Instance.new("Frame", sg)
+    local tit = Instance.new("TextLabel", fr)
+    local inp = Instance.new("TextBox", fr)
+    local btn = Instance.new("TextButton", fr)
+    
+    fr.Size = UDim2.new(0, 320, 0, 180)
+    fr.Position = UDim2.new(0.5, -160, 0.5, -90)
+    fr.BackgroundColor3 = Color3.fromRGB(13, 17, 26)
+    fr.BorderSizePixel = 0
+    Instance.new("UICorner", fr).CornerRadius = UDim.new(0, 15)
+    local str = Instance.new("UIStroke", fr)
+    str.Color = Color3.fromRGB(167, 139, 250)
+    str.Thickness = 2
+
+    tit.Size = UDim2.new(1, 0, 0, 50)
+    tit.Text = "VANDER GUARD PROTECTION"
+    tit.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tit.Font = Enum.Font.GothamBold
+    tit.BackgroundTransparency = 1
+    tit.TextSize = 14
+
+    inp.Size = UDim2.new(0.8, 0, 0, 40)
+    inp.Position = UDim2.new(0.1, 0, 0.35, 0)
+    inp.BackgroundColor3 = Color3.fromRGB(8, 10, 15)
+    inp.TextColor3 = Color3.fromRGB(167, 139, 250)
+    inp.PlaceholderText = "Enter License Key..."
+    inp.Text = ""
+    Instance.new("UICorner", inp).CornerRadius = UDim.new(0, 8)
+
+    btn.Size = UDim2.new(0.8, 0, 0, 40)
+    btn.Position = UDim2.new(0.1, 0, 0.65, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(167, 139, 250)
+    btn.Text = "VALIDATE LICENSE"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    btn.MouseButton1Click:Connect(function()
+        local k = inp.Text
+        local h = tostring(game:GetService("RbxAnalyticsService"):GetClientId())
+        local target = "${host}/raw/${req.params.name}?key="..k.."&hwid="..h
+        local res = game:HttpGet(target)
+        
+        if res:find("REVOKED") or res:find("INVALID") or res:find("ERROR") then
+            btn.Text = "INVALID KEY"
+            btn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
+            wait(2)
+            btn.Text = "VALIDATE LICENSE"
+            btn.BackgroundColor3 = Color3.fromRGB(167, 139, 250)
+        else
+            sg:Destroy()
+            _G.VanderGuard_Active = false
+            loadstring(res)()
+        end
+    end)
+end
+
+Init()`;
+        res.setHeader('Content-Type', 'text/plain');
+        return res.send(guiScript);
     }
 
-    // 3. Authentication
+    // --- CASE 2: KEY PROVIDED -> VALIDATE & SERVE VIRTUALIZED SCRIPT ---
     const kData = db.keys.find(k => k.key === key);
     if (!kData) return res.status(401).send("-- [[ REVOKED OR INVALID KEY ]]");
     if (kData.hwid && kData.hwid !== hwid) return res.status(403).send("-- [[ HWID ERROR: RESET REQUIRED ]]");
     if (!kData.hwid && hwid) { kData.hwid = hwid; syncToCloud(); }
 
-    // 4. Delivery
-    const asset = db.vault[req.params.name.replace(/\./g, '_dot_')];
+    const asset = db.vault[fileName];
     if (asset) {
         db.analytics.totalExecutions++;
         db.executions.push({ script: req.params.name, ip: req.ip, user: user_id || "Anonymous", time: new Date().toISOString() });

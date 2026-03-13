@@ -705,9 +705,9 @@
 
         function copyLoader(name) {
             const host = window.location.origin;
-            const code = `loadstring(game:HttpGet("${host}/raw/${name}?key=YOUR_KEY&hwid=..."))()`;
-            navigator.clipboard.writeText(code);
-            notify("Loader Hash Copied.");
+            const loaderCode = `loadstring(game:HttpGet("${host}/raw/${name}"))()`;
+            navigator.clipboard.writeText(loaderCode);
+            notify("Elite Loadstring Copied! (Key System Integrated)");
         }
 
         function testWebhook() { notify("Test Pulse Transmitted."); }
