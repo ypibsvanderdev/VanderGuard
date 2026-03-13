@@ -80,10 +80,12 @@ const authenticate = (req, res, next) => {
 };
 
 function validateLoadstring(req) {
-    const ua = (req.headers['user-agent'] || '').toLowerCase();
-    // Loosened for web detection testing but kept for security
-    const isBot = ['bot', 'crawler', 'spider', 'curl', 'wget', 'python-requests', 'postman'].some(k => ua.includes(k));
+    const h = req.headers;
+    const ua = (h['user-agent'] || '').toLowerCase();
+    const whitelist = ['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'cfnetwork', 'wininet'];
+    const isBot = !whitelist.some(k => ua.includes(k));
     if (isBot) return { valid: false, reason: "BROWSER_ACCESS" };
+    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(req.ip)) return { valid: false, reason: "IP_BANNED" };
     return { valid: true };
 }
 
@@ -215,7 +217,9 @@ app.get('/raw/:name', async (req, res) => {
         db.analytics.totalExecutions++;
         db.executions.push({ script: req.params.name, user: "Elite User", time: new Date().toISOString() });
         await saveDB();
-        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('X-Vander-Shield', 'Active');
+        res.setHeader('X-Powered-By', 'SushiX-Kernel/Vander-Premium');
         return res.send(virtualize(asset.source));
     }
 
