@@ -332,4 +332,8 @@ Init()`;
     res.send(guiScript);
 });
 
-app.listen(PORT, () => console.log(`VANDER ULTIMATE ON ${PORT}`));
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.log(`VANDER ULTIMATE ON ${PORT}`));
+}
+
+module.exports = app;
