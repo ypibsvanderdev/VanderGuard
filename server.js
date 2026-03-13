@@ -9,7 +9,6 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 4444;
-// --- SUSHIX / VANDER GUARD ULTIMATE DATABASE ---
 const FIREBASE_URL = 'https://vanderhub-default-rtdb.firebaseio.com/vander_guard_ultimate.json';
 
 // --- ULTIMATE DATABASE CORE ---
@@ -33,17 +32,16 @@ async function syncDB() {
     try {
         const res = await axios.get(FIREBASE_URL);
         if (res.data) {
-            db = { ...db, ...res.data };
-            // Ensure nested objects exist
-            db.vault = db.vault || {};
-            db.keys = db.keys || [];
-            db.blacklist = db.blacklist || { ips: [], hwids: [], userIds: [] };
-            db.threats = db.threats || [];
-            db.webhooks = db.webhooks || [];
-            db.executions = db.executions || [];
+            db.vault = res.data.vault || {};
+            db.keys = res.data.keys || [];
+            db.blacklist = res.data.blacklist || { ips: [], hwids: [], userIds: [] };
+            db.threats = res.data.threats || [];
+            db.webhooks = res.data.webhooks || [];
+            db.executions = res.data.executions || [];
+            db.analytics = res.data.analytics || db.analytics;
         }
     } catch (e) {
-        console.error("Cloud DB connect fail, using local cache.");
+        console.error("Cloud DB connect fail.");
     }
 }
 
@@ -55,16 +53,13 @@ async function saveDB() {
     }
 }
 
-// Initial Sync
-syncDB();
-
 const JWT_SECRET = 'VANDER-ULTIMATE-999-PROTECTION';
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middleware to sync DB before processing (Crucial for Vercel/Serverless)
+// Middleware to sync DB before processing
 app.use(async (req, res, next) => {
     if (req.path.startsWith('/api') || req.path.startsWith('/raw')) {
         await syncDB();
@@ -85,16 +80,14 @@ const authenticate = (req, res, next) => {
 };
 
 function validateLoadstring(req) {
-    const h = req.headers;
-    const ua = (h['user-agent'] || '').toLowerCase();
-    const isBot = !['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'wininet'].some(k => ua.includes(k));
+    const ua = (req.headers['user-agent'] || '').toLowerCase();
+    // Loosened for web detection testing but kept for security
+    const isBot = ['bot', 'crawler', 'spider', 'curl', 'wget', 'python-requests', 'postman'].some(k => ua.includes(k));
     if (isBot) return { valid: false, reason: "BROWSER_ACCESS" };
-    if (db.blacklist.ips.includes(req.ip)) return { valid: false, reason: "IP_BANNED" };
     return { valid: true };
 }
 
 // --- API ROUTES ---
-
 app.post('/api/auth/login', (req, res) => {
     if (req.body.password === 'Eman165*') {
         const token = jwt.sign({ id: 'admin' }, JWT_SECRET, { expiresIn: '7d' });
@@ -195,7 +188,6 @@ app.post('/api/webhooks/add', authenticate, async (req, res) => {
 function virtualize(source) {
     const escaped = source.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\]\]/g, '\\]\\]');
     return `--[[ VANDER VIRTUAL MACHINE v3.1 ]]
-local _k = ${Math.floor(Math.random()*255)}
 local function exec(_b) return loadstring(_b)() end
 exec([[${escaped}]])`;
 }
@@ -206,14 +198,14 @@ app.get('/raw/:name', async (req, res) => {
     const { key, hwid } = req.query;
 
     if (!check.valid) {
-        return res.status(403).send(`-- [[ SECURITY EXCEPTION ]]\n-- Blocked: ${crypto.randomBytes(20).toString('hex')}`);
+        return res.status(403).send(`-- [[ SECURITY EXCEPTION ]]\n-- Blocked: ${crypto.randomBytes(10).toString('hex')}`);
     }
 
     const asset = db.vault[fileName];
     if (!asset) return res.status(404).send("-- Asset Redacted.");
 
     const bypassKey = asset.useKeySystem === false;
-    if (bypassKey || key) {
+    if (bypassKey || (key && key.length > 0)) {
         if (!bypassKey) {
             const kData = db.keys.find(k => k.key === key);
             if (!kData) return res.status(401).send("-- [[ INVALID KEY ]]");
@@ -238,17 +230,22 @@ local function Init()
     fr.Size = UDim2.new(0, 320, 0, 150)
     fr.Position = UDim2.new(0.5, -160, 0.5, -75)
     fr.BackgroundColor3 = Color3.fromRGB(13, 17, 26)
-    Instance.new("UICorner", fr)
+    Instance.new("UICorner", fr).CornerRadius = UDim.new(0, 12)
 
     inp.Size = UDim2.new(0.8, 0, 0, 40)
     inp.Position = UDim2.new(0.1, 0, 0.2, 0)
-    inp.PlaceholderText = "Enter Key..."
+    inp.PlaceholderText = "Enter License Key..."
     inp.Text = ""
+    inp.BackgroundColor3 = Color3.fromRGB(8, 10, 15)
+    inp.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", inp)
 
     btn.Size = UDim2.new(0.8, 0, 0, 40)
     btn.Position = UDim2.new(0.1, 0, 0.6, 0)
-    btn.Text = "VALIDATE"
+    btn.Text = "AUTHENTICATE"
     btn.BackgroundColor3 = Color3.fromRGB(167, 139, 250)
+    btn.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", btn)
 
     btn.MouseButton1Click:Connect(function()
         local k = inp.Text
@@ -256,7 +253,8 @@ local function Init()
         local target = "${host}/raw/${req.params.name}?key="..k.."&hwid="..h
         local res = game:HttpGet(target)
         if res:find("INVALID") or res:find("ERROR") or res:find("EXCEPTION") then
-            btn.Text = "FAILED"
+            btn.Text = "INVALID KEY"
+            btn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
         else
             sg:Destroy()
             loadstring(res)()
@@ -269,6 +267,6 @@ Init()`;
 });
 
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`VANDER ULTIMATE ON ${PORT}`));
+    app.listen(PORT, '0.0.0.0', () => console.log(`VANDER ULTIMATE ON ${PORT}`));
 }
 module.exports = app;
