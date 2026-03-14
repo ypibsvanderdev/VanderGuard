@@ -195,17 +195,15 @@ app.post('/api/webhooks/add', authenticate, async (req, res) => {
 // --- ENGINE ---
 // --- SECURITY KERNEL ---
 app.get('/raw/:name', async (req, res) => {
-    const ua = (req.headers['user-agent'] || '').toLowerCase();
     const fileName = req.params.name.replace(/\./g, '_dot_');
-    const { key, hwid } = req.query;
-
-    // 1. HARDENED HEADERS (SushiX Matrix)
+    
+    // 1. HARDENED HEADERS
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('X-Vander-Shield', 'Industrial/v4.2');
     res.setHeader('X-Powered-By', 'SushiX-Kernel-Matrix');
     res.setHeader('Server', 'Vander-Guard-Edge');
 
-    // 2. INDUSTRIAL VALIDATION
+    // 2. INDUSTRIAL VALIDATION (Executor Detection)
     const check = validateLoadstring(req);
     if (!check.valid) {
         return res.status(403).send(`-- [[ SECURITY EXCEPTION ]]\n-- Timestamp: ${Date.now()}\n-- Identity: ${crypto.randomBytes(8).toString('hex')}`);
@@ -214,67 +212,17 @@ app.get('/raw/:name', async (req, res) => {
     const asset = db.vault[fileName];
     if (!asset) return res.status(404).send("-- Asset Redacted.");
 
-    const bypassKey = asset.useKeySystem === false;
-    if (bypassKey || (key && key.length > 0)) {
-        if (!bypassKey) {
-            const kData = db.keys.find(k => k.key === key);
-            if (!kData) return res.status(401).send("-- [[ INVALID KEY ]]");
-            if (kData.hwid && kData.hwid !== hwid) return res.status(403).send("-- [[ HWID ERROR ]]");
-            if (!kData.hwid && hwid) { kData.hwid = hwid; await saveDB(); }
-        }
-        db.analytics.totalExecutions++;
-        db.executions.push({ script: req.params.name, user: hwid || "Verified Device", time: new Date().toISOString() });
-        await saveDB();
-        
-        // Deliver Raw Source (Bypassing Internal Obfuscator as requested)
-        return res.send(asset.source);
-    }
-
-    const host = `${req.protocol}://${req.get('host')}`;
-    const guiScript = `--[[ VANDER GUARD | AUTOMATED KEY SYSTEM ]]
-local function Init()
-    local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
-    local fr = Instance.new("Frame", sg)
-    local inp = Instance.new("TextBox", fr)
-    local btn = Instance.new("TextButton", fr)
+    // 3. LOG EXECUTION
+    db.analytics.totalExecutions++;
+    db.executions.push({ 
+        script: req.params.name, 
+        user: req.headers['x-forwarded-for'] || req.ip, 
+        time: new Date().toISOString() 
+    });
+    await saveDB();
     
-    fr.Size = UDim2.new(0, 320, 0, 150)
-    fr.Position = UDim2.new(0.5, -160, 0.5, -75)
-    fr.BackgroundColor3 = Color3.fromRGB(13, 17, 26)
-    Instance.new("UICorner", fr).CornerRadius = UDim.new(0, 12)
-
-    inp.Size = UDim2.new(0.8, 0, 0, 40)
-    inp.Position = UDim2.new(0.1, 0, 0.2, 0)
-    inp.PlaceholderText = "Enter License Key..."
-    inp.Text = ""
-    inp.BackgroundColor3 = Color3.fromRGB(8, 10, 15)
-    inp.TextColor3 = Color3.new(1,1,1)
-    Instance.new("UICorner", inp)
-
-    btn.Size = UDim2.new(0.8, 0, 0, 40)
-    btn.Position = UDim2.new(0.1, 0, 0.6, 0)
-    btn.Text = "AUTHENTICATE"
-    btn.BackgroundColor3 = Color3.fromRGB(167, 139, 250)
-    btn.TextColor3 = Color3.new(1,1,1)
-    Instance.new("UICorner", btn)
-
-    btn.MouseButton1Click:Connect(function()
-        local k = inp.Text
-        local h = tostring(game:GetService("RbxAnalyticsService"):GetClientId())
-        local target = "${host}/raw/${req.params.name}?key="..k.."&hwid="..h
-        local res = game:HttpGet(target)
-        if res:find("INVALID") or res:find("ERROR") or res:find("EXCEPTION") then
-            btn.Text = "INVALID KEY"
-            btn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
-        else
-            sg:Destroy()
-            loadstring(res)()
-        end
-    end)
-end
-Init()`;
-    res.setHeader('Content-Type', 'text/plain');
-    res.send(guiScript);
+    // 4. DELIVER RAW SOURCE
+    return res.send(asset.source);
 });
 
 if (process.env.NODE_ENV !== 'production') {

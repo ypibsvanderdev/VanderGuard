@@ -592,24 +592,10 @@
 
         function copyLoader(name) {
             const host = window.location.origin;
-            const loaderCode = `--[[ VANDER GUARD | SUSHIX PROTECTION ]]
-local function VANDER_INIT()
-    local url = "${host}/raw/${name}"
-    local integrity = "SHIELD-V4.2"
-    
-    local success, response = pcall(function()
-        return game:HttpGet(url)
-    end)
-
-    if success and not response:find("EXCEPTION") then
-        loadstring(response)()
-    else
-        warn("VANDER_GUARD: Handshake Failed (" .. (response or "TIMEOUT") .. ")")
-    end
-end
-VANDER_INIT()`;
+            const encodedName = name.replace(/ /g, '%20');
+            const loaderCode = `loadstring(game:HttpGet("${host}/raw/${encodedName}"))()`;
             navigator.clipboard.writeText(loaderCode);
-            notify("SushiX Matrix Loader Copied!");
+            notify("Standard Loadstring Copied!");
         }
 
         async function submitKeygen() {
