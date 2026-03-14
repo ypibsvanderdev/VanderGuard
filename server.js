@@ -84,38 +84,37 @@ const getRealIP = (req) => {
     return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
 };
 
-// --- SECURITY KERNEL V6.0 (MATRIX HANDSHAKE) ---
+// --- SECURITY KERNEL V7.0 (TRUE EXECUTOR WHITELIST) ---
 function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const realIP = getRealIP(req);
-    const vanderToken = h['x-vander-token'];
     
-    // 1. NON-SPOOFABLE HANDSHAKE
-    // Only requests with the correct internal token are allowed. 
-    // This prevents any generic bot from fetching even with a spoofed UA.
-    if (vanderToken !== 'VANDER-ELITE-KERNEL-888') {
-        db.threats.push({ type: "UNAUTHORIZED_HANDSHAKE", ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "NOT_AUTHORIZED" };
-    }
-
-    // 2. EXECUTOR WHITELIST (STRICT)
-    const whitelistedUA = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno'];
-    const isWhitelisted = whitelistedUA.some(k => ua.includes(k));
+    // 1. INDUSTRIAL EXECUTOR WHITELIST
+    // Higher priority: Only allow known Roblox executor signatures.
+    const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
+    const isWhitelisted = whitelist.some(k => ua.includes(k));
 
     if (!ua || !isWhitelisted) {
-        db.threats.push({ type: "INVALID_UA", ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "NOT_AUTHORIZED" };
+        db.threats.push({ type: "BLOCKED_UA", ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "NOT_AN_EXECUTOR" };
     }
 
-    // 3. INTEGRITY SENTRY (Anti-Browser/Anti-Dumper)
-    // Legitimate executors NEVER send these. Browsers and Scrapers ALWAYS do.
-    const browserHeaders = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
+    // 2. BROWSER ARTIFACT PROTECTION
+    // Even if UA is spoofed, real executors never send these browser management headers.
+    const forbidden = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
     for (const key of Object.keys(h)) {
-        if (browserHeaders.some(bh => key.toLowerCase().includes(bh))) {
-            db.threats.push({ type: "BROWSER_ARTIFACT_DETECTED", detail: key, ip: realIP, ua: ua, time: new Date().toISOString() });
-            return { valid: false, reason: "INTEGRITY_FAIL" };
+        const k = key.toLowerCase();
+        if (forbidden.some(f => k.includes(f))) {
+            db.threats.push({ type: "BROWSER_ARTIFACT", detail: k, ip: realIP, ua: ua, time: new Date().toISOString() });
+            return { valid: false, reason: "DUMPER_SIGNAL_DETECTED" };
         }
+    }
+
+    // 3. DATA CENTER/SCRAPER PROTECTION
+    // Axios used by dumpers usually sends application/json headers. Roblox doesn't.
+    if (h['accept'] && h['accept'].includes('application/json') && !ua.includes('codex')) {
+        return { valid: false, reason: "SCRAPER_FINGERPRINT" };
     }
 
     // 4. DATABASE BLACKLIST
