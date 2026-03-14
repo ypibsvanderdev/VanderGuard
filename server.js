@@ -80,51 +80,61 @@ const authenticate = (req, res, next) => {
 };
 
 const getRealIP = (req) => {
-    const forwarded = req.headers['x-forwarded-for'];
-    return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
+    const h = req.headers;
+    // Prioritize un-spoofable edge headers
+    return h['cf-connecting-ip'] || 
+           h['x-vercel-forwarded-for'] || 
+           h['x-real-ip'] || 
+           (h['x-forwarded-for'] ? h['x-forwarded-for'].split(',').pop().trim() : req.socket.remoteAddress);
 };
 
-// --- SECURITY KERNEL V8.0 (RESIDENTIAL SENTRY) ---
+// --- SECURITY KERNEL V9.0 (TITANIUM GUARD) ---
 async function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
-    const realIP = getRealIP(req);
+    const verifiedIP = getRealIP(req);
     
-    // 1. INDUSTRIAL EXECUTOR WHITELIST
-    const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
-    const isWhitelisted = whitelist.some(k => ua.includes(k));
-
-    if (!ua || !isWhitelisted) {
-        db.threats.push({ type: "BLOCKED_UA", ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "NOT_AN_EXECUTOR" };
+    // 1. HEADER LEANNESS (Executor Fingerprint)
+    // Real executors (WinInet/WinHttp) are extremely lean. 
+    // Scrapers/Browsers are heavy (10-20 headers).
+    const headerCount = Object.keys(h).length;
+    if (headerCount > 9) {
+        db.threats.push({ type: "EXCESSIVE_HEADERS", count: headerCount, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "SYSTEM_REDACTED" };
     }
 
-    // 2. RESIDENTIAL SENTRY (The "God-Level" Block)
-    // Professional dumpers run on VPS/Servers. Real players use Home Internet.
+    // 2. INDUSTRIAL EXECUTOR WHITELIST
+    const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
+    if (!ua || !whitelist.some(k => ua.includes(k))) {
+        db.threats.push({ type: "BLOCKED_UA", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "SYSTEM_REDACTED" };
+    }
+
+    // 3. NUCLEAR FRAGMENT SCANNER (Anti-Stealth)
+    const forbiddenFragments = ['sec-', 'fetch-', 'upgrade-', 'referer', 'accept-language'];
+    for (const key of Object.keys(h)) {
+        const k = key.toLowerCase();
+        if (forbiddenFragments.some(f => k.includes(f))) {
+            db.threats.push({ type: "BROWSER_ARTIFACT", detail: k, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+            return { valid: false, reason: "SYSTEM_REDACTED" };
+        }
+    }
+
+    // 4. RESIDENTIAL SENTRY (VPS/VPN Detection)
     try {
-        const ipCheck = await axios.get(`http://ip-api.com/json/${realIP}?fields=proxy,hosting,status`);
+        const ipCheck = await axios.get(`http://ip-api.com/json/${verifiedIP}?fields=proxy,hosting,status`);
         if (ipCheck.data && ipCheck.data.status === 'success') {
             if (ipCheck.data.proxy === true || ipCheck.data.hosting === true) {
-                db.threats.push({ type: "DATA_CENTER_BLOCK", ip: realIP, ua: ua, time: new Date().toISOString() });
-                return { valid: false, reason: "SERVER_INFRASTRUCTURE_DETECTED" };
+                db.threats.push({ type: "DATA_CENTER_BLOCK", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+                return { valid: false, reason: "SYSTEM_REDACTED" };
             }
         }
     } catch (e) {
-        console.warn("Sentry Intelligence Offline - Falling back to Header Integrity.");
+        console.warn("Sentry Intel Timeout.");
     }
 
-    // 3. BROWSER ARTIFACT PROTECTION
-    const forbidden = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
-    for (const key of Object.keys(h)) {
-        const k = key.toLowerCase();
-        if (forbidden.some(f => k.includes(f))) {
-            db.threats.push({ type: "BROWSER_ARTIFACT", detail: k, ip: realIP, ua: ua, time: new Date().toISOString() });
-            return { valid: false, reason: "DUMPER_SIGNAL_DETECTED" };
-        }
-    }
-
-    // 4. DATABASE BLACKLIST
-    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(realIP)) {
+    // 5. DATABASE BLACKLIST
+    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(verifiedIP)) {
         return { valid: false, reason: "BANNED_ENTITY" };
     }
     
