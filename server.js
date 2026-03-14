@@ -84,58 +84,61 @@ const getRealIP = (req) => {
     return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
 };
 
-// --- SECURITY KERNEL V2 (INDUSTRIAL) ---
+// --- SECURITY KERNEL V3 (AGGRESSIVE ZERO-TRUST) ---
 function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const realIP = getRealIP(req);
     
-    // 1. DYNAMIC BLACKLIST (Aggressive)
-    const botUA = [
-        'curl', 'wget', 'python', 'postman', 'node', 'axios', 'fetch', 'puppeteer',
-        'selenium', 'playwright', 'insomnia', 'googlebot', 'bingbot', 'phantomjs',
-        'headless', 'scrap', 'collector', 'spider'
+    // 1. FORBIDDEN HEADERS (The Scraper Fingerprint)
+    // Legit Roblox/Executors NEVER send these. Browsers and Puppeteer ALWAYS do.
+    const forbidden = [
+        'sec-ch-ua', 
+        'sec-fetch-mode', 
+        'sec-fetch-site', 
+        'sec-fetch-dest', 
+        'sec-fetch-user',
+        'upgrade-insecure-requests',
+        'accept-language',
+        'referer' // Most executors don't send a referer to raw/ links
     ];
-    
-    // 2. INDUSTRIAL EXECUTOR WHITELIST
+
+    for (const key of forbidden) {
+        if (h[key]) {
+            return { valid: false, reason: "FORBIDDEN_HEADER_DETECTED: " + key };
+        }
+    }
+
+    // 2. FINGERPRINT: AXIOS/NODE-FETCH DETECTION
+    // Axios default: 'application/json, text/plain, */*'
+    // Roblox default: '*/*'
+    if (h['accept'] && h['accept'].includes('application/json') && !ua.includes('codex')) {
+        return { valid: false, reason: "JSON_ACCEPT_FINGERPRINT" };
+    }
+
+    // 3. INDUSTRIAL EXECUTOR WHITELIST
     const executorUA = [
         'roblox/wininet', 'roblox/winhttp', 'delta', 'fluxus', 'codex', 'hydrogen', 
         'arceus', 'vegax', 'wave', 'solara', 'xeno', 'celery'
     ];
+    
+    const isWhitelisted = executorUA.some(k => ua.includes(k));
 
-    // 3. IP SPOOF DETECTION
-    // If multiple forwarding headers exist with conflicting data, flag it
+    // 4. UA MANDATORY CHECK
+    if (!ua || !isWhitelisted) {
+        return { valid: false, reason: "INVALID_USER_AGENT" };
+    }
+
+    // 5. IP SPOOF DETECTION (STRICT)
     const cloudflareIP = h['cf-connecting-ip'];
     const forwadIP = h['x-forwarded-for'];
     if (cloudflareIP && forwadIP && cloudflareIP !== forwadIP.split(',')[0].trim()) {
-        return { valid: false, reason: "IP_SPOOF_DETECTED" };
-    }
-
-    // 4. FINGERPRINT CONSISTENCY (Impossible Requests)
-    const isRoblox = ua.includes('roblox');
-    const hasBrowserHeaders = h['accept-language'] || h['sec-ch-ua'] || h['sec-fetch-dest'];
-
-    // If it claims to be a simple Roblox WinInet but has advanced browser fingerprints
-    if (isRoblox && hasBrowserHeaders) {
-        return { valid: false, reason: "IMPOSSIBLE_FINGERPRINT" };
-    }
-
-    // 5. UA CONSISTENCY CHECK
-    const isWhitelisted = executorUA.some(k => ua.includes(k));
-    const isBlacklisted = botUA.some(k => ua.includes(k));
-
-    // Strict: If it's a browser but claiming to be an executor, or just a known bot
-    if (isBlacklisted || !ua) {
-        return { valid: false, reason: "BLACKLISTED_UA" };
-    }
-
-    if (ua.includes('mozilla') && !isWhitelisted) {
-        return { valid: false, reason: "BROWSER_ACCESS_DENIED" };
+        return { valid: false, reason: "IP_SPOOF_SENTRY" };
     }
 
     // 6. DATABASE BLACKLIST
     if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(realIP)) {
-        return { valid: false, reason: "IP_BANNED" };
+        return { valid: false, reason: "BANNED_ENTITY" };
     }
     
     return { valid: true };
