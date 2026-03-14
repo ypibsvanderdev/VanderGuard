@@ -81,25 +81,30 @@ const authenticate = (req, res, next) => {
 
 const getRealIP = (req) => {
     const h = req.headers;
-    // Prioritize un-spoofable edge headers
     return h['cf-connecting-ip'] || 
            h['x-vercel-forwarded-for'] || 
            h['x-real-ip'] || 
-           (h['x-forwarded-for'] ? h['x-forwarded-for'].split(',').pop().trim() : req.socket.remoteAddress);
+           (h['x-forwarded-for'] ? h['x-forwarded-for'].split(',')[0].trim() : req.socket.remoteAddress);
 };
 
-// --- SECURITY KERNEL V9.0 (TITANIUM GUARD) ---
+// --- SECURITY KERNEL V9.1 (BALANCED TITANIUM) ---
 async function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const verifiedIP = getRealIP(req);
     
-    // 1. HEADER LEANNESS (Executor Fingerprint)
-    // Real executors (WinInet/WinHttp) are extremely lean. 
-    // Scrapers/Browsers are heavy (10-20 headers).
-    const headerCount = Object.keys(h).length;
-    if (headerCount > 9) {
-        db.threats.push({ type: "EXCESSIVE_HEADERS", count: headerCount, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+    // 1. HEADER LEANNESS (Smart Filter)
+    // Only count headers that the client actually sends (ignore Vercel infrastructure)
+    const clientHeaders = Object.keys(h).filter(k => 
+        !k.startsWith('x-vercel-') && 
+        !k.startsWith('x-forwarded-') &&
+        !k.startsWith('x-real-') &&
+        k !== 'connection' &&
+        k !== 'host'
+    );
+    
+    if (clientHeaders.length > 7) {
+        db.threats.push({ type: "EXCESSIVE_HEADERS", count: clientHeaders.length, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
         return { valid: false, reason: "SYSTEM_REDACTED" };
     }
 
@@ -110,12 +115,11 @@ async function validateLoadstring(req) {
         return { valid: false, reason: "SYSTEM_REDACTED" };
     }
 
-    // 3. NUCLEAR FRAGMENT SCANNER (Anti-Stealth)
-    const forbiddenFragments = ['sec-', 'fetch-', 'upgrade-', 'referer', 'accept-language'];
-    for (const key of Object.keys(h)) {
-        const k = key.toLowerCase();
-        if (forbiddenFragments.some(f => k.includes(f))) {
-            db.threats.push({ type: "BROWSER_ARTIFACT", detail: k, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+    // 3. NUCLEAR FRAGMENT SCANNER
+    const forbiddenFragments = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
+    for (const key of clientHeaders) {
+        if (forbiddenFragments.some(f => key.includes(f))) {
+            db.threats.push({ type: "BROWSER_ARTIFACT", detail: key, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
             return { valid: false, reason: "SYSTEM_REDACTED" };
         }
     }
