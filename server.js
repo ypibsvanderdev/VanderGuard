@@ -240,7 +240,7 @@ app.get('/raw/:name', async (req, res) => {
     res.setHeader('Server', 'Vander-Guard-Edge');
 
     // 2. INDUSTRIAL VALIDATION (Executor Detection)
-    const check = validateLoadstring(req);
+    const check = await validateLoadstring(req);
     if (!check.valid) {
         return res.redirect('/denied.html');
     }
