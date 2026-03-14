@@ -83,15 +83,31 @@ function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     
-    // SushiX Industrial Whitelist
-    const whitelist = ['delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 'cfnetwork', 'wininet', 'robloxproxy'];
-    const blacklist = ['curl', 'wget', 'python', 'postman', 'bot', 'node', 'fetch', 'axios', 'scaper'];
+    // Industrial Guard Whitelist (Executors only)
+    const whitelist = [
+        'delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 
+        'cfnetwork', 'wininet', 'robloxproxy', 'wave', 'solara', 'xeno'
+    ];
+    
+    // Aggressive Bot/Scraper Blacklist
+    const blacklist = [
+        'curl', 'wget', 'python', 'postman', 'bot', 'node', 'fetch', 'axios', 
+        'scraper', 'puppeteer', 'selenium', 'playwright', 'insomnia', 'discord',
+        'googlebot', 'bingbot'
+    ];
     
     const isWhitelisted = whitelist.some(k => ua.includes(k));
     const isBlacklisted = blacklist.some(k => ua.includes(k));
 
-    if (!isWhitelisted || isBlacklisted) return { valid: false, reason: "BROWSER_ACCESS" };
-    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(req.ip)) return { valid: false, reason: "IP_BANNED" };
+    // If it's a browser (has 'mozilla' but not whitelisted) or a known bot
+    if ((ua.includes('mozilla') && !isWhitelisted) || isBlacklisted || !ua) {
+        return { valid: false, reason: "BROWSER_OR_BOT" };
+    }
+    
+    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(req.ip)) {
+        return { valid: false, reason: "IP_BANNED" };
+    }
+    
     return { valid: true };
 }
 
@@ -206,7 +222,7 @@ app.get('/raw/:name', async (req, res) => {
     // 2. INDUSTRIAL VALIDATION (Executor Detection)
     const check = validateLoadstring(req);
     if (!check.valid) {
-        return res.status(403).send(`-- [[ SECURITY EXCEPTION ]]\n-- Timestamp: ${Date.now()}\n-- Identity: ${crypto.randomBytes(8).toString('hex')}`);
+        return res.redirect('/denied.html');
     }
 
     const asset = db.vault[fileName];
