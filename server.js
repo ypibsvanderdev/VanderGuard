@@ -87,7 +87,7 @@ const getRealIP = (req) => {
            (h['x-forwarded-for'] ? h['x-forwarded-for'].split(',')[0].trim() : req.socket.remoteAddress);
 };
 
-// --- SECURITY KERNEL V11.1 (SPECTER SENTRY) ---
+// --- SECURITY KERNEL V11.2 (STABLE SENTRY) ---
 const COOLDOWN = {};
 
 async function validateLoadstring(req) {
@@ -97,16 +97,17 @@ async function validateLoadstring(req) {
     
     // 1. BURST RATE LIMITER
     const now = Date.now();
-    if (COOLDOWN[verifiedIP] && (now - COOLDOWN[verifiedIP]) < 8000) {
+    if (COOLDOWN[verifiedIP] && (now - COOLDOWN[verifiedIP]) < 3000) {
         db.threats.push({ type: "BURST_FETCH", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "REDACTED" };
+        await saveDB();
+        return { valid: false, reason: "COOLDOWN_ACTIVE" };
     }
     COOLDOWN[verifiedIP] = now;
 
-    // 2. STRICT SIGNATURE ENFORCEMENT
-    // Only allow headers that a legit Roblox executor (game:HttpGet) sends.
+    // 2. SIGNATURE ENFORCEMENT
     const allowedHeaders = [
-        'user-agent', 'host', 'connection', 'accept-encoding', 'accept',
+        'user-agent', 'host', 'connection', 'accept-encoding', 'accept', 'accept-language',
+        'content-type', 'content-length', 'cache-control', 'pragma', 'identity',
         'x-forwarded-for', 'x-forwarded-proto', 'x-real-ip', 
         'x-vercel-forwarded-for', 'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 
         'cf-visitor', 'x-vercel-id', 'x-vercel-proxy-signature', 'x-vercel-proxy-signature-common'
@@ -115,25 +116,27 @@ async function validateLoadstring(req) {
     for (const key of Object.keys(h)) {
         if (!allowedHeaders.includes(key.toLowerCase())) {
             db.threats.push({ type: "ILLEGAL_HEADER", detail: key, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-            return { valid: false, reason: "REDACTED" };
+            await saveDB();
+            return { valid: false, reason: "SIGNATURE_REJECTED" };
         }
     }
 
-    // 3. ENCODING INTEGRITY
-    const encoding = h['accept-encoding'] || '';
-    if (!encoding.includes('gzip') || encoding.includes('br')) {
-         db.threats.push({ type: "ENCODING_MISMATCH", detail: encoding, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-         return { valid: false, reason: "REDACTED" };
+    // 3. ENCODING CHECK (Optional but Strict)
+    if (h['accept-encoding'] && h['accept-encoding'].includes('br')) {
+         db.threats.push({ type: "ENCODING_MISMATCH", detail: h['accept-encoding'], ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+         await saveDB();
+         return { valid: false, reason: "SIGNATURE_REJECTED" };
     }
 
     // 4. INDUSTRIAL UA WHITELIST
     const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
     if (!ua || !whitelist.some(k => ua.includes(k))) {
         db.threats.push({ type: "INVALID_UA", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "REDACTED" };
+        await saveDB();
+        return { valid: false, reason: "SIGNATURE_REJECTED" };
     }
 
-    // 5. RESIDENTIAL ORACLE (Data Center Block)
+    // 5. RESIDENTIAL ORACLE
     try {
         const ipCheck = await axios.get(`http://ip-api.com/json/${verifiedIP}?fields=isp,org,as,hosting,proxy,status`, { timeout: 3000 });
         if (ipCheck.data && ipCheck.data.status === 'success') {
@@ -141,23 +144,15 @@ async function validateLoadstring(req) {
             const org = (ipCheck.data.org || '').toLowerCase();
             const as = (ipCheck.data.as || '').toLowerCase();
             
-            const serverKeywords = [
-                'digitalocean', 'amazon', 'aws', 'google', 'cloud', 'ovh', 'linode', 
-                'hetzner', 'microsoft', 'azure', 'vultr', 'm247', 'hosting', 'datacenter',
-                'oracle', 'ibm', 'server', 'choopa', 'quadranet', 'leaseweb'
-            ];
+            const serverKeywords = ['digitalocean', 'amazon', 'aws', 'google', 'cloud', 'ovh', 'linode', 'hetzner', 'microsoft', 'azure', 'vultr', 'm247', 'hosting', 'datacenter', 'oracle', 'ibm', 'server', 'choopa', 'quadranet', 'leaseweb'];
 
-            const isServer = serverKeywords.some(k => isp.includes(k) || org.includes(k) || as.includes(k)) || 
-                             ipCheck.data.proxy === true || 
-                             ipCheck.data.hosting === true;
-
-            if (isServer) {
+            if (serverKeywords.some(k => isp.includes(k) || org.includes(k) || as.includes(k)) || ipCheck.data.proxy === true || ipCheck.data.hosting === true) {
                 db.threats.push({ type: "DATA_CENTER_BLOCK", provider: isp, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-                return { valid: false, reason: "REDACTED" };
+                await saveDB();
+                return { valid: false, reason: "INFRASTRUCTURE_REDACTED" };
             }
         }
     } catch (e) {}
-
     // 6. DB BLACKLIST
     if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(verifiedIP)) {
         return { valid: false, reason: "BANNED" };
