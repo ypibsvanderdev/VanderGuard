@@ -87,41 +87,67 @@ const getRealIP = (req) => {
            (h['x-forwarded-for'] ? h['x-forwarded-for'].split(',')[0].trim() : req.socket.remoteAddress);
 };
 
-// --- SECURITY KERNEL V9.2 (MAX COMPATIBILITY) ---
+// --- SECURITY KERNEL V10.0 (OBSIDIAN SHIELD) ---
 async function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const verifiedIP = getRealIP(req);
     
-    // 1. DYNAMIC SIGNATURE SCANNER (Core Defense)
-    // We scan all incoming headers for browser fingerprint artifacts.
-    // This is the most reliable way to kill Puppeteer/Chromium without blocking players.
-    const forbidden = [
-        'sec-ch-ua', 
-        'sec-fetch-dest', 
-        'sec-fetch-mode', 
-        'sec-fetch-site', 
-        'sec-fetch-user',
-        'upgrade-insecure-requests',
-        'accept-language'
-    ];
+    // 1. SIGNATURE SCANNER (Browser/Scraper Detection)
+    // Legit executors are minimal. Scrapers leave browser/library fingerprints.
+    const forbidden = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
+    const clientHeaders = Object.keys(h).filter(k => 
+        !k.startsWith('x-vercel-') && !k.startsWith('x-forwarded-') && !k.startsWith('x-real-') &&
+        k !== 'connection' && k !== 'host' && k !== 'accept-encoding' && k !== 'accept'
+    );
 
     for (const key of Object.keys(h)) {
-        const k = key.toLowerCase();
-        if (forbidden.some(f => k.includes(f))) {
-            db.threats.push({ type: "BROWSER_FINGERPRINT", detail: k, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+        if (forbidden.some(f => key.toLowerCase().includes(f))) {
+            db.threats.push({ type: "BROWSER_ARTIFACT", detail: key, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
             return { valid: false, reason: "SYSTEM_REDACTED" };
         }
+    }
+
+    if (clientHeaders.length > 8) {
+        db.threats.push({ type: "EXCESSIVE_HEADERS", count: clientHeaders.length, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "SYSTEM_REDACTED" };
     }
 
     // 2. INDUSTRIAL EXECUTOR WHITELIST
     const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
     if (!ua || !whitelist.some(k => ua.includes(k))) {
-        db.threats.push({ type: "INVALID_IDENTITY", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+        db.threats.push({ type: "INVALID_UA", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
         return { valid: false, reason: "SYSTEM_REDACTED" };
     }
 
-    // 3. DATABASE BLACKLIST
+    // 3. ZERO-TRUST IP ORACLE (VPN/VPS/DUMPER BLOCK)
+    try {
+        const ipCheck = await axios.get(`http://ip-api.com/json/${verifiedIP}?fields=isp,org,as,hosting,proxy,status`, { timeout: 3000 });
+        if (ipCheck.data && ipCheck.data.status === 'success') {
+            const isp = (ipCheck.data.isp || '').toLowerCase();
+            const org = (ipCheck.data.org || '').toLowerCase();
+            const as = (ipCheck.data.as || '').toLowerCase();
+            
+            const serverKeywords = [
+                'digitalocean', 'amazon', 'aws', 'google', 'cloud', 'ovh', 'linode', 
+                'hetzner', 'microsoft', 'azure', 'vultr', 'm247', 'hosting', 'datacenter',
+                'oracle', 'ibm', 'server', 'choopa', 'quadranet', 'leaseweb'
+            ];
+
+            const isServer = serverKeywords.some(k => isp.includes(k) || org.includes(k) || as.includes(k)) || 
+                             ipCheck.data.proxy === true || 
+                             ipCheck.data.hosting === true;
+
+            if (isServer) {
+                db.threats.push({ type: "DATA_CENTER_BLOCK", provider: isp, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+                return { valid: false, reason: "INFRASTRUCTURE_REDACTED" };
+            }
+        }
+    } catch (e) {
+        console.warn("Oracle Timeout - Speed Mode Active.");
+    }
+
+    // 4. DATABASE BLACKLIST
     if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(verifiedIP)) {
         return { valid: false, reason: "BANNED_ENTITY" };
     }
