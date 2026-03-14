@@ -87,61 +87,45 @@ const getRealIP = (req) => {
            (h['x-forwarded-for'] ? h['x-forwarded-for'].split(',')[0].trim() : req.socket.remoteAddress);
 };
 
-// --- SECURITY KERNEL V9.1 (BALANCED TITANIUM) ---
+// --- SECURITY KERNEL V9.2 (MAX COMPATIBILITY) ---
 async function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const verifiedIP = getRealIP(req);
     
-    // 1. HEADER LEANNESS (Smart Filter)
-    // Only count headers that the client actually sends (ignore Vercel infrastructure)
-    const clientHeaders = Object.keys(h).filter(k => 
-        !k.startsWith('x-vercel-') && 
-        !k.startsWith('x-forwarded-') &&
-        !k.startsWith('x-real-') &&
-        k !== 'connection' &&
-        k !== 'host'
-    );
-    
-    if (clientHeaders.length > 7) {
-        db.threats.push({ type: "EXCESSIVE_HEADERS", count: clientHeaders.length, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "SYSTEM_REDACTED" };
+    // 1. DYNAMIC SIGNATURE SCANNER (Core Defense)
+    // We scan all incoming headers for browser fingerprint artifacts.
+    // This is the most reliable way to kill Puppeteer/Chromium without blocking players.
+    const forbidden = [
+        'sec-ch-ua', 
+        'sec-fetch-dest', 
+        'sec-fetch-mode', 
+        'sec-fetch-site', 
+        'sec-fetch-user',
+        'upgrade-insecure-requests',
+        'accept-language'
+    ];
+
+    for (const key of Object.keys(h)) {
+        const k = key.toLowerCase();
+        if (forbidden.some(f => k.includes(f))) {
+            db.threats.push({ type: "BROWSER_FINGERPRINT", detail: k, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+            return { valid: false, reason: "SYSTEM_REDACTED" };
+        }
     }
 
     // 2. INDUSTRIAL EXECUTOR WHITELIST
     const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
     if (!ua || !whitelist.some(k => ua.includes(k))) {
-        db.threats.push({ type: "BLOCKED_UA", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+        db.threats.push({ type: "INVALID_IDENTITY", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
         return { valid: false, reason: "SYSTEM_REDACTED" };
     }
 
-    // 3. NUCLEAR FRAGMENT SCANNER
-    const forbiddenFragments = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
-    for (const key of clientHeaders) {
-        if (forbiddenFragments.some(f => key.includes(f))) {
-            db.threats.push({ type: "BROWSER_ARTIFACT", detail: key, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-            return { valid: false, reason: "SYSTEM_REDACTED" };
-        }
-    }
-
-    // 4. RESIDENTIAL SENTRY (VPS/VPN Detection)
-    try {
-        const ipCheck = await axios.get(`http://ip-api.com/json/${verifiedIP}?fields=proxy,hosting,status`);
-        if (ipCheck.data && ipCheck.data.status === 'success') {
-            if (ipCheck.data.proxy === true || ipCheck.data.hosting === true) {
-                db.threats.push({ type: "DATA_CENTER_BLOCK", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-                return { valid: false, reason: "SYSTEM_REDACTED" };
-            }
-        }
-    } catch (e) {
-        console.warn("Sentry Intel Timeout.");
-    }
-
-    // 5. DATABASE BLACKLIST
+    // 3. DATABASE BLACKLIST
     if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(verifiedIP)) {
         return { valid: false, reason: "BANNED_ENTITY" };
     }
-    
+
     return { valid: true };
 }
 
