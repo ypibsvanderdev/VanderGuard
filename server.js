@@ -84,53 +84,41 @@ const getRealIP = (req) => {
     return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
 };
 
-// --- SECURITY KERNEL V5.0 (NUCLEAR SENTRY) ---
+// --- SECURITY KERNEL V6.0 (MATRIX HANDSHAKE) ---
 function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const realIP = getRealIP(req);
+    const vanderToken = h['x-vander-token'];
     
-    // 1. HEADER LEANNESS (Executor Fingerprint)
-    // Real Roblox executors send 4-6 headers max. Scrapers send 10-20.
-    const headerCount = Object.keys(h).length;
-    if (headerCount > 9) {
-        db.threats.push({ type: "EXCESSIVE_HEADERS", count: headerCount, ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "NUCLEAR_BLOCK" };
+    // 1. NON-SPOOFABLE HANDSHAKE
+    // Only requests with the correct internal token are allowed. 
+    // This prevents any generic bot from fetching even with a spoofed UA.
+    if (vanderToken !== 'VANDER-ELITE-KERNEL-888') {
+        db.threats.push({ type: "UNAUTHORIZED_HANDSHAKE", ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "NOT_AUTHORIZED" };
     }
 
-    // 2. FORBIDDEN FRAGMENTS (Browser/Scraper Detection)
-    const forbiddenKeys = ['sec-', 'fetch-', 'upgrade-', 'referer', 'accept-language'];
+    // 2. EXECUTOR WHITELIST (STRICT)
+    const whitelistedUA = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno'];
+    const isWhitelisted = whitelistedUA.some(k => ua.includes(k));
+
+    if (!ua || !isWhitelisted) {
+        db.threats.push({ type: "INVALID_UA", ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "NOT_AUTHORIZED" };
+    }
+
+    // 3. INTEGRITY SENTRY (Anti-Browser/Anti-Dumper)
+    // Legitimate executors NEVER send these. Browsers and Scrapers ALWAYS do.
+    const browserHeaders = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
     for (const key of Object.keys(h)) {
-        const k = key.toLowerCase();
-        if (forbiddenKeys.some(f => k.includes(f))) {
-            db.threats.push({ type: "BAD_HEADER", detail: k, ip: realIP, ua: ua, time: new Date().toISOString() });
-            return { valid: false, reason: "NUCLEAR_BLOCK" };
+        if (browserHeaders.some(bh => key.toLowerCase().includes(bh))) {
+            db.threats.push({ type: "BROWSER_ARTIFACT_DETECTED", detail: key, ip: realIP, ua: ua, time: new Date().toISOString() });
+            return { valid: false, reason: "INTEGRITY_FAIL" };
         }
     }
 
-    // 3. FINGERPRINT: AXIOS/NODE-FETCH DETECTION
-    if (h['accept'] && h['accept'].includes('application/json')) {
-         db.threats.push({ type: "JSON_FINGERPRINT", ip: realIP, ua: ua, time: new Date().toISOString() });
-         return { valid: false, reason: "NUCLEAR_BLOCK" };
-    }
-
-    // 4. IP SENTRY (Strict Proxy Check)
-    if (h['x-forwarded-for'] && h['x-forwarded-for'].includes(',')) {
-        db.threats.push({ type: "PROXY_CHAIN", ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "NUCLEAR_BLOCK" };
-    }
-
-    // 5. UA WHITELIST (STRICT)
-    const executorUA = [
-        'roblox', 'delta', 'fluxus', 'codex', 'hydrogen', 
-        'arceus', 'vegax', 'wave', 'solara', 'xeno', 'celery'
-    ];
-    if (!ua || !executorUA.some(k => ua.includes(k))) {
-        db.threats.push({ type: "INVALID_UA", ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "NUCLEAR_BLOCK" };
-    }
-
-    // 6. DB BLACKLIST
+    // 4. DATABASE BLACKLIST
     if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(realIP)) {
         return { valid: false, reason: "BANNED_ENTITY" };
     }
