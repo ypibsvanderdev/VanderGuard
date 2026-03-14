@@ -84,58 +84,53 @@ const getRealIP = (req) => {
     return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
 };
 
-// --- SECURITY KERNEL V3.1 (BALANCED PROTECTION) ---
+// --- SECURITY KERNEL V5.0 (NUCLEAR SENTRY) ---
 function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const realIP = getRealIP(req);
     
-    // 1. FORBIDDEN HEADERS (The Scraper Fingerprint)
-    const forbidden = [
-        'sec-ch-ua', 
-        'sec-fetch-mode', 
-        'sec-fetch-site', 
-        'sec-fetch-dest', 
-        'sec-fetch-user',
-        'upgrade-insecure-requests'
-    ];
+    // 1. HEADER LEANNESS (Executor Fingerprint)
+    // Real Roblox executors send 4-6 headers max. Scrapers send 10-20.
+    const headerCount = Object.keys(h).length;
+    if (headerCount > 9) {
+        db.threats.push({ type: "EXCESSIVE_HEADERS", count: headerCount, ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "NUCLEAR_BLOCK" };
+    }
 
-    for (const key of forbidden) {
-        if (h[key]) {
-            db.threats.push({ type: "FORBIDDEN_HEADER", detail: key, ip: realIP, ua: ua, time: new Date().toISOString() });
-            return { valid: false, reason: "BLOCKED_BY_SENTRY" };
+    // 2. FORBIDDEN FRAGMENTS (Browser/Scraper Detection)
+    const forbiddenKeys = ['sec-', 'fetch-', 'upgrade-', 'referer', 'accept-language'];
+    for (const key of Object.keys(h)) {
+        const k = key.toLowerCase();
+        if (forbiddenKeys.some(f => k.includes(f))) {
+            db.threats.push({ type: "BAD_HEADER", detail: k, ip: realIP, ua: ua, time: new Date().toISOString() });
+            return { valid: false, reason: "NUCLEAR_BLOCK" };
         }
     }
 
-    // 2. FINGERPRINT: AXIOS/NODE-FETCH DETECTION
-    if (h['accept'] && h['accept'].includes('application/json') && !ua.includes('codex') && !ua.includes('roblox')) {
-        db.threats.push({ type: "JSON_FINGERPRINT", ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "BLOCKED_BY_SENTRY" };
+    // 3. FINGERPRINT: AXIOS/NODE-FETCH DETECTION
+    if (h['accept'] && h['accept'].includes('application/json')) {
+         db.threats.push({ type: "JSON_FINGERPRINT", ip: realIP, ua: ua, time: new Date().toISOString() });
+         return { valid: false, reason: "NUCLEAR_BLOCK" };
     }
 
-    // 3. INDUSTRIAL EXECUTOR WHITELIST
+    // 4. IP SENTRY (Strict Proxy Check)
+    if (h['x-forwarded-for'] && h['x-forwarded-for'].includes(',')) {
+        db.threats.push({ type: "PROXY_CHAIN", ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "NUCLEAR_BLOCK" };
+    }
+
+    // 5. UA WHITELIST (STRICT)
     const executorUA = [
         'roblox', 'delta', 'fluxus', 'codex', 'hydrogen', 
         'arceus', 'vegax', 'wave', 'solara', 'xeno', 'celery'
     ];
-    
-    const isWhitelisted = executorUA.some(k => ua.includes(k));
-
-    // 4. UA MANDATORY CHECK
-    if (!ua || !isWhitelisted) {
+    if (!ua || !executorUA.some(k => ua.includes(k))) {
         db.threats.push({ type: "INVALID_UA", ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "BLOCKED_BY_SENTRY" };
+        return { valid: false, reason: "NUCLEAR_BLOCK" };
     }
 
-    // 5. IP SPOOF DETECTION (STRICT)
-    const cloudflareIP = h['cf-connecting-ip'];
-    const forwadIP = h['x-forwarded-for'];
-    if (cloudflareIP && forwadIP && cloudflareIP !== forwadIP.split(',')[0].trim()) {
-        db.threats.push({ type: "IP_SPOOF", ip: realIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "BLOCKED_BY_SENTRY" };
-    }
-
-    // 6. DATABASE BLACKLIST
+    // 6. DB BLACKLIST
     if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(realIP)) {
         return { valid: false, reason: "BANNED_ENTITY" };
     }
