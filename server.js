@@ -79,32 +79,62 @@ const authenticate = (req, res, next) => {
     }
 };
 
+const getRealIP = (req) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
+};
+
+// --- SECURITY KERNEL V2 (INDUSTRIAL) ---
 function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
+    const realIP = getRealIP(req);
     
-    // Industrial Guard Whitelist (Executors only)
-    const whitelist = [
-        'delta', 'fluxus', 'codex', 'arceus', 'hydrogen', 'vegax', 'roblox', 
-        'cfnetwork', 'wininet', 'robloxproxy', 'wave', 'solara', 'xeno'
+    // 1. DYNAMIC BLACKLIST (Aggressive)
+    const botUA = [
+        'curl', 'wget', 'python', 'postman', 'node', 'axios', 'fetch', 'puppeteer',
+        'selenium', 'playwright', 'insomnia', 'googlebot', 'bingbot', 'phantomjs',
+        'headless', 'scrap', 'collector', 'spider'
     ];
     
-    // Aggressive Bot/Scraper Blacklist
-    const blacklist = [
-        'curl', 'wget', 'python', 'postman', 'bot', 'node', 'fetch', 'axios', 
-        'scraper', 'puppeteer', 'selenium', 'playwright', 'insomnia', 'discord',
-        'googlebot', 'bingbot'
+    // 2. INDUSTRIAL EXECUTOR WHITELIST
+    const executorUA = [
+        'roblox/wininet', 'roblox/winhttp', 'delta', 'fluxus', 'codex', 'hydrogen', 
+        'arceus', 'vegax', 'wave', 'solara', 'xeno', 'celery'
     ];
-    
-    const isWhitelisted = whitelist.some(k => ua.includes(k));
-    const isBlacklisted = blacklist.some(k => ua.includes(k));
 
-    // If it's a browser (has 'mozilla' but not whitelisted) or a known bot
-    if ((ua.includes('mozilla') && !isWhitelisted) || isBlacklisted || !ua) {
-        return { valid: false, reason: "BROWSER_OR_BOT" };
+    // 3. IP SPOOF DETECTION
+    // If multiple forwarding headers exist with conflicting data, flag it
+    const cloudflareIP = h['cf-connecting-ip'];
+    const forwadIP = h['x-forwarded-for'];
+    if (cloudflareIP && forwadIP && cloudflareIP !== forwadIP.split(',')[0].trim()) {
+        return { valid: false, reason: "IP_SPOOF_DETECTED" };
     }
-    
-    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(req.ip)) {
+
+    // 4. FINGERPRINT CONSISTENCY (Impossible Requests)
+    const isRoblox = ua.includes('roblox');
+    const hasBrowserHeaders = h['accept-language'] || h['sec-ch-ua'] || h['sec-fetch-dest'];
+
+    // If it claims to be a simple Roblox WinInet but has advanced browser fingerprints
+    if (isRoblox && hasBrowserHeaders) {
+        return { valid: false, reason: "IMPOSSIBLE_FINGERPRINT" };
+    }
+
+    // 5. UA CONSISTENCY CHECK
+    const isWhitelisted = executorUA.some(k => ua.includes(k));
+    const isBlacklisted = botUA.some(k => ua.includes(k));
+
+    // Strict: If it's a browser but claiming to be an executor, or just a known bot
+    if (isBlacklisted || !ua) {
+        return { valid: false, reason: "BLACKLISTED_UA" };
+    }
+
+    if (ua.includes('mozilla') && !isWhitelisted) {
+        return { valid: false, reason: "BROWSER_ACCESS_DENIED" };
+    }
+
+    // 6. DATABASE BLACKLIST
+    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(realIP)) {
         return { valid: false, reason: "IP_BANNED" };
     }
     
@@ -229,10 +259,11 @@ app.get('/raw/:name', async (req, res) => {
     if (!asset) return res.status(404).send("-- Asset Redacted.");
 
     // 3. LOG EXECUTION
+    const realIP = getRealIP(req);
     db.analytics.totalExecutions++;
     db.executions.push({ 
         script: req.params.name, 
-        user: req.headers['x-forwarded-for'] || req.ip, 
+        user: realIP, 
         time: new Date().toISOString() 
     });
     await saveDB();
