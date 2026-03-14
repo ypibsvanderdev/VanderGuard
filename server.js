@@ -84,14 +84,13 @@ const getRealIP = (req) => {
     return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
 };
 
-// --- SECURITY KERNEL V7.0 (TRUE EXECUTOR WHITELIST) ---
-function validateLoadstring(req) {
+// --- SECURITY KERNEL V8.0 (RESIDENTIAL SENTRY) ---
+async function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const realIP = getRealIP(req);
     
     // 1. INDUSTRIAL EXECUTOR WHITELIST
-    // Higher priority: Only allow known Roblox executor signatures.
     const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
     const isWhitelisted = whitelist.some(k => ua.includes(k));
 
@@ -100,8 +99,21 @@ function validateLoadstring(req) {
         return { valid: false, reason: "NOT_AN_EXECUTOR" };
     }
 
-    // 2. BROWSER ARTIFACT PROTECTION
-    // Even if UA is spoofed, real executors never send these browser management headers.
+    // 2. RESIDENTIAL SENTRY (The "God-Level" Block)
+    // Professional dumpers run on VPS/Servers. Real players use Home Internet.
+    try {
+        const ipCheck = await axios.get(`http://ip-api.com/json/${realIP}?fields=proxy,hosting,status`);
+        if (ipCheck.data && ipCheck.data.status === 'success') {
+            if (ipCheck.data.proxy === true || ipCheck.data.hosting === true) {
+                db.threats.push({ type: "DATA_CENTER_BLOCK", ip: realIP, ua: ua, time: new Date().toISOString() });
+                return { valid: false, reason: "SERVER_INFRASTRUCTURE_DETECTED" };
+            }
+        }
+    } catch (e) {
+        console.warn("Sentry Intelligence Offline - Falling back to Header Integrity.");
+    }
+
+    // 3. BROWSER ARTIFACT PROTECTION
     const forbidden = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
     for (const key of Object.keys(h)) {
         const k = key.toLowerCase();
@@ -109,12 +121,6 @@ function validateLoadstring(req) {
             db.threats.push({ type: "BROWSER_ARTIFACT", detail: k, ip: realIP, ua: ua, time: new Date().toISOString() });
             return { valid: false, reason: "DUMPER_SIGNAL_DETECTED" };
         }
-    }
-
-    // 3. DATA CENTER/SCRAPER PROTECTION
-    // Axios used by dumpers usually sends application/json headers. Roblox doesn't.
-    if (h['accept'] && h['accept'].includes('application/json') && !ua.includes('codex')) {
-        return { valid: false, reason: "SCRAPER_FINGERPRINT" };
     }
 
     // 4. DATABASE BLACKLIST
