@@ -84,41 +84,38 @@ const getRealIP = (req) => {
     return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
 };
 
-// --- SECURITY KERNEL V3 (AGGRESSIVE ZERO-TRUST) ---
+// --- SECURITY KERNEL V3.1 (BALANCED PROTECTION) ---
 function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const realIP = getRealIP(req);
     
     // 1. FORBIDDEN HEADERS (The Scraper Fingerprint)
-    // Legit Roblox/Executors NEVER send these. Browsers and Puppeteer ALWAYS do.
     const forbidden = [
         'sec-ch-ua', 
         'sec-fetch-mode', 
         'sec-fetch-site', 
         'sec-fetch-dest', 
         'sec-fetch-user',
-        'upgrade-insecure-requests',
-        'accept-language',
-        'referer' // Most executors don't send a referer to raw/ links
+        'upgrade-insecure-requests'
     ];
 
     for (const key of forbidden) {
         if (h[key]) {
-            return { valid: false, reason: "FORBIDDEN_HEADER_DETECTED: " + key };
+            db.threats.push({ type: "FORBIDDEN_HEADER", detail: key, ip: realIP, ua: ua, time: new Date().toISOString() });
+            return { valid: false, reason: "BLOCKED_BY_SENTRY" };
         }
     }
 
     // 2. FINGERPRINT: AXIOS/NODE-FETCH DETECTION
-    // Axios default: 'application/json, text/plain, */*'
-    // Roblox default: '*/*'
-    if (h['accept'] && h['accept'].includes('application/json') && !ua.includes('codex')) {
-        return { valid: false, reason: "JSON_ACCEPT_FINGERPRINT" };
+    if (h['accept'] && h['accept'].includes('application/json') && !ua.includes('codex') && !ua.includes('roblox')) {
+        db.threats.push({ type: "JSON_FINGERPRINT", ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "BLOCKED_BY_SENTRY" };
     }
 
     // 3. INDUSTRIAL EXECUTOR WHITELIST
     const executorUA = [
-        'roblox/wininet', 'roblox/winhttp', 'delta', 'fluxus', 'codex', 'hydrogen', 
+        'roblox', 'delta', 'fluxus', 'codex', 'hydrogen', 
         'arceus', 'vegax', 'wave', 'solara', 'xeno', 'celery'
     ];
     
@@ -126,14 +123,16 @@ function validateLoadstring(req) {
 
     // 4. UA MANDATORY CHECK
     if (!ua || !isWhitelisted) {
-        return { valid: false, reason: "INVALID_USER_AGENT" };
+        db.threats.push({ type: "INVALID_UA", ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "BLOCKED_BY_SENTRY" };
     }
 
     // 5. IP SPOOF DETECTION (STRICT)
     const cloudflareIP = h['cf-connecting-ip'];
     const forwadIP = h['x-forwarded-for'];
     if (cloudflareIP && forwadIP && cloudflareIP !== forwadIP.split(',')[0].trim()) {
-        return { valid: false, reason: "IP_SPOOF_SENTRY" };
+        db.threats.push({ type: "IP_SPOOF", ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "BLOCKED_BY_SENTRY" };
     }
 
     // 6. DATABASE BLACKLIST
