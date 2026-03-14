@@ -80,84 +80,48 @@ const authenticate = (req, res, next) => {
 };
 
 const getRealIP = (req) => {
-    const h = req.headers;
-    return h['cf-connecting-ip'] || 
-           h['x-vercel-forwarded-for'] || 
-           h['x-real-ip'] || 
-           (h['x-forwarded-for'] ? h['x-forwarded-for'].split(',')[0].trim() : req.socket.remoteAddress);
+    const forwarded = req.headers['x-forwarded-for'];
+    return forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
 };
 
-// --- SECURITY KERNEL V11.2 (STABLE SENTRY) ---
-const COOLDOWN = {};
-
-async function validateLoadstring(req) {
+// --- SECURITY KERNEL V7.0 (TRUE EXECUTOR WHITELIST) ---
+function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
-    const verifiedIP = getRealIP(req);
+    const realIP = getRealIP(req);
     
-    // 1. BURST RATE LIMITER
-    const now = Date.now();
-    if (COOLDOWN[verifiedIP] && (now - COOLDOWN[verifiedIP]) < 3000) {
-        db.threats.push({ type: "BURST_FETCH", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-        await saveDB();
-        return { valid: false, reason: "COOLDOWN_ACTIVE" };
-    }
-    COOLDOWN[verifiedIP] = now;
-
-    // 2. SIGNATURE ENFORCEMENT
-    const allowedHeaders = [
-        'user-agent', 'host', 'connection', 'accept-encoding', 'accept', 'accept-language',
-        'content-type', 'content-length', 'cache-control', 'pragma', 'identity',
-        'x-forwarded-for', 'x-forwarded-proto', 'x-real-ip', 
-        'x-vercel-forwarded-for', 'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 
-        'cf-visitor', 'x-vercel-id', 'x-vercel-proxy-signature', 'x-vercel-proxy-signature-common'
-    ];
-
-    for (const key of Object.keys(h)) {
-        if (!allowedHeaders.includes(key.toLowerCase())) {
-            db.threats.push({ type: "ILLEGAL_HEADER", detail: key, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-            await saveDB();
-            return { valid: false, reason: "SIGNATURE_REJECTED" };
-        }
-    }
-
-    // 3. ENCODING CHECK (Optional but Strict)
-    if (h['accept-encoding'] && h['accept-encoding'].includes('br')) {
-         db.threats.push({ type: "ENCODING_MISMATCH", detail: h['accept-encoding'], ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-         await saveDB();
-         return { valid: false, reason: "SIGNATURE_REJECTED" };
-    }
-
-    // 4. INDUSTRIAL UA WHITELIST
+    // 1. INDUSTRIAL EXECUTOR WHITELIST
+    // Higher priority: Only allow known Roblox executor signatures.
     const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
-    if (!ua || !whitelist.some(k => ua.includes(k))) {
-        db.threats.push({ type: "INVALID_UA", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-        await saveDB();
-        return { valid: false, reason: "SIGNATURE_REJECTED" };
+    const isWhitelisted = whitelist.some(k => ua.includes(k));
+
+    if (!ua || !isWhitelisted) {
+        db.threats.push({ type: "BLOCKED_UA", ip: realIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "NOT_AN_EXECUTOR" };
     }
 
-    // 5. RESIDENTIAL ORACLE
-    try {
-        const ipCheck = await axios.get(`http://ip-api.com/json/${verifiedIP}?fields=isp,org,as,hosting,proxy,status`, { timeout: 3000 });
-        if (ipCheck.data && ipCheck.data.status === 'success') {
-            const isp = (ipCheck.data.isp || '').toLowerCase();
-            const org = (ipCheck.data.org || '').toLowerCase();
-            const as = (ipCheck.data.as || '').toLowerCase();
-            
-            const serverKeywords = ['digitalocean', 'amazon', 'aws', 'google', 'cloud', 'ovh', 'linode', 'hetzner', 'microsoft', 'azure', 'vultr', 'm247', 'hosting', 'datacenter', 'oracle', 'ibm', 'server', 'choopa', 'quadranet', 'leaseweb'];
-
-            if (serverKeywords.some(k => isp.includes(k) || org.includes(k) || as.includes(k)) || ipCheck.data.proxy === true || ipCheck.data.hosting === true) {
-                db.threats.push({ type: "DATA_CENTER_BLOCK", provider: isp, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-                await saveDB();
-                return { valid: false, reason: "INFRASTRUCTURE_REDACTED" };
-            }
+    // 2. BROWSER ARTIFACT PROTECTION
+    // Even if UA is spoofed, real executors never send these browser management headers.
+    const forbidden = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests'];
+    for (const key of Object.keys(h)) {
+        const k = key.toLowerCase();
+        if (forbidden.some(f => k.includes(f))) {
+            db.threats.push({ type: "BROWSER_ARTIFACT", detail: k, ip: realIP, ua: ua, time: new Date().toISOString() });
+            return { valid: false, reason: "DUMPER_SIGNAL_DETECTED" };
         }
-    } catch (e) {}
-    // 6. DB BLACKLIST
-    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(verifiedIP)) {
-        return { valid: false, reason: "BANNED" };
     }
 
+    // 3. DATA CENTER/SCRAPER PROTECTION
+    // Axios used by dumpers usually sends application/json headers. Roblox doesn't.
+    if (h['accept'] && h['accept'].includes('application/json') && !ua.includes('codex')) {
+        return { valid: false, reason: "SCRAPER_FINGERPRINT" };
+    }
+
+    // 4. DATABASE BLACKLIST
+    if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(realIP)) {
+        return { valid: false, reason: "BANNED_ENTITY" };
+    }
+    
     return { valid: true };
 }
 
@@ -270,9 +234,9 @@ app.get('/raw/:name', async (req, res) => {
     res.setHeader('Server', 'Vander-Guard-Edge');
 
     // 2. INDUSTRIAL VALIDATION (Executor Detection)
-    const check = await validateLoadstring(req);
+    const check = validateLoadstring(req);
     if (!check.valid) {
-        return res.redirect('/denied.html');
+        return res.status(403).send("-- [VANDER GUARD]: Access Denied. Integrity Check Failed.");
     }
 
     const asset = db.vault[fileName];
