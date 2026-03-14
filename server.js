@@ -87,40 +87,53 @@ const getRealIP = (req) => {
            (h['x-forwarded-for'] ? h['x-forwarded-for'].split(',')[0].trim() : req.socket.remoteAddress);
 };
 
-// --- SECURITY KERNEL V10.0 (OBSIDIAN SHIELD) ---
+// --- SECURITY KERNEL V11.1 (SPECTER SENTRY) ---
+const COOLDOWN = {};
+
 async function validateLoadstring(req) {
     const h = req.headers;
     const ua = (h['user-agent'] || '').toLowerCase();
     const verifiedIP = getRealIP(req);
     
-    // 1. SIGNATURE SCANNER (Browser/Scraper Detection)
-    // Legit executors are minimal. Scrapers leave browser/library fingerprints.
-    const forbidden = ['sec-ch-ua', 'sec-fetch-', 'upgrade-insecure-requests', 'accept-language'];
-    const clientHeaders = Object.keys(h).filter(k => 
-        !k.startsWith('x-vercel-') && !k.startsWith('x-forwarded-') && !k.startsWith('x-real-') &&
-        k !== 'connection' && k !== 'host' && k !== 'accept-encoding' && k !== 'accept'
-    );
+    // 1. BURST RATE LIMITER
+    const now = Date.now();
+    if (COOLDOWN[verifiedIP] && (now - COOLDOWN[verifiedIP]) < 8000) {
+        db.threats.push({ type: "BURST_FETCH", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+        return { valid: false, reason: "REDACTED" };
+    }
+    COOLDOWN[verifiedIP] = now;
+
+    // 2. STRICT SIGNATURE ENFORCEMENT
+    // Only allow headers that a legit Roblox executor (game:HttpGet) sends.
+    const allowedHeaders = [
+        'user-agent', 'host', 'connection', 'accept-encoding', 'accept',
+        'x-forwarded-for', 'x-forwarded-proto', 'x-real-ip', 
+        'x-vercel-forwarded-for', 'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 
+        'cf-visitor', 'x-vercel-id', 'x-vercel-proxy-signature', 'x-vercel-proxy-signature-common'
+    ];
 
     for (const key of Object.keys(h)) {
-        if (forbidden.some(f => key.toLowerCase().includes(f))) {
-            db.threats.push({ type: "BROWSER_ARTIFACT", detail: key, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-            return { valid: false, reason: "SYSTEM_REDACTED" };
+        if (!allowedHeaders.includes(key.toLowerCase())) {
+            db.threats.push({ type: "ILLEGAL_HEADER", detail: key, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+            return { valid: false, reason: "REDACTED" };
         }
     }
 
-    if (clientHeaders.length > 8) {
-        db.threats.push({ type: "EXCESSIVE_HEADERS", count: clientHeaders.length, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "SYSTEM_REDACTED" };
+    // 3. ENCODING INTEGRITY
+    const encoding = h['accept-encoding'] || '';
+    if (!encoding.includes('gzip') || encoding.includes('br')) {
+         db.threats.push({ type: "ENCODING_MISMATCH", detail: encoding, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
+         return { valid: false, reason: "REDACTED" };
     }
 
-    // 2. INDUSTRIAL EXECUTOR WHITELIST
+    // 4. INDUSTRIAL UA WHITELIST
     const whitelist = ['roblox', 'delta', 'fluxus', 'codex', 'arceus', 'vegax', 'hydrogen', 'wave', 'solara', 'xeno', 'celery'];
     if (!ua || !whitelist.some(k => ua.includes(k))) {
         db.threats.push({ type: "INVALID_UA", ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-        return { valid: false, reason: "SYSTEM_REDACTED" };
+        return { valid: false, reason: "REDACTED" };
     }
 
-    // 3. ZERO-TRUST IP ORACLE (VPN/VPS/DUMPER BLOCK)
+    // 5. RESIDENTIAL ORACLE (Data Center Block)
     try {
         const ipCheck = await axios.get(`http://ip-api.com/json/${verifiedIP}?fields=isp,org,as,hosting,proxy,status`, { timeout: 3000 });
         if (ipCheck.data && ipCheck.data.status === 'success') {
@@ -140,16 +153,14 @@ async function validateLoadstring(req) {
 
             if (isServer) {
                 db.threats.push({ type: "DATA_CENTER_BLOCK", provider: isp, ip: verifiedIP, ua: ua, time: new Date().toISOString() });
-                return { valid: false, reason: "INFRASTRUCTURE_REDACTED" };
+                return { valid: false, reason: "REDACTED" };
             }
         }
-    } catch (e) {
-        console.warn("Oracle Timeout - Speed Mode Active.");
-    }
+    } catch (e) {}
 
-    // 4. DATABASE BLACKLIST
+    // 6. DB BLACKLIST
     if (db.blacklist && db.blacklist.ips && db.blacklist.ips.includes(verifiedIP)) {
-        return { valid: false, reason: "BANNED_ENTITY" };
+        return { valid: false, reason: "BANNED" };
     }
 
     return { valid: true };
