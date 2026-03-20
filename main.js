@@ -48,40 +48,70 @@ document.addEventListener('DOMContentLoaded', () => {
         nemesis_hub: `-- [[ 👺 NEMESIS HUB PREMIUM ]]\n-- Dominance Restored\nprint("[Vander]: Initializing Nemesis Core...")\nloadstring(game:HttpGet("https://raw.githubusercontent.com/Vander/Scripts/main/nemesis.lua"))()`
     };
 
-    const ELITE_WRAPPER = `-- [[ 🎭 VANDER GUARD | ELITE ENFORCER V4.2 ]] --
-local VG_KEY = "PLACEHOLDER_KEY"
-local VG_APP = "PLACEHOLDER_APP"
-local VG_SECRET = "VANDER_X88_SECURE"
+    const ELITE_WRAPPER = `-- [[ 🎭 VANDER GUARD | ELITE ENFORCER V5.9 ]] --
+local TEST_KEY = "PLACEHOLDER_KEY"
+local SCRIPT_NAME = "PLACEHOLDER_NAME"
+local LICENSE_FILE = "vander_license.dat"
 
--- [ SECURITY PROTOCOLS ] --
-local function getHWID() return game:GetService("RbxAnalyticsService"):GetClientId() end
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
 
-local function validate()
-    local hwid = getHWID()
-    local url = "https://vander-guard.vercel.app/api/verify?key="..VG_KEY.."&hwid="..hwid.."&app="..VG_APP
-    local ok, res = pcall(function() return game:HttpGet(url) end)
-    
-    if ok and res:find("STATUS_SUCCESS") then
-        print("[VANDER-GUARD]: Access Authorized for " .. VG_APP)
-        -- Polling to ensure live revocation
-        task.spawn(function()
-            while task.wait(45) do
-                local ok2, res2 = pcall(function() return game:HttpGet(url) end)
-                if not (ok2 and res2:find("STATUS_SUCCESS")) then 
-                    game:GetService("Players").LocalPlayer:Kick("[VG]: License Terminated.") 
-                end
-            end
-        end)
-        return true
-    end
-    return false
-end
-
-if validate() then
+local function runPayload()
+    if game:GetService("Lighting"):FindFirstChild("VanderBlur") then game:GetService("Lighting").VanderBlur:Destroy() end
     -- [[ EXECUTE PAYLOAD ]]
     PLACEHOLDER_PAYLOAD
+end
+
+local function getSavedKey()
+    if isfile and isfile(LICENSE_FILE) then return readfile(LICENSE_FILE) end
+    return nil
+end
+
+if getSavedKey() == TEST_KEY then
+    runPayload()
 else
-    game:GetService("Players").LocalPlayer:Kick("[VANDER-GUARD]: Unauthorized Device or Invalid License.")
+    local Blur = Instance.new("BlurEffect", Lighting)
+    Blur.Name = "VanderBlur"; Blur.Size = 40
+    
+    local UI = Instance.new("ScreenGui", CoreGui)
+    UI.DisplayOrder = 99999; UI.ResetOnSpawn = false
+    
+    local Main = Instance.new("Frame", UI)
+    Main.BackgroundColor3 = Color3.new(0,0,0); Main.Size = UDim2.new(0,450,0,320)
+    Main.Position = UDim2.new(0.5,0,0.5,0); Main.AnchorPoint = Vector2.new(0.5,0.5)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0,24)
+    Instance.new("UIStroke", Main).Color = Color3.fromRGB(157, 80, 187)
+
+    local KeyInput = Instance.new("TextBox", Main)
+    KeyInput.BackgroundColor3 = Color3.fromRGB(200, 0, 255)
+    KeyInput.Position = UDim2.new(0.5,0,0.5,0); KeyInput.AnchorPoint = Vector2.new(0.5,0.5)
+    KeyInput.Size = UDim2.new(0,340,0,70); KeyInput.ZIndex = 100
+    KeyInput.Font = Enum.Font.GothamBold; KeyInput.PlaceholderText = "text here"
+    KeyInput.Text = ""; KeyInput.TextColor3 = Color3.new(1,1,1); KeyInput.TextSize = 22
+    KeyInput.PlaceholderColor3 = Color3.new(1,1,1); KeyInput.TextXAlignment = Enum.TextXAlignment.Center
+    Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0,15)
+
+    local CloseBtn = Instance.new("TextButton", Main)
+    CloseBtn.BackgroundTransparency = 1; CloseBtn.Position = UDim2.new(1,-50,0,10)
+    CloseBtn.Size = UDim2.new(0,40,0,40); CloseBtn.Text = "X"; CloseBtn.TextColor3 = Color3.new(1,0,0); CloseBtn.TextSize = 24
+
+    local AuthBtn = Instance.new("TextButton", Main)
+    AuthBtn.BackgroundColor3 = Color3.fromRGB(157, 80, 187); AuthBtn.Position = UDim2.new(0.5,0,0.85,0)
+    AuthBtn.AnchorPoint = Vector2.new(0.5,0.5); AuthBtn.Size = UDim2.new(0,340,0,50)
+    AuthBtn.Text = "VERIFY LICENSE"; AuthBtn.TextColor3 = Color3.new(1,1,1); AuthBtn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", AuthBtn).CornerRadius = UDim.new(0,12)
+
+    CloseBtn.MouseButton1Click:Connect(function() UI:Destroy(); Blur:Destroy() end)
+    AuthBtn.MouseButton1Click:Connect(function()
+        if KeyInput.Text == TEST_KEY then
+            if writefile then pcall(function() writefile(LICENSE_FILE, TEST_KEY) end) end
+            UI:Destroy(); runPayload()
+        else
+            AuthBtn.Text = "INVALID KEY"; AuthBtn.BackgroundColor3 = Color3.new(1,0,0)
+            task.wait(1); AuthBtn.Text = "VERIFY LICENSE"; AuthBtn.BackgroundColor3 = Color3.fromRGB(157, 80, 187)
+        end
+    end)
 end`;
 
     // --- AUTHENTICATION ---
@@ -249,7 +279,7 @@ end`;
                 
                 finalScript = ELITE_WRAPPER
                     .replace('PLACEHOLDER_KEY', selectedKey)
-                    .replace('PLACEHOLDER_APP', currentAppId)
+                    .replace('PLACEHOLDER_NAME', currentAppId.replace('_',' ').toUpperCase())
                     .replace('PLACEHOLDER_PAYLOAD', rawScript);
             }
 
