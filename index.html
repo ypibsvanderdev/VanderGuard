@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vander Guard | The Elite Key System</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css">
+</head>
+
+<body class="auth-mode">
+    <div class="mesh-background"></div>
+
+    <!-- AUTHENTICATION SCREEN -->
+    <div id="auth-screen" class="modal-overlay active">
+        <div class="auth-card glass-card">
+            <div class="auth-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div class="logo-text"><span class="vander">VANDER</span><span class="guard">GUARD</span></div>
+            </div>
+            <div class="auth-content">
+                <h2 id="auth-title">Welcome Back</h2>
+                <p id="auth-desc">Please authorize your device to continue.</p>
+
+                <div class="input-container">
+                    <label><i class="fa-solid fa-user"></i> USERNAME</label>
+                    <input type="text" id="login-uid" placeholder="VanderElite">
+                </div>
+                <div class="input-container">
+                    <label><i class="fa-solid fa-lock"></i> PASSWORD</label>
+                    <input type="password" id="login-pin" placeholder="••••••••">
+                </div>
+
+                <button id="auth-btn" class="btn-primary full-width">
+                    <span>AUTHORIZE DEVICE</span>
+                    <i class="fa-solid fa-arrow-right-long"></i>
+                </button>
+
+                <div class="auth-footer">
+                    <span id="auth-switch-text">New to the platform?</span>
+                    <button id="toggle-auth-mode">Create Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="app-wrapper" style="display:none;">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>VANDERGUARD</span>
+                </div>
+            </div>
+
+            <div class="sidebar-nav">
+                <div class="nav-section">MAIN</div>
+                <button class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-grid-2"></i> Dashboard
+                </button>
+                <button class="nav-item" data-tab="projects">
+                    <i class="fa-solid fa-folders"></i> My Apps
+                </button>
+                <button class="nav-item" data-tab="key-gen">
+                    <i class="fa-solid fa-sparkles"></i> KEY GEN
+                </button>
+
+                <div class="nav-section">SECURITY</div>
+                <button class="nav-item" data-tab="whitelist">
+                    <i class="fa-solid fa-user-shield"></i> Whitelist
+                </button>
+                <button class="nav-item" data-tab="blacklist">
+                    <i class="fa-solid fa-user-slash"></i> Blacklist
+                </button>
+
+                <div class="nav-section">DOCUMENTATION</div>
+                <button class="nav-item" data-tab="integration">
+                    <i class="fa-solid fa-code"></i> Integration
+                </button>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="avatar" id="user-pfp">V</div>
+                    <div class="details">
+                        <span class="username" id="user-display">Vander_Elite</span>
+                        <span class="plan">EXECUTIVE PLAN</span>
+                    </div>
+                </div>
+                <button class="logout-btn" id="logout-btn"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+        </aside>
+
+        <main class="content-area">
+            <!-- DASHBOARD TAB -->
+            <section id="tab-dashboard" class="tab-content active">
+                <div class="content-header">
+                    <h1>Network Overview</h1>
+                    <p>Live statistics across your entire script deployment.</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon purple"><i class="fa-solid fa-users"></i></div>
+                        <div class="stat-info">
+                            <span class="label">Total Users</span>
+                            <span class="value" id="stat-total-users">12,402</span>
+                        </div>
+                        <div class="stat-trend positive">+12.4% <i class="fa-solid fa-arrow-up"></i></div>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon blue"><i class="fa-solid fa-key"></i></div>
+                        <div class="stat-info">
+                            <span class="label">Active Keys</span>
+                            <span class="value" id="stat-active-keys">854</span>
+                        </div>
+                        <div class="stat-trend positive">+5.2% <i class="fa-solid fa-arrow-up"></i></div>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon red"><i class="fa-solid fa-shield-xmark"></i></div>
+                        <div class="stat-info">
+                            <span class="label">Terminated</span>
+                            <span class="value" id="stat-terminated">142</span>
+                        </div>
+                        <div class="stat-trend negative">-2.1% <i class="fa-solid fa-arrow-down"></i></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="recent-activity glass-card">
+                        <h3>Recent Authentications</h3>
+                        <div class="activity-list" id="activity-list">
+                            <!-- Injected activity -->
+                        </div>
+                    </div>
+                    <div class="active-apps glass-card">
+                        <h3>Your Top Apps</h3>
+                        <div class="app-mini-list" id="top-apps-list">
+                            <!-- Injected apps -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PROJECTS TAB -->
+            <section id="tab-projects" class="tab-content">
+                <div class="content-header">
+                    <div class="header-left">
+                        <h1>Your Applications</h1>
+                        <p>Manage your hosted Roblox scripts and security settings.</p>
+                    </div>
+                    <button class="btn-primary" id="new-app-btn"><i class="fa-solid fa-plus"></i> New App</button>
+                </div>
+
+                <div class="repos-grid" id="repos-grid">
+                    <!-- GitHub style app cards -->
+                </div>
+            </section>
+
+            <!-- KEY GEN TAB (NEW) -->
+            <section id="tab-key-gen" class="tab-content">
+                <div class="content-header">
+                    <h1>Rapid Key Generator</h1>
+                    <p>Instantly generate and manage access keys for your customers.</p>
+                </div>
+
+                <div class="key-controls-grid">
+                    <div class="key-gen-card glass-card">
+                        <h3>Generate Access</h3>
+                        <div class="config-form">
+                            <div class="input-group">
+                                <label>Target Script</label>
+                                <select id="keygen-target-app">
+                                    <option value="none">No Specific App</option>
+                                    <option value="vander_duels">Vander Duels</option>
+                                    <option value="vander_desync">Vander Desync</option>
+                                    <option value="kawatan_hub">Kawatan Hub</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Expiration</label>
+                                <select id="keygen-duration">
+                                    <option value="24h">24 Hours</option>
+                                    <option value="1w">1 Week</option>
+                                    <option value="1m">1 Month</option>
+                                    <option value="lifetime">Lifetime</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary full-width" id="keygen-generate-btn">GENERATE NEW KEY</button>
+                            
+                            <div id="keygen-result" class="output-box" style="display:none; margin-top: 15px; flex-direction: column; align-items: flex-start; gap: 10px;">
+                                <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                                    <span style="font-size:0.6rem; color:var(--accent); font-weight:800;">NEW LICENSE KEY</span>
+                                    <span id="keygen-result-text" style="font-size:1rem; color:white;">KEY-XXXXX</span>
+                                    <button class="copy-small" onclick="copyText('keygen-result-text')"><i class="fa-solid fa-copy"></i></button>
+                                </div>
+                                <div id="keygen-loader-area" style="display:none; width:100%; border-top: 1px solid rgba(255,255,255,0.05); padding-top:10px;">
+                                    <span style="font-size:0.6rem; color:var(--cyan); font-weight:800;">DIRECT LOADER (KEYED)</span>
+                                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:5px;">
+                                        <span id="keygen-loader-text" style="font-size:0.7rem; color:var(--text-secondary); max-width: 80%;">loadstring(...)()</span>
+                                        <button class="copy-small" onclick="copyText('keygen-loader-text')"><i class="fa-solid fa-link"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="key-table-card glass-card">
+                        <h3>Active Distribution</h3>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>KEY</th>
+                                        <th>APP</th>
+                                        <th>EXPIRY</th>
+                                        <th>HWID</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="keygen-tbody">
+                                    <!-- Keygen rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WHITELIST TAB -->
+            <section id="tab-whitelist" class="tab-content">
+                <div class="content-header">
+                    <div class="header-left">
+                        <h1>Neural Whitelist</h1>
+                        <p>Authorized Roblox users allowed to bypass standard key checks.</p>
+                    </div>
+                    <div class="header-actions" style="display:flex; gap:10px;">
+                        <input type="text" id="whitelist-input" placeholder="Roblox Username" class="glass-input-small">
+                        <button class="btn-primary" id="add-whitelist-btn"><i class="fa-solid fa-user-plus"></i>
+                            Whitelist User</button>
+                    </div>
+                </div>
+
+                <div class="table-card glass-card">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ROBLOX USERNAME</th>
+                                    <th>USER ID</th>
+                                    <th>AUTH DATE</th>
+                                    <th>STATUS</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="whitelist-tbody">
+                                <!-- Whitelist rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BLACKLIST TAB -->
+            <section id="tab-blacklist" class="tab-content">
+                <div class="content-header">
+                    <div class="header-left">
+                        <h1>Network Blacklist</h1>
+                        <p>Banned Roblox users blocked from all script executions.</p>
+                    </div>
+                    <div class="header-actions" style="display:flex; gap:10px;">
+                        <input type="text" id="blacklist-input" placeholder="Roblox Username" class="glass-input-small">
+                        <button class="btn-red" id="add-blacklist-btn"><i class="fa-solid fa-user-slash"></i> Ban
+                            User</button>
+                    </div>
+                </div>
+
+                <div class="table-card glass-card">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ROBLOX USERNAME</th>
+                                    <th>USER ID</th>
+                                    <th>BAN REASON</th>
+                                    <th>DATE BANNED</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blacklist-tbody">
+                                <!-- Blacklist rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INTEGRATION TAB -->
+            <section id="tab-integration" class="tab-content">
+                <div class="content-header">
+                    <h1>Integration Portal</h1>
+                    <p>Connect your Roblox Lua scripts to the Vander Guard network.</p>
+                </div>
+
+                <div class="integration-grid">
+                    <div class="snippet-card glass-card">
+                        <h3>Standard Loader (Recommended)</h3>
+                        <p>Paste this code at the top of your script to force whitelisting.</p>
+                        <div class="code-container">
+                            <pre id="lua-snippet">
+-- [[ VANDER GUARD ENFORCER ]] --
+local VG_KEY = "PASTE_KEY_HERE"
+local function authenticate()
+    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
+    local url = "https://vander.guard/v2/auth?key="..VG_KEY.."&hwid="..hwid
+    local req = game:HttpGet(url)
+    local res = game:GetService("HttpService"):JSONDecode(req)
+    
+    if res.Success then
+        print("[VG] ACCESS GRANTED")
+        loadstring(res.ScriptData)()
+    else
+        game:GetService("Players").LocalPlayer:Kick("[VG] ERROR: " .. res.Error)
+    end
+end
+authenticate()</pre>
+                            <button class="copy-code-btn" id="copy-snippet">COPY CODE</button>
+                        </div>
+                    </div>
+
+                    <div class="loadstring-card glass-card">
+                        <h3>Private Loadstring Generator</h3>
+                        <p>Upload your script and get a secure Loadstring/Keyed version.</p>
+                        
+                        <div class="input-group" style="margin-bottom: 10px;">
+                            <label>Library Choice</label>
+                            <select id="vault-script-selector" class="glass-select">
+                                <option value="raw">Custom Input (Paste Below)</option>
+                                <option value="vander_duels">Vander Duels Elite</option>
+                                <option value="vander_desync">Vander Desync V3</option>
+                                <option value="kawatan_hub">Kawatan Hub (Instant Steal)</option>
+                            </select>
+                        </div>
+
+                        <textarea id="vault-input" placeholder="-- Paste your raw Lua script here..."></textarea>
+                        
+                        <div class="toggle-container" style="margin: 15px 0; display: flex; align-items: center; justify-content: space-between;">
+                            <div class="toggle-info">
+                                <span style="font-weight: 600; font-size: 0.85rem; color: var(--accent);">VANDER KEY SYSTEM</span>
+                                <p style="font-size: 0.65rem; color: var(--text-muted); margin: 0;">Wraps script in key-locked authentication.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="key-system-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div id="key-selection-area" style="display:none; margin-bottom: 15px;">
+                            <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom: 5px;">SELECT KEY TO EMBED</label>
+                            <select id="vault-key-select" class="glass-select" style="width:100%;">
+                                <option value="none">No key selected</option>
+                            </select>
+                        </div>
+
+                        <button class="btn-primary full-width" id="generate-loadstring">CREATE SECURE LINK</button>
+                        <div id="loadstring-output" class="output-box" style="display:none;">
+                            <span id="loadstring-text">loadstring(game:HttpGet(...))()</span>
+                            <button class="copy-small"><i class="fa-solid fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- NOTIFICATION -->
+    <div id="notification" class="toast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toast-message">Success!</span>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
