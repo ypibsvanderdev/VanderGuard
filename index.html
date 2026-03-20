@@ -141,7 +141,17 @@
                                     <option value="lifetime">Lifetime</option>
                                 </select>
                             </div>
-                            <button class="btn-primary" id="keygen-generate-btn" style="width:100%;">GENERATE NEW KEY</button>
+                            
+                            <div class="batch-config" style="background:rgba(255,255,255,0.02); padding:15px; border-radius:10px; border:1px solid var(--border);">
+                                <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:10px; font-weight:800;">BATCH GENERATION (OPTIONAL)</label>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <span style="font-size:0.75rem;">COUNT:</span>
+                                    <input type="number" id="batch-count" value="1" min="1" max="100" style="width:60px; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:white; padding:5px; border-radius:6px; font-size:0.8rem;">
+                                    <p style="font-size:0.6rem; color:var(--text-muted);">Max 100 per batch</p>
+                                </div>
+                            </div>
+
+                            <button class="btn-primary" id="keygen-generate-btn" style="width:100%;">GENERATE KEY(S)</button>
                             
                             <div id="keygen-result" class="output-box" style="display:none; flex-direction:column; gap:10px; align-items:flex-start;">
                                 <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">

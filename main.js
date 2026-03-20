@@ -172,36 +172,40 @@ end`;
             const app = document.getElementById('keygen-target-app').value;
             const durationSelect = document.getElementById('keygen-duration');
             const duration = durationSelect.options[durationSelect.selectedIndex].text;
+            const batchCount = parseInt(document.getElementById('batch-count').value) || 1;
             
             if (app === 'none') {
                 showToast("Please select a target script.", "fa-solid fa-triangle-exclamation");
                 return;
             }
 
-            const newKey = "VG-" + Math.floor(Math.random() * 900000 + 100000);
-            activeKeys.unshift({
-                key: newKey,
-                app: app,
-                type: duration,
-                hwid: "UNLOCKED"
-            });
+            for (let i = 0; i < batchCount; i++) {
+                const newKey = "VG-" + Math.floor(Math.random() * 900000 + 100000);
+                activeKeys.unshift({
+                    key: newKey,
+                    app: app,
+                    type: duration,
+                    hwid: "UNLOCKED"
+                });
+            }
 
             saveAndRender();
             
+            // SHOW PREVIEW OF LAST GENERATED KEY & LOADER
+            const lastKey = activeKeys[0].key;
             keygenResult.style.display = 'flex';
-            keygenResultText.innerText = newKey;
+            keygenResultText.innerText = (batchCount > 1) ? `Generated ${batchCount} Keys!` : lastKey;
 
-            // LOADER GENERATION ON KEY GEN
+            // LOADER GENERATION ON KEY GEN (Preview for the last key)
             const loaderArea = document.getElementById('keygen-loader-area');
             const loaderText = document.getElementById('keygen-loader-text');
-            
             const dummyId = Math.random().toString(36).substring(7);
-            const loadstring = `loadstring(game:HttpGet("https://vander-guard.vercel.app/loader/${app}?key=${newKey}&v=${dummyId}"))()`;
+            const loadstring = `loadstring(game:HttpGet("https://vander-guard.vercel.app/loader/${app}?key=${lastKey}&v=${dummyId}"))()`;
             
             loaderArea.style.display = 'block';
             loaderText.innerText = loadstring;
 
-            showToast(`Key & Loader Created!`, "fa-solid fa-sparkles");
+            showToast(`${batchCount} Key(s) for ${app.replace('_',' ')} Created!`, "fa-solid fa-sparkles");
         };
     }
 
