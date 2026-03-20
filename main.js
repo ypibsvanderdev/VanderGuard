@@ -167,12 +167,26 @@ end`;
     });
 
     // --- KEY GEN ---
-    if (keygenGenerateBtn) {
-        keygenGenerateBtn.onclick = () => {
-            const app = document.getElementById('keygen-target-app').value;
-            const durationSelect = document.getElementById('keygen-duration');
+    // --- LICENSE GENERATOR MODAL LOGIC ---
+    const licenseModal = document.getElementById('license-modal');
+    const openModalBtn = document.getElementById('open-keygen-modal');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalGenerateBtn = document.getElementById('modal-generate-btn');
+
+    if (openModalBtn) {
+        openModalBtn.onclick = () => licenseModal.classList.add('active');
+    }
+
+    if (modalCancelBtn) {
+        modalCancelBtn.onclick = () => licenseModal.classList.remove('active');
+    }
+
+    if (modalGenerateBtn) {
+        modalGenerateBtn.onclick = () => {
+            const app = document.getElementById('modal-target-app').value;
+            const durationSelect = document.getElementById('modal-duration');
             const duration = durationSelect.options[durationSelect.selectedIndex].text;
-            const batchCount = parseInt(document.getElementById('batch-count').value) || 1;
+            const batchCount = parseInt(document.getElementById('modal-batch-count').value) || 1;
             
             if (app === 'none') {
                 showToast("Please select a target script.", "fa-solid fa-triangle-exclamation");
@@ -190,13 +204,13 @@ end`;
             }
 
             saveAndRender();
+            licenseModal.classList.remove('active');
             
-            // SHOW PREVIEW OF LAST GENERATED KEY & LOADER
+            // SHOW PREVIEW
             const lastKey = activeKeys[0].key;
             keygenResult.style.display = 'flex';
             keygenResultText.innerText = (batchCount > 1) ? `Generated ${batchCount} Keys!` : lastKey;
 
-            // LOADER GENERATION ON KEY GEN (Preview for the last key)
             const loaderArea = document.getElementById('keygen-loader-area');
             const loaderText = document.getElementById('keygen-loader-text');
             const dummyId = Math.random().toString(36).substring(7);
