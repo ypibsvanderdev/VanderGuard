@@ -167,26 +167,12 @@ end`;
     });
 
     // --- KEY GEN ---
-    // --- LICENSE GENERATOR MODAL LOGIC ---
-    const licenseModal = document.getElementById('license-modal');
-    const openModalBtn = document.getElementById('open-keygen-modal');
-    const modalCancelBtn = document.getElementById('modal-cancel-btn');
-    const modalGenerateBtn = document.getElementById('modal-generate-btn');
-
-    if (openModalBtn) {
-        openModalBtn.onclick = () => licenseModal.classList.add('active');
-    }
-
-    if (modalCancelBtn) {
-        modalCancelBtn.onclick = () => licenseModal.classList.remove('active');
-    }
-
-    if (modalGenerateBtn) {
-        modalGenerateBtn.onclick = () => {
-            const app = document.getElementById('modal-target-app').value;
-            const durationSelect = document.getElementById('modal-duration');
+    if (keygenGenerateBtn) {
+        keygenGenerateBtn.onclick = () => {
+            const app = document.getElementById('keygen-target-app').value;
+            const durationSelect = document.getElementById('keygen-duration');
             const duration = durationSelect.options[durationSelect.selectedIndex].text;
-            const batchCount = parseInt(document.getElementById('modal-batch-count').value) || 1;
+            const batchCount = parseInt(document.getElementById('batch-count').value) || 1;
             
             if (app === 'none') {
                 showToast("Please select a target script.", "fa-solid fa-triangle-exclamation");
@@ -204,7 +190,6 @@ end`;
             }
 
             saveAndRender();
-            licenseModal.classList.remove('active');
             
             // SHOW PREVIEW
             const lastKey = activeKeys[0].key;
@@ -276,8 +261,10 @@ end`;
             activeKeys.map(k => `<option value="${k.key}">${k.key} (${k.app.replace('_',' ')})</option>`).join('');
     }
 
+    const obfuscateToggle = document.getElementById('obfuscate-toggle');
+
     if (generateLoadstringBtn) {
-        generateLoadstringBtn.onclick = () => {
+        generateLoadstringBtn.onclick = async () => {
             const rawScript = vaultInput.value.trim();
             const currentAppId = vaultScriptSelector.value;
             
@@ -286,12 +273,18 @@ end`;
                 return;
             }
 
+            generateLoadstringBtn.innerText = "ARMORING...";
+            generateLoadstringBtn.disabled = true;
+
             let finalScript = rawScript;
             
+            // Step 1: Wrap in Key System if enabled
             if (keySystemToggle.checked) {
                 const selectedKey = vaultKeySelect.value;
                 if (selectedKey === 'none') {
                     showToast("Choose a key to embed in the enforcer.", "fa-solid fa-key");
+                    generateLoadstringBtn.innerText = "CREATE SECURE PAYLOAD";
+                    generateLoadstringBtn.disabled = false;
                     return;
                 }
                 
@@ -299,6 +292,25 @@ end`;
                     .replace('PLACEHOLDER_KEY', selectedKey)
                     .replace('PLACEHOLDER_NAME', currentAppId.replace('_',' ').toUpperCase())
                     .replace('PLACEHOLDER_PAYLOAD', rawScript);
+            }
+
+            // Step 2: Auto Obfuscate if enabled
+            if (obfuscateToggle && obfuscateToggle.checked) {
+                try {
+                    const response = await fetch('/api/obfuscate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ source: finalScript })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        finalScript = data.obfuscated;
+                    } else {
+                        showToast("Obfuscation Error: " + data.error, "fa-solid fa-triangle-exclamation");
+                    }
+                } catch (err) {
+                    showToast("Failed to connect to Armor Engine.", "fa-solid fa-wifi-slash");
+                }
             }
 
             // Show result
@@ -310,6 +322,9 @@ end`;
             
             loadstringText.innerText = loadstring;
             wrappedCodePreview.innerText = finalScript;
+            
+            generateLoadstringBtn.innerText = "CREATE SECURE PAYLOAD";
+            generateLoadstringBtn.disabled = false;
             
             showToast("Elite Enforcer Payload Generated!", "fa-solid fa-shield-virus");
         };

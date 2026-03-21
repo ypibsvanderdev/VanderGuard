@@ -316,3 +316,14 @@ input:checked + .slider:before { transform: translateX(22px); }
 }
 
 .toast.show { bottom: 40px; }
+
+/* CYAN VARIANT FOR OBFUSCATOR */
+input:checked + .slider.cyan {
+    background-color: var(--cyan);
+}
+.slider.round.cyan:before {
+    background-color: white;
+}
+input:checked + .slider.cyan:before {
+    box-shadow: 0 0 10px var(--cyan);
+}
