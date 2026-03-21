@@ -1,0 +1,5 @@
+# Ignore Deno/Base44 platform files (not for Vercel)
+functions/
+src/
+node_modules/
+.git/
