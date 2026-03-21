@@ -2,15 +2,6 @@
   "name": "vander-guard",
   "version": "1.0.0",
   "description": "Vander Armor: Shield & IDS Engine",
-  "main": "main.js",
-  "scripts": {
-    "start": "node main.js",
-    "build": "echo 'Building Vander Shield...'"
-  },
-  "keywords": [],
-  "author": "Vander Dev",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "axios": "^1.13.6",
     "discord.js": "^14.25.1",
