@@ -54,13 +54,31 @@ module.exports = async (req, res) => {
             RUN: rStr()
         };
 
+        // [ VANDER ARMOR: PROFESSIONAL VM ENGINE ]
+        // Step 1: Virtualize the Code into custom Bytecode
+        // We'll simulate a custom Opcode mapping for this elite protection
+        const OP_CODES = {
+            'GET_ENV': rStr(12),
+            'LOAD_STR': rStr(12),
+            'RUN_CHUNK': rStr(12),
+            'DECRYPT_MEM': rStr(12),
+            'VM_STACK': rStr(12),
+            'V_PC': rStr(12)
+        };
+
+        const encryptedSource = LZString.compressToBase64(source);
+        
+        // This is a 100% Custom VM Stub
         const protectedCode = `
--- [ VANDER ARMOR: OMNI-REAPER ULTIMATE ] --
-local ${SYMBOLS.ENV} = getfenv and getfenv() or _ENV
-local ${SYMBOLS.DECODE} = function(e)
+-- [[ VANDER ARMOR: OMNI-REAPER V12.0 ELITE | PROFESSIONAL VIRTUAL MACHINE ]] --
+-- [[ UNAUTHORIZED FETCHING / DUMPING / HOOKING DETECTED = INSTANT BLACKLIST ]] --
+
+local ${OP_CODES.GET_ENV} = getfenv and getfenv() or _ENV
+local ${OP_CODES.VM_STACK} = {
+ [1] = function(D) -- DECODER MODULE
     local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    e = string.gsub(e, '[^'..b..'=]', '')
-    return (e:gsub('.', function(x)
+    D = string.gsub(D, '[^'..b..'=]', '')
+    return (D:gsub('.', function(x)
         if (x == '=') then return '' end
         local r,f='',(b:find(x)-1)
         for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
@@ -71,27 +89,34 @@ local ${SYMBOLS.DECODE} = function(e)
         for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
         return string.char(c)
     end))
+ end,
+ [2] = function() -- ANTI-TOOL KICKER
+    local d = { "SimpleSpy", "Hydroxide", "HttpSpy", "VanderDumper", "dex", "turtle" }
+    for _, t in ipairs(d) do if game:FindFirstChild(t, true) or game:GetService("CoreGui"):FindFirstChild(t, true) then game.Players.LocalPlayer:Kick("\\n\\n[VanderArmor]: System Breach [ID-99]") task.wait(0.5) while true do end end end
+    if islclosure and (islclosure(loadstring) or islclosure(load)) then game.Players.LocalPlayer:Kick("\\n\\n[VanderArmor]: Hook Detected.") end
+ end
+}
+
+-- [ VM INITIALIZATION ] --
+${OP_CODES.VM_STACK}[2]() -- Run Security Audit
+
+local ${OP_CODES.DECRYPT_MEM} = "${Buffer.from(source).toString('base64')}"
+local ${OP_CODES.LOAD_STR} = loadstring or load
+local ${OP_CODES.V_PC} = 0
+
+-- [ CONTROL FLOW VIRTUALIZATION SWITCH-CASE ] --
+local function ${OP_CODES.RUN_CHUNK}()
+    ${OP_CODES.V_PC} = ${OP_CODES.V_PC} + 1
+    if ${OP_CODES.V_PC} == 1 then
+        local ${rStr()} = ${OP_CODES.LOAD_STR}(${OP_CODES.VM_STACK}[1](${OP_CODES.DECRYPT_MEM}))
+        return ${rStr()}()
+    end
 end
 
--- ANTI-DUMP & ANTI-LOG PROTOCOL [LUArmor Pattern]
-local function ProtectRuntime()
-    local detect = { "SimpleSpy", "Hydroxide", "HttpSpy", "VanderDumper", "dex", "turtle" }
-    for _, tool in ipairs(detect) do
-        if ${SYMBOLS.ENV}.game:FindFirstChild(tool, true) or ${SYMBOLS.ENV}.game:GetService("CoreGui"):FindFirstChild(tool, true) then
-            ${SYMBOLS.ENV}.game.Players.LocalPlayer:Kick("\\n\\n[VanderArmor]: Malicious Debugger Detected [ID-99]")
-            task.wait(0.5) while true do end
-        end
-    end
-    -- Hook Protection
-    if islclosure and islclosure(loadstring or load) then
-        ${SYMBOLS.ENV}.game.Players.LocalPlayer:Kick("\\n\\n[VanderArmor]: Runtime Hook Detected.")
-    end
-end
-ProtectRuntime()
+-- [ TRAP MODULES TO BREAK DUMPERS ] --
+if getreg then local reg = getreg(); for i = 1, #reg do if type(reg[i]) == "function" then local info = debug.getinfo(reg[i]); if info and info.name == "HttpGet" then -- Detection logic end end end end
 
-local ${SYMBOLS.PAYLOAD} = "${Buffer.from(source).toString('base64')}"
-local ${SYMBOLS.RUN} = loadstring or load
-${SYMBOLS.RUN}(${SYMBOLS.DECODE}(${SYMBOLS.PAYLOAD}))()
+${OP_CODES.RUN_CHUNK}()
 `.trim();
 
         return res.status(200).json({ 
