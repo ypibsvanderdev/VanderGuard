@@ -3,6 +3,8 @@
     { "source": "/api/test", "destination": "/api/test.js" },
     { "source": "/api/handshake", "destination": "/api/handshake.js" },
     { "source": "/api/access-denied", "destination": "/api/access-denied.js" },
+    { "source": "/v4", "destination": "/api/v4.js" },
+    { "source": "/v4/(.*)", "destination": "/api/v4.js?project=$1" },
     { "source": "/raw", "destination": "/api/raw.js" },
     { "source": "/raw/(.*)", "destination": "/api/raw.js?path=$1" }
   ]
