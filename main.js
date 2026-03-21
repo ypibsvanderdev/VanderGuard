@@ -299,7 +299,10 @@ end`;
                 try {
                     const response = await fetch('/api/obfuscate', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-Vander-Shield-Key': 'VANDER_SHIELD_CORE_99'
+                        },
                         body: JSON.stringify({ source: finalScript })
                     });
                     const data = await response.json();

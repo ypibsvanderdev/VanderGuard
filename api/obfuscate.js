@@ -11,6 +11,24 @@ function rStr(length = 8) {
 }
 
 module.exports = async (req, res) => {
+    // ANTI-BOT & SCRAPER PROTECTION [LUArmor Pattern]
+    const userAgent = req.headers['user-agent'] || '';
+    const handshakeToken = req.headers['x-vander-shield-key'];
+
+    // Only allow verified Roblox or the official Vander website
+    const isRoblox = userAgent.includes('Roblox');
+    const isBrowser = userAgent.includes('Mozilla'); // Basic website check
+    
+    if (!isRoblox && !isBrowser) {
+        return res.status(403).json({ error: 'UNAUTHORIZED_ACCESS_DENIED [ERR-499]' });
+    }
+
+    // Handshake Check (Prevent direct API abuse)
+    const SECRET_SHIELD_KEY = 'VANDER_SHIELD_CORE_99'; // Should match main.js
+    if (handshakeToken !== SECRET_SHIELD_KEY) {
+        return res.status(401).json({ error: 'SHIELD_HANDSHAKE_FAILURE' });
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
