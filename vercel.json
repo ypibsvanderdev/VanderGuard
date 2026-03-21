@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/api/test", "destination": "/api/test" },
+    { "source": "/api/handshake", "destination": "/api/handshake" },
+    { "source": "/api/access-denied", "destination": "/api/access-denied" },
+    { "source": "/raw", "destination": "/api/raw" },
+    { "source": "/raw/(.*)", "destination": "/api/raw?path=$1" }
+  ]
+}
