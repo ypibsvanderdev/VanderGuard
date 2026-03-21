@@ -53,7 +53,8 @@ module.exports = async (req, res) => {
                 print("[Luarmor-V4]: Success. Initializing VM Execution...")
                 loadstring(response.Body)()
             else
-                warn("[Luarmor-V4]: Authentication Failed. Code: " .. response.StatusCode)
+                local kickReason = "[LUARMOR-V4]: ACCESS DENIED\\nReason: Invalid/Expired License Key\\nTimestamp: " .. os.date("!%X")
+                game.Players.LocalPlayer:Kick(kickReason)
             end
         end
         
