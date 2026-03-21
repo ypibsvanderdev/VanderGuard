@@ -3,242 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUARMOR V4 | SUPREMACY EDITION</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <title>vander-user / vander-duels | VANDER HUB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css">
     <style>
-        /* [ VANDER-ARMOR V4 | SUPREMACY EDITION ] */
+        /* [ GITHUB 1:1 CLONE | VANDER HUB ] */
         :root {
-            --bg-main: #06070a;
-            --sidebar-bg: rgba(14, 15, 20, 0.85);
-            --card-bg: rgba(20, 21, 26, 0.7);
-            --border: rgba(255, 255, 255, 0.05);
-            --blue: #0091ff;
-            --blue-glow: rgba(0, 145, 255, 0.3);
-            --red: #ff3e3e;
-            --text-primary: #ffffff;
-            --text-secondary: #94a3b8;
-            --text-muted: #475569;
-            --font-main: 'Outfit', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg: #0d1117;
+            --header: #161b22;
+            --border: #30363d;
+            --text: #8b949e;
+            --text-bold: #f0f6fc;
+            --blue: #2f81f7;
+            --green: #238636;
+            --red: #da3633;
+            --font: 'Segoe UI', sans-serif;
+            --transition: all 0.2s ease;
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; outline:none; }
-        body { background-color: var(--bg-main); color: var(--text-primary); font-family: var(--font-main); min-height: 100vh; overflow: hidden; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background: var(--bg); color: var(--text-bold); font-family: var(--font); height: 100vh; overflow: hidden; }
 
-        /* DYNAMIC MESH BG */
-        canvas#mesh { position: fixed; inset: 0; z-index: -1; opacity: 0.15; filter: blur(50px); animation: drift 20s infinite alternate; }
-        @keyframes drift { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.2) translate(50px, 30px); } }
+        /* AUTH (GITHUB LOGIN STYLE) */
+        .auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        .auth-logo { color: white; font-size: 3rem; margin-bottom: 25px; }
+        .auth-box { width: 340px; padding: 25px; background: var(--header); border: 1px solid var(--border); border-radius: 6px; }
+        .auth-box label { display: block; font-size: 0.85rem; margin-bottom: 8px; }
+        .auth-box input { width: 100%; height: 35px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: white; padding: 0 10px; margin-bottom: 20px; outline: none; border-color: var(--blue); }
+        .btn-green { background: var(--green); color: white; border: 1px solid rgba(240,246,252,0.1); padding: 7px 15px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; width: 100%; cursor: pointer; transition: 0.2s; }
+        .btn-green:hover { background: #2ea043; }
 
-        .mesh-static { position: fixed; inset: 0; z-index: -2; background: url('/bg.png') center/cover no-repeat; opacity: 0.3; filter: grayscale(1) brightness(0.2); }
+        #app { display: none; flex-direction: column; height: 100vh; }
 
-        /* AUTH */
-        .auth-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #11141d 0%, #06070a 100%); z-index: 1000; }
-        .auth-card { width: 440px; padding: 50px; border-radius: 20px; background: var(--card-bg); border: 1px solid var(--border); backdrop-filter: blur(20px); box-shadow: 0 20px 80px rgba(0,0,0,0.8); }
-        .auth-logo { text-align: center; margin-bottom: 40px; }
-        .auth-logo img { width: 80px; height: 80px; border-radius: 20px; box-shadow: 0 0 30px var(--blue-glow); margin-bottom: 15px; }
-        .auth-logo h1 { font-size: 1.8rem; letter-spacing: 2px; font-weight: 900; }
+        /* TOP NAV (GITHUB STYLE) */
+        .top-nav { background: var(--header); height: 60px; display: flex; align-items: center; padding: 0 32px; border-bottom: 1px solid var(--border); gap: 15px; }
+        .top-nav i.fa-github { font-size: 2rem; color: white; margin-right: 15px; }
+        .search-box { width: 240px; height: 32px; background: transparent; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; padding: 0 10px; font-size: 0.85rem; color: var(--text); }
 
-        .input-group { margin-bottom: 25px; }
-        .input-group label { display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
-        .input-group input, .input-group select, .input-group textarea { width: 100%; height: 50px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: white; padding: 0 20px; font-size: 0.95rem; transition: var(--transition); }
-        .input-group textarea { height: 350px; padding: 20px; font-family: var(--font-mono); line-height: 1.6; }
-        .input-group input:focus, .input-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 15px var(--blue-glow); }
+        /* REPO HEADER (GITHUB STYLE) */
+        .repo-head { background: var(--bg); padding: 20px 32px 0 32px; border-bottom: 1px solid var(--border); position: relative; }
+        .repo-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 1.25rem; font-weight: 400; }
+        .repo-title-row a { color: var(--blue); text-decoration: none; }
+        .repo-title-row strong { font-weight: 700; }
+        .visibility { font-size: 0.75rem; border: 1px solid var(--border); color: var(--text); padding: 1px 10px; border-radius: 20px; font-weight: 500; }
 
-        .btn-auth { width: 100%; height: 50px; background: var(--blue); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: var(--transition); letter-spacing: 1px; }
-        .btn-auth:hover { background: #007ce0; transform: translateY(-2px); box-shadow: 0 10px 40px var(--blue-glow); }
+        .tabs { display: flex; gap: 25px; margin-top: 5px; }
+        .tab { padding: 8px 15px; font-size: 0.85rem; color: var(--text); cursor: pointer; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .tab:hover { border-color: rgba(255,255,255,0.1); }
+        .tab.active { color: var(--text-bold); border-color: #f78166; }
+        .tab i { font-size: 1rem; }
 
-        /* DASHBOARD */
-        #app { display: none; height: 100vh; grid-template-columns: 280px 1fr; }
+        /* MAIN CONTENT AREA */
+        .main-grid { display: grid; grid-template-columns: 1fr 300px; padding: 32px; gap: 32px; flex: 1; overflow-y: auto; }
+
+        .file-grid { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 25px; }
+        .file-head { background: var(--header); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+        .file-cell { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .file-cell:hover { background: rgba(255,255,255,0.02); }
+        .file-cell:last-child { border-bottom: none; }
+
+        .badge { font-size: 0.65rem; background: rgba(47, 129, 247, 0.1); color: var(--blue); padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(47, 129, 247, 0.4); }
+
+        .btn-gray { background: #21262d; border: 1px solid var(--border); color: var(--text-bold); padding: 5px 15px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .btn-gray:hover { background: #30363d; border-color: #8b949e; }
+
+        /* ABOUT SECTION */
+        .about-title { font-size: 1rem; font-weight: 600; color: var(--text-bold); margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .about-desc { font-size: 0.85rem; color: var(--text); line-height: 1.6; margin-bottom: 20px; }
         
-        .sidebar { background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 40px 25px; display: flex; flex-direction: column; backdrop-filter: blur(30px); }
-        .sidebar-brand { display: flex; align-items: center; gap: 15px; font-weight: 900; font-size: 1.25rem; letter-spacing: 1px; margin-bottom: 60px; }
-        .sidebar-brand img { width: 40px; height: 40px; border-radius: 10px; }
+        /* EDITOR */
+        .editor-container { padding: 32px; display: none; flex-direction: column; gap: 15px; }
+        textarea { width: 100%; height: 600px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: white; padding: 30px; font-family: monospace; font-size: 0.9rem; resize: none; line-height: 1.6; }
 
-        .nav-item { display: flex; align-items: center; gap: 18px; padding: 15px 20px; border-radius: 12px; color: var(--text-secondary); cursor: pointer; border: none; background: transparent; width: 100%; margin-bottom: 8px; font-size: 0.95rem; font-weight: 600; transition: var(--transition); }
-        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.03); color: var(--blue); }
-        .nav-item i { font-size: 1.2rem; filter: drop-shadow(0 0 5px var(--blue-glow)); }
+        /* TOAST */
+        #toast { position: fixed; bottom: 30px; right: 30px; background: var(--green); color: white; padding: 12px 25px; border-radius: 6px; font-weight: 600; display: none; z-index: 10000; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(50px); } to { transform: translateY(0); } }
 
-        .content { padding: 60px 80px; overflow-y: auto; scrollbar-width: none; }
-        .tab-content { display: none; transform: translateY(20px); opacity: 0; transition: all 0.5s ease-out; }
-        .tab-content.active { display: block; transform: translateY(0); opacity: 1; }
-
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; }
-        .header h2 { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
-
-        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; margin-bottom: 50px; }
-        .stat-card { background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 20px; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
-        .stat-card::after { content:''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent, rgba(255,255,255,0.02)); }
-        .stat-card span { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 800; letter-spacing: 1.5px; margin-bottom: 20px; }
-        .stat-card h3 { font-size: 2rem; font-weight: 900; }
-
-        .project-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 40px; margin-bottom: 30px; backdrop-filter: blur(10px); }
-        .project-card h3 { font-size: 1.4rem; margin-bottom: 30px; font-weight: 800; }
-        
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; font-size: 0.75rem; color: var(--text-muted); font-weight: 800; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        td { padding: 25px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
-
-        .btn-action { background: var(--blue); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: var(--transition); }
-        .btn-action:hover { transform: scale(1.05); box-shadow: 0 5px 20px var(--blue-glow); }
-        .btn-secondary { background: rgba(255,255,255,0.03); color: white; border: 1px solid var(--border); padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: var(--transition); }
-        .btn-secondary:hover { background: var(--blue); border-color: var(--blue); }
-        .btn-danger { background: rgba(255, 62, 62, 0.05); color: var(--red); border: 1px solid rgba(255, 62, 62, 0.2); padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: var(--transition); font-size: 0.8rem; }
-        .btn-danger:hover { background: var(--red); color: white; box-shadow: 0 0 20px rgba(255, 62, 62, 0.3); }
-
-        .badge { padding: 6px 14px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; background: rgba(0, 145, 255, 0.1); color: var(--blue); }
-
-        #toast { position: fixed; bottom: 40px; right: 40px; background: var(--blue); color: white; padding: 18px 30px; border-radius: 16px; font-weight: 800; box-shadow: 0 15px 40px var(--blue-glow); display: none; z-index: 10000; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(10px); }
-        .modal-content { background: #0e0f14; border: 1px solid var(--blue); border-radius: 24px; width: 900px; padding: 50px; }
+        /* ACCESSIBLE TABS CONTENT */
+        .tab-view { display: none; }
+        .tab-view.active { display: block; }
     </style>
 </head>
 <body>
 
-    <div class="mesh-static"></div>
-    <div id="auth" class="auth-container">
-        <div class="auth-card">
-            <div class="auth-logo"><img src="/logo.png" alt="Logo"><h1>LUARMOR <span style="color:var(--blue)">V4</span></h1><p style="color:var(--text-muted); font-size:0.85rem; margin-top:10px; font-weight:600;">SUPREMACY EDITION</p></div>
-            <div class="input-group"><label>AUTHORIZATION TOKEN</label><input type="password" id="api-key" value="VANDER-SHIELD-GOD-MODE-ADMIN"></div>
-            <button class="btn-auth" id="login-btn">ENTER VANDER-SHELL</button>
+    <div id="auth" class="auth-overlay">
+        <i class="fa-brands fa-github auth-logo"></i>
+        <div class="auth-box">
+            <h1 style="font-size:1.5rem; font-weight:400; margin-bottom:20px; text-align:center;">Sign in to <span style="font-weight:700;">Vander Hub</span></h1>
+            <label>Site Access Key</label>
+            <input type="password" id="site-key" value="VANDER-GOD-MODE">
+            <button class="btn-green" id="login-btn">Sign in</button>
         </div>
     </div>
 
     <div id="app">
-        <aside class="sidebar">
-            <div class="sidebar-brand"><img src="/logo.png" alt="Logo"><span>LUARMOR</span></div>
-            <button class="nav-item active" data-tab="dashboard"><i class="fa-solid fa-grid-2 luc-icon"></i> Overlook</button>
-            <button class="nav-item" data-tab="projects"><i class="fa-solid fa-brackets-curly luc-icon"></i> Arsenal</button>
-            <button class="nav-item" data-tab="licenses"><i class="fa-solid fa-key-skeleton luc-icon"></i> Licenses</button>
-            <button class="nav-item" data-tab="customers"><i class="fa-solid fa-radar luc-icon"></i> IDS Feed</button>
+        <nav class="top-nav">
+            <i class="fa-brands fa-github"></i>
+            <div class="search-box">Search or jump to...</div>
+            <div style="font-weight:600; font-size:0.85rem; color:white;">Pull requests</div>
+            <div style="font-weight:600; font-size:0.85rem; color:white;">Issues</div>
+            <div style="font-weight:600; font-size:0.85rem; color:white;">Marketplace</div>
             <div style="flex:1"></div>
-            <button class="nav-item" style="color:var(--red)"><i class="fa-solid fa-power-off"></i> Terminate</button>
-        </aside>
+            <div class="search-box" style="width:100px; justify-content:center; cursor:pointer;" onclick="renderReposSidebar()">[ Repos ]</div>
+            <img src="/logo.png" style="width:20px; border-radius:50%;">
+        </nav>
 
-        <main class="content">
-            <section id="tab-dashboard" class="tab-content active">
-                <div class="header"><h2>Network Status</h2><button class="btn-action" onclick="switchTab('projects')"><i class="fa-solid fa-sparkles"></i> INITIALIZE NEW SHIELD</button></div>
-                <div class="stats-row">
-                    <div class="stat-card"><span>EXECUTIONS</span><h3>2,548,192</h3></div>
-                    <div class="stat-card"><span>LIVE SESSIONS</span><h3>8,421</h3></div>
-                    <div class="stat-card"><span>ACTIVE CODES</span><h3 id="stat-licenses">15,240</h3></div>
-                    <div class="stat-card"><span>CORE HEALTH</span><h3 style="color:#00ff66">PEAK</h3></div>
-                </div>
-                <div class="project-card" style="border-left: 5px solid var(--blue); background: linear-gradient(90deg, rgba(0, 145, 255, 0.05), transparent);">
-                    <h3 style="color:var(--blue); font-size: 1rem;"><i class="fa-solid fa-shield-check"></i> SUPREMACY GUIDE</h3>
-                    <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:10px;">To arm a project: 1. Deploy code in **Arsenal**. 2. Generate key in **Licenses**. 3. Deploy Loader in-game.</p>
-                </div>
-                <div class="project-card"><h3>Elite Projects</h3><table style="margin-top:20px;"><thead><tr><th>NAME</th><th>THREAT LEVEL</th><th>VERSION</th><th>ACTION</th></tr></thead><tbody id="dash-project-list"></tbody></table></div>
-            </section>
+        <section class="repo-head">
+            <div class="repo-title-row">
+                <i class="fa-solid fa-book-bookmark" style="color:var(--text); font-size:1rem;"></i>
+                <a href="#">vander-user</a> / <strong><span id="repo-name">vander-duels</span></strong>
+                <span class="visibility" id="repo-visibility">Public</span>
+            </div>
+            <div class="tabs">
+                <div class="tab active" onclick="switchMain('code')"><i class="fa-solid fa-code"></i> Code</div>
+                <div class="tab" onclick="switchMain('keys')"><i class="fa-solid fa-code-pull-request"></i> Access Keys</div>
+                <div class="tab" onclick="switchMain('bans')"><i class="fa-solid fa-shield-halved"></i> Security</div>
+                <div class="tab" onclick="switchMain('settings')"><i class="fa-solid fa-gear"></i> Settings</div>
+            </div>
+        </section>
 
-            <section id="tab-projects" class="tab-content">
-                <div class="header"><h2>Script Arsenal</h2></div>
-                <div class="project-card">
-                    <h3>Forge New Shield</h3>
-                    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:30px; margin-top:20px;">
-                        <div class="input-group"><label>SHIELD NAME</label><input type="text" id="new-project-name" placeholder="E.g. Vander Duels X"></div>
-                        <div class="input-group" style="display:flex; align-items:flex-end;"><button class="btn-action" id="create-project-btn" style="height:50px; width:100%;">FORGE PROJECT</button></div>
+        <main id="main-content">
+            <!-- CODE TAB -->
+            <div id="v-code" class="tab-view active">
+                <div class="main-grid">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                            <button class="btn-gray">main <i class="fa-solid fa-caret-down"></i></button>
+                            <button class="btn-green" onclick="toggleEditor('new')">Add file</button>
+                        </div>
+                        <div class="file-grid">
+                            <div class="file-head">
+                                <div>vander-user <span style="color:var(--text)">committed latest build to cloud</span></div>
+                                <div style="color:var(--text)">2 min ago</div>
+                            </div>
+                            <div class="file-cell" style="cursor:pointer;" onclick="toggleEditor('edit')">
+                                <div style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-file-code" style="color:var(--blue); font-size:1.1rem;"></i> <strong>main.lua</strong></div>
+                                <div class="badge">Protected by V4-Shield</div>
+                            </div>
+                        </div>
+                        <div class="file-grid" style="padding:40px; border-style:dashed;">
+                            <h4 style="margin-bottom:10px;">README.md</h4>
+                            <p style="font-size:0.85rem; color:var(--text); line-height:1.6;">Vander-Guard Protection Protocol active. This script is uniquely shielded with V12 Polymorphic obfuscation. Use the Access Key tab to manage authorized HWIDs.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="about-title">About</div>
+                        <div class="about-desc">High-performance script protection fused with GitHub codebase management. Full 1:1 Luarmor integration.</div>
+                        <button class="btn-green" style="width:100%; margin-bottom:20px;" onclick="copyLoader()">Copy Loader Link</button>
+                        <div style="font-size:0.8rem; color:var(--text-bold); font-weight:600; margin-bottom:10px;">Releases</div>
+                        <div style="font-size:0.75rem; color:var(--text); margin-bottom:20px;">v4.9.2-SUPREME <span class="badge" style="margin-left:5px;">Latest</span></div>
                     </div>
                 </div>
-                <div class="project-card"><h3>Project Registry</h3><table style="margin-top:20px;"><thead><tr><th>NAME</th><th>TIER</th><th>BUILD</th><th>ACTION</th></tr></thead><tbody id="manage-project-list"></tbody></table></div>
-            </section>
+            </div>
 
-            <section id="tab-licenses" class="tab-content">
-                <div class="header"><h2>License Matrix</h2></div>
-                <div class="project-card">
-                    <h3>Batch Code Generator</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 0.5fr; gap:30px; margin-top:20px;">
-                        <div class="input-group"><label>TARGET SHIELD</label><select id="license-project-select"></select></div>
-                        <div class="input-group"><label>DURATION</label><select id="license-duration"><option selected>LIFETIME ACCESS</option><option>24 HOUR TRIAL</option></select></div>
-                        <div class="input-group" style="display:flex; align-items:flex-end;"><button class="btn-action" id="gen-key-btn" style="height:50px; width:100%;">GENERATE</button></div>
+            <!-- KEYS TAB -->
+            <div id="v-keys" class="tab-view" style="padding:32px;">
+                <h3 style="margin-bottom:20px;">License Key Matrix</h3>
+                <div class="file-grid">
+                    <div class="file-head">Generate New Access Channel</div>
+                    <div style="padding:30px; display:flex; gap:15px; align-items:flex-end;">
+                        <div style="flex:1"><label style="font-size:0.75rem; font-weight:700;">Duration</label><div class="search-box" style="width:100%; height:40px; margin-top:5px;">Lifetime Access</div></div>
+                        <button class="btn-green" style="height:40px;" onclick="genKey()">Make Key</button>
                     </div>
                 </div>
-                <div class="project-card"><h3>Active Intelligence</h3><table id="lic-table" style="margin-top:20px;"><thead><tr><th>CODE</th><th>PROJECT</th><th>STATUS</th><th>LOADER</th></tr></thead><tbody id="license-list"></tbody></table></div>
-            </section>
+                <div class="file-grid"><div class="file-head">Active Keys</div><div id="key-list"></div></div>
+            </div>
+
+            <!-- BANS TAB -->
+            <div id="v-bans" class="tab-view" style="padding:32px;">
+                <h3 style="margin-bottom:20px;">Security: HWID Blacklist</h3>
+                <div class="file-grid"><div class="file-head">Banned Hardware Fingerprints</div><div id="ban-list"></div></div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div id="v-settings" class="tab-view" style="padding:32px;">
+                <h3 style="margin-bottom:20px;">Settings</h3>
+                <div class="file-grid">
+                    <div class="file-head">Danger Zone</div>
+                    <div style="padding:30px; display:flex; flex-direction:column; gap:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div><strong>Change visibility</strong><div style="font-size:0.75rem; color:var(--text);">Current: <span id="set-visibility">Public</span></div></div>
+                            <button class="btn-gray" onclick="toggleVisibility()">Change</button>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:20px;">
+                            <div><strong>Delete this repository</strong><div style="font-size:0.75rem; color:var(--text);">This action cannot be undone.</div></div>
+                            <button class="btn-gray" style="color:var(--red);" onclick="delRepo()">Delete Repository</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
-    </div>
 
-    <div id="editor-modal" class="modal">
-        <div class="modal-content">
-            <h2 id="editor-title" style="font-weight:900;">Script Deployment</h2>
-            <div class="input-group" style="margin-top:30px;"><label>SOURCE PAYLOAD (LUA)</label><textarea id="editor-payload" spellcheck="false"></textarea></div>
-            <div style="display:flex; gap:15px; margin-top:30px;"><button class="btn-action" id="save-project-btn" style="flex:1">PUSH TO CLOUD</button><button class="btn-secondary" onclick="closeEditor()">REVERT</button></div>
+        <div id="editor-field" class="editor-container">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-weight:700; color:var(--blue)">main.lua</div>
+                <button class="btn-green" onclick="saveCode()">Commit changes</button>
+            </div>
+            <textarea id="code-area" spellcheck="false"></textarea>
+            <button class="btn-gray" onclick="toggleEditor()">Cancel</button>
         </div>
     </div>
 
-    <div id="toast">Vander-Shield Operational.</div>
+    <div id="toast">Operational</div>
 
     <script>
-        let projects = JSON.parse(localStorage.getItem('v_sup_p')) || [
-            { id: 'vander_duels', name: 'Vander Duels Elite', keys: 9240, version: 'v5.9.2', code: '-- [[ DUELS SUPREMACY ]]' },
-            { id: 'vander_desync', name: 'Vander Desync V3', keys: 4420, version: 'v3.1.0', code: '-- [[ DESYNC SUPREMACY ]]' }
+        let ps = JSON.parse(localStorage.getItem('v_11_p')) || [
+            { id: 'vander-duels', isPrivate: true, code: '-- [[ DUELS 1:1 ]]' },
+            { id: 'vander-desync', isPrivate: false, code: '-- [[ DESYNC 1:1 ]]' }
         ];
-        let licenses = JSON.parse(localStorage.getItem('v_sup_l')) || [];
-        let activeEditId = null;
+        let activeRepo = ps[0];
+        let bans = [{hwid: '5AB7-FF41', date: '2026-03-21'}];
+        let keys = [];
 
-        function save() { localStorage.setItem('v_sup_p', JSON.stringify(projects)); localStorage.setItem('v_sup_l', JSON.stringify(licenses)); }
+        function save() { localStorage.setItem('v_11_p', JSON.stringify(ps)); }
 
         document.getElementById('login-btn').onclick = () => {
-            showToast("Initializing Neural Handshake...");
-            setTimeout(() => { document.getElementById('auth').style.display='none'; document.getElementById('app').style.display='grid'; init(); }, 1200);
+            document.getElementById('auth').style.display='none'; document.getElementById('app').style.display='flex'; render();
         };
 
-        function switchTab(id) {
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.querySelector('[data-tab="'+id+'"]').classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            setTimeout(() => document.getElementById('tab-'+id).classList.add('active'), 50);
+        function switchMain(t) {
+            document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${t==='code'?1:(t==='keys'?2:(t==='bans'?3:4))})`).classList.add('active');
+            document.querySelectorAll('.tab-view').forEach(x=>x.classList.remove('active'));
+            document.getElementById('v-'+t).classList.add('active');
+            document.getElementById('editor-field').style.display='none';
+            document.getElementById('main-content').style.display='block';
         }
 
-        document.querySelectorAll('.nav-item').forEach(i => i.onclick=()=>switchTab(i.dataset.tab));
-
-        function init() { renderP(); renderL(); }
-
-        function renderP() {
-            const dl = document.getElementById('dash-project-list'), ml = document.getElementById('manage-project-list'), sl = document.getElementById('license-project-select');
-            dl.innerHTML = projects.map(p => `<tr><td><b>${p.name}</b></td><td><span class="badge">EXTREME</span></td><td>${p.version}</td><td style="display:flex; gap:10px;"><button class="btn-secondary" onclick="openEditor('${p.id}')">EDIT</button><button class="btn-secondary" onclick="copyLoader('${p.id}', 'FREE')">FREE LINK</button></td></tr>`).join('');
-            ml.innerHTML = projects.map(p => `<tr><td>${p.name}</td><td><span class="badge">V4 SUPREME</span></td><td>B-${Math.random().toString(36).substr(7).toUpperCase()}</td><td><button class="btn-danger" onclick="delP('${p.id}')">PERISH</button></td></tr>`).join('');
-            sl.innerHTML = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        function render() {
+            document.getElementById('repo-name').innerText = activeRepo.id;
+            document.getElementById('repo-visibility').innerText = activeRepo.isPrivate ? 'Private' : 'Public';
+            document.getElementById('set-visibility').innerText = activeRepo.isPrivate ? 'Private' : 'Public';
+            
+            const kl = document.getElementById('key-list');
+            kl.innerHTML = keys.length === 0 ? '<div class="file-cell">No keys generated.</div>' : keys.map(k => `<div class="file-cell"><div><strong style="color:var(--blue); font-family:monospace;">${k.key}</strong></div><div><span class="badge">ACTIVE</span></div></div>`).join('');
+            
+            const bl = document.getElementById('ban-list');
+            bl.innerHTML = bans.map(b => `<div class="file-cell"><div><strong style="font-family:monospace;">${b.hwid}</strong></div><div style="display:flex; gap:15px; align-items:center;"><span style="color:var(--red); font-size:0.75rem; font-weight:700;">BANNED</span><button class="btn-gray" style="font-size:0.6rem;">UNBAN</button></div></div>`).join('');
         }
 
-        document.getElementById('create-project-btn').onclick = () => {
-            const n = document.getElementById('new-project-name').value; if(!n) return;
-            const id = n.toLowerCase().replace(/ /g,'_');
-            projects.push({ id, name: n, keys: 0, version: 'v1.0.0', code: '-- [[ PAYLOAD STANDBY ]]' });
-            document.getElementById('new-project-name').value=''; init(); save(); showToast("Forge Successful.");
+        window.toggleEditor = (m) => {
+            if(m === 'show' || m === 'edit') {
+                document.getElementById('main-content').style.display='none';
+                document.getElementById('editor-field').style.display='flex';
+                document.getElementById('code-area').value = activeRepo.code;
+            } else {
+                document.getElementById('main-content').style.display='block';
+                document.getElementById('editor-field').style.display='none';
+            }
         };
 
-        window.openEditor = (id) => { activeEditId = id; const p = projects.find(p=>p.id===id); document.getElementById('editor-title').innerText=p.name; document.getElementById('editor-payload').value=p.code; document.getElementById('editor-modal').style.display='flex'; };
-        window.closeEditor = () => document.getElementById('editor-modal').style.display='none';
-        
-        document.getElementById('save-project-btn').onclick = () => {
-            const i = projects.findIndex(p=>p.id===activeEditId); projects[i].code=document.getElementById('editor-payload').value;
-            save(); init(); closeEditor(); showToast("Intelligence Deployed.");
+        window.saveCode = () => {
+            activeRepo.code = document.getElementById('code-area').value;
+            save(); toggleEditor(); showT("Committed changes to main.");
         };
 
-        document.getElementById('gen-key-btn').onclick = () => {
-            const pId = document.getElementById('license-project-select').value;
-            const key = "VG-" + Math.floor(Math.random()*16777215).toString(16).toUpperCase();
-            licenses.unshift({ key, project: pId, expiry: 'LIFETIME' });
-            renderL(); save(); showToast("Matrix Key Captured: "+key);
+        window.genKey = () => {
+            const k = "VG-" + Math.floor(Math.random()*16777215).toString(16).toUpperCase();
+            keys.unshift({key:k}); render(); showT("Access key forged.");
         };
 
-        function renderL() {
-            const l = document.getElementById('license-list');
-            l.innerHTML = licenses.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:var(--text-muted)">Matrix Empty.</td></tr>' :
-                licenses.map(lic => {
-                    return `<tr><td style="color:var(--blue); font-family:var(--font-mono); font-weight:800;">${lic.key}</td><td>${lic.project}</td><td><span class="badge">ACTIVE</span></td><td style="display:flex; gap:10px;"><button class="btn-secondary" onclick="copyLoader('${lic.project}','${lic.key}')">LOADER</button><button class="btn-danger" onclick="delL('${lic.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-                }).join('');
-        }
+        window.toggleVisibility = () => {
+            activeRepo.isPrivate = !activeRepo.isPrivate;
+            save(); render(); showT("Visibility updated.");
+        };
 
-        window.delL=(k)=>{ licenses=licenses.filter(l=>l.key!==k); renderL(); save(); showToast("License Purged."); };
-        window.delP=(id)=>{ projects=projects.filter(p=>p.id!==id); init(); save(); showToast("Arsenal Purged."); };
-        window.copyLoader=(p,k)=>{ const l=`loadstring(game:HttpGet("https://vander-guard.vercel.app/v4?project=${p}&key=${k}"))()`; navigator.clipboard.writeText(l).then(()=>showToast("Vector Captured.")); };
+        window.copyLoader = () => {
+            const l = `loadstring(game:HttpGet("https://vander-guard.vercel.app/v4?project=${activeRepo.id}&key=${activeRepo.isPrivate ? 'YOUR_KEY' : 'FREE'}"))()`;
+            navigator.clipboard.writeText(l).then(()=>showT("Loader stream synced."));
+        };
 
-        function showToast(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+        function showT(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
     </script>
 </body>
 </html>
