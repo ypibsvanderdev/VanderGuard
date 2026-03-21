@@ -1,0 +1,11 @@
+{
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1.js" },
+    { "source": "/v4", "destination": "/api/v4.js" },
+    { "source": "/v4/(.*)", "destination": "/api/v4.js?project=$1" },
+    { "source": "/raw", "destination": "/api/raw.js" },
+    { "source": "/raw/(.*)", "destination": "/api/raw.js?path=$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
