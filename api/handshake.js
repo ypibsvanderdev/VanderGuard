@@ -32,15 +32,9 @@ module.exports = async (req, res) => {
 
     const payload = SCRIPTS[project] || `print("[Vander-Shield]: Welcome to the Vander Guard Matrix.")\n-- Core Engine Active.`;
 
-    // 3. POLYMORPHIC OBFUSCATION WRAP (Simulated for 0.1% speed)
-    // We deliver it as a highly-packed, anti-dump loadstring.
-    const packed_payload = `
-        local _LPH = function(data) return data end -- Luarmor v4 Marker
-        local function VanderVM()
-            ${payload}
-        end
-        task.spawn(VanderVM)
-    `;
+    // 3. POLYMORPHIC OBFUSCATION ENGINE (V12 REAPER)
+    const { obfuscate } = require('../utils/obfuscator');
+    const obfuscated_payload = obfuscate(payload);
 
-    return res.status(200).send(packed_payload);
+    return res.status(200).send(obfuscated_payload);
 };
