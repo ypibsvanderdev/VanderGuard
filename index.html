@@ -188,11 +188,16 @@
 
     <script>
         // --- GLOBAL STATE ---
-        let projects = [
+        let projects = JSON.parse(localStorage.getItem('vander_projects')) || [
             { id: 'vander_duels', name: 'Vander Duels Elite', keys: 9240, version: 'v5.9.2' },
             { id: 'vander_desync', name: 'Vander Desync V3', keys: 4420, version: 'v3.1.0' }
         ];
-        let licenses = [];
+        let licenses = JSON.parse(localStorage.getItem('vander_licenses')) || [];
+
+        function saveState() {
+            localStorage.setItem('vander_projects', JSON.stringify(projects));
+            localStorage.setItem('vander_licenses', JSON.stringify(licenses));
+        }
 
         // --- AUTH ---
         document.getElementById('login-btn').onclick = () => {
@@ -239,6 +244,7 @@
             projects.push({ id, name, keys: 0, version: 'v1.0.0' });
             document.getElementById('new-project-name').value = '';
             renderProjects();
+            saveState();
             showToast("New Project Initialized: " + name);
         };
 
@@ -247,8 +253,9 @@
             const dur = document.getElementById('license-duration').value;
             const newKey = "VG-" + Math.floor(Math.random() * 9000000 + 1000000).toString(16).toUpperCase();
             
-            licenses.unshift({ key: newKey, project: pId, expiry: dur });
+             licenses.unshift({ key: newKey, project: pId, expiry: dur });
             renderLicenses();
+            saveState();
             showToast("Matrix License Generated: " + newKey);
         };
 
@@ -271,6 +278,7 @@
         window.deleteProject = (id) => {
             projects = projects.filter(p => p.id !== id);
             renderProjects();
+            saveState();
             showToast("Project Purged.");
         };
 
@@ -282,7 +290,9 @@
         }
 
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text);
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Copied to Clipboard");
+            });
         }
     </script>
 </body>
