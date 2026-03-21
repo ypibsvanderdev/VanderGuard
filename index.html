@@ -27,7 +27,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: var(--bg-main); color: var(--text-primary); font-family: var(--font-main); min-height: 100vh; overflow: hidden; }
 
-        /* AUTH SECT */
         .auth-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1e2e 0%, #0a0b10 100%); z-index: 1000; }
         .auth-card { width: 400px; padding: 40px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
         .auth-logo { text-align: center; margin-bottom: 30px; }
@@ -36,13 +35,13 @@
         
         .input-group { margin-bottom: 20px; }
         .input-group label { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
-        .input-group input, .input-group select { width: 100%; height: 45px; background: #0a0b10; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 0 15px; font-weight: 500; outline: none; transition: var(--transition); }
-        .input-group input:focus { border-color: var(--blue); box-shadow: 0 0 10px rgba(0, 145, 255, 0.1); }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; height: 45px; background: #0a0b10; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 0 15px; font-weight: 500; outline: none; transition: var(--transition); }
+        .input-group textarea { height: 200px; padding: 15px; font-family: var(--font-mono); resize: none; font-size: 0.85rem; }
+        .input-group input:focus, .input-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 10px rgba(0, 145, 255, 0.1); }
 
         .btn-auth { width: 100%; height: 45px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); margin-top: 10px; }
         .btn-auth:hover { background: #007ce0; box-shadow: 0 0 20px var(--blue-glow); }
 
-        /* DASHBOARD LAYOUT */
         #app { display: none; height: 100vh; grid-template-columns: 260px 1fr; }
         .sidebar { background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; }
         .sidebar-brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.1rem; margin-bottom: 40px; }
@@ -73,16 +72,18 @@
         .badge.blue { background: rgba(0, 145, 255, 0.1); color: var(--blue); }
         
         .btn-action { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-        .btn-secondary { background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+        .btn-secondary { background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; }
 
         .luarmor-icon { color: var(--blue); font-size: 1.2rem; }
 
         #toast { position: fixed; bottom: 30px; right: 30px; background: #0091ff; color: white; padding: 15px 25px; border-radius: 8px; font-weight: 700; box-shadow: 0 10px 30px var(--blue-glow); display: none; transition: 0.3s; z-index: 10000; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 40px; }
+        .modal-content { background: var(--card-bg); border: 1px solid var(--blue); border-radius: 12px; width: 800px; padding: 40px; }
     </style>
 </head>
 <body>
 
-    <!-- AUTHENTICATION LAYER -->
     <div id="auth" class="auth-container">
         <div class="auth-card">
             <div class="auth-logo">
@@ -98,7 +99,6 @@
         </div>
     </div>
 
-    <!-- MAIN APP LAYER -->
     <div id="app">
         <aside class="sidebar">
             <div class="sidebar-brand">
@@ -116,14 +116,13 @@
         </aside>
 
         <main class="content">
-            <!-- DASHBOARD TAB -->
             <section id="tab-dashboard" class="tab-content active">
                 <div class="header">
                     <h2>Network Overview</h2>
                     <button class="btn-action" onclick="switchTab('projects')"><i class="fa-solid fa-plus"></i> NEW PROJECT</button>
                 </div>
                 <div class="stats-row">
-                    <div class="stat-card"><span>GLOBAL EXECUTIONS</span><h3 id="stat-executions">2,548,192</h3></div>
+                    <div class="stat-card"><span>GLOBAL EXECUTIONS</span><h3>2,548,192</h3></div>
                     <div class="stat-card"><span>ACTIVE USERS (24H)</span><h3>8,421</h3></div>
                     <div class="stat-card"><span>TOTAL LICENSES</span><h3 id="stat-licenses">15,240</h3></div>
                     <div class="stat-card"><span>API HEALTH</span><h3 style="color:#00ff66">STABLE</h3></div>
@@ -137,7 +136,6 @@
                 </div>
             </section>
 
-            <!-- PROJECTS TAB -->
             <section id="tab-projects" class="tab-content">
                 <div class="header"><h2>Project Management</h2></div>
                 <div class="project-card">
@@ -156,7 +154,6 @@
                 </div>
             </section>
 
-            <!-- LICENSES TAB -->
             <section id="tab-licenses" class="tab-content">
                 <div class="header"><h2>License Engine</h2></div>
                 <div class="project-card">
@@ -176,7 +173,6 @@
                 </div>
             </section>
 
-            <!-- CUSTOMERS TAB -->
             <section id="tab-customers" class="tab-content">
                 <div class="header"><h2>Customer Database</h2></div>
                 <div class="project-card"><p style="color:var(--text-muted)">Security service established. All HWID records are locally synced.</p></div>
@@ -184,22 +180,37 @@
         </main>
     </div>
 
+    <!-- PROJECT EDITOR MODAL -->
+    <div id="editor-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="editor-title" style="margin-bottom:20px;">Edit Project</h2>
+            <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:20px;">Paste your raw Lua source code below. All code is automatically wrapped in Vander-Armor V4 protection.</p>
+            <div class="input-group">
+                <label>SOURCE CODE (LUA)</label>
+                <textarea id="editor-payload" placeholder="-- [[ PASTE LUA SCRIPT HERE ]] --"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn-action" id="save-project-btn" style="flex:1">DEPLOY CHANGES</button>
+                <button class="btn-secondary" onclick="closeEditor()" style="width:100px; justify-content:center;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast">Success.</div>
 
     <script>
-        // --- GLOBAL STATE ---
         let projects = JSON.parse(localStorage.getItem('vander_projects')) || [
-            { id: 'vander_duels', name: 'Vander Duels Elite', keys: 9240, version: 'v5.9.2' },
-            { id: 'vander_desync', name: 'Vander Desync V3', keys: 4420, version: 'v3.1.0' }
+            { id: 'vander_duels', name: 'Vander Duels Elite', keys: 9240, version: 'v5.9.2', code: '-- [[ DUELS ELITE ]]' },
+            { id: 'vander_desync', name: 'Vander Desync V3', keys: 4420, version: 'v3.1.0', code: '-- [[ DESYNC V3 ]]' }
         ];
         let licenses = JSON.parse(localStorage.getItem('vander_licenses')) || [];
+        let activeEditId = null;
 
         function saveState() {
             localStorage.setItem('vander_projects', JSON.stringify(projects));
             localStorage.setItem('vander_licenses', JSON.stringify(licenses));
         }
 
-        // --- AUTH ---
         document.getElementById('login-btn').onclick = () => {
             showToast("Syncing Luarmor V4 Core...");
             setTimeout(() => {
@@ -209,7 +220,6 @@
             }, 800);
         };
 
-        // --- NAVIGATION ---
         function switchTab(tabId) {
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('[data-tab="'+tabId+'"]').forEach(i => i.classList.add('active'));
@@ -221,7 +231,6 @@
             item.onclick = () => switchTab(item.getAttribute('data-tab'));
         });
 
-        // --- ENGINE LOGIC ---
         function initApp() {
             renderProjects();
             renderLicenses();
@@ -232,8 +241,8 @@
             const manageList = document.getElementById('manage-project-list');
             const selectList = document.getElementById('license-project-select');
             
-            dashList.innerHTML = projects.map(p => `<tr><td><b>${p.name}</b></td><td><span class="badge blue">ACTIVE</span></td><td>${p.keys}</td><td><button class="btn-secondary" onclick="generateLoader('${p.id}')">GET LOADER</button></td></tr>`).join('');
-            manageList.innerHTML = projects.map(p => `<tr><td>${p.name}</td><td><span class="badge blue">LUARMOR V4</span></td><td>${p.version}</td><td><button class="btn-secondary" onclick="deleteProject('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+            dashList.innerHTML = projects.map(p => `<tr><td><b>${p.name}</b></td><td><span class="badge blue">ACTIVE</span></td><td>${p.keys}</td><td><button class="btn-secondary" onclick="openEditor('${p.id}')"><i class="fa-solid fa-pen"></i> EDIT CODE</button></td></tr>`).join('');
+            manageList.innerHTML = projects.map(p => `<tr><td>${p.name}</td><td><span class="badge blue">LUARMOR V4</span></td><td>${p.version}</td><td style="display:flex; gap:10px;"><button class="btn-secondary" onclick="openEditor('${p.id}')"><i class="fa-solid fa-code"></i> SOURCE</button><button class="btn-secondary" onclick="deleteProject('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
             selectList.innerHTML = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
         }
 
@@ -241,19 +250,39 @@
             const name = document.getElementById('new-project-name').value;
             if(!name) return;
             const id = name.toLowerCase().replace(/ /g, '_');
-            projects.push({ id, name, keys: 0, version: 'v1.0.0' });
+            projects.push({ id, name, keys: 0, version: 'v1.0.0', code: '-- [[ INITIALIZED PROJECT ]]' });
             document.getElementById('new-project-name').value = '';
             renderProjects();
             saveState();
             showToast("New Project Initialized: " + name);
         };
 
+        window.openEditor = (id) => {
+            activeEditId = id;
+            const project = projects.find(p => p.id === id);
+            document.getElementById('editor-title').innerText = "Edit Script: " + project.name;
+            document.getElementById('editor-payload').value = project.code || '';
+            document.getElementById('editor-modal').style.display = 'flex';
+        };
+
+        window.closeEditor = () => {
+            document.getElementById('editor-modal').style.display = 'none';
+        };
+
+        document.getElementById('save-project-btn').onclick = () => {
+            const index = projects.findIndex(p => p.id === activeEditId);
+            projects[index].code = document.getElementById('editor-payload').value;
+            saveState();
+            renderProjects();
+            closeEditor();
+            showToast("Source Changes Deployed Successfully.");
+        };
+
         document.getElementById('gen-key-btn').onclick = () => {
             const pId = document.getElementById('license-project-select').value;
             const dur = document.getElementById('license-duration').value;
             const newKey = "VG-" + Math.floor(Math.random() * 9000000 + 1000000).toString(16).toUpperCase();
-            
-             licenses.unshift({ key: newKey, project: pId, expiry: dur });
+            licenses.unshift({ key: newKey, project: pId, expiry: dur });
             renderLicenses();
             saveState();
             showToast("Matrix License Generated: " + newKey);
@@ -268,12 +297,6 @@
                     return `<tr><td style="font-family:var(--font-mono); color:var(--blue)">${l.key}</td><td>${project}</td><td>${l.expiry}</td><td><button class="btn-secondary" onclick="copyToClipboard('${loader}')">COPY LOADER</button></td></tr>`;
                 }).join('');
         }
-
-        window.generateLoader = (pId) => {
-            const loader = `loadstring(game:HttpGet("https://vander-guard.vercel.app/v4?project=${pId}&key=REPLACE_WITH_KEY"))()`;
-            copyToClipboard(loader);
-            showToast("Loader template copied for: " + pId);
-        };
 
         window.deleteProject = (id) => {
             projects = projects.filter(p => p.id !== id);
