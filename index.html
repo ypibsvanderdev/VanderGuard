@@ -1,332 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vander Guard | The Elite Key System</title>
-    <link rel="stylesheet" href="style.css">
+    <title>VANDER GUARD | THE OMNI-REAPER</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css">
-</head>
+    <style>
+        /* [ VANDER-SINGULARITY V3 | PREMIUM CSS ] */
+        :root {
+            --bg-main: #020204;
+            --sidebar-bg: #050508;
+            --card-bg: rgba(10, 11, 16, 0.7);
+            --border: rgba(157, 80, 187, 0.15);
+            --purple: #9d50bb;
+            --purple-glow: rgba(157, 80, 187, 0.4);
+            --cyan: #00f2ff;
+            --cyan-glow: rgba(0, 242, 255, 0.4);
+            --accent: #9d50bb;
+            --red: #ff3e3e;
+            --blue: #3e88ff;
+            --surface: #10121a;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --font-main: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg-main); color: var(--text-primary); font-family: var(--font-main); min-height: 100vh; overflow-x: hidden; }
+
+        .mesh-background {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: url('vander_guard_bg_1774121380017.png') no-repeat center center fixed;
+            background-size: cover;
+            filter: brightness(0.4) saturate(1.2);
+        }
+
+        .mesh-background::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 0%, var(--bg-main) 100%);
+        }
+
+        .glass-card { background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* AUTHENTICATION */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; z-index: 1000; transition: var(--transition); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .auth-card { width: 440px; padding: 3.5rem; text-align: center; border: 1px solid var(--purple); animation: auth-pulse 2s infinite alternate; }
+        @keyframes auth-pulse { from { box-shadow: 0 0 20px rgba(157, 80, 187, 0.1); } to { box-shadow: 0 0 40px rgba(157, 80, 187, 0.3); } }
+
+        .auth-logo i { font-size: 3.5rem; color: var(--purple); filter: drop-shadow(0 0 20px var(--purple-glow)); margin-bottom: 2rem; }
+        .logo-text { font-size: 1.8rem; font-weight: 800; letter-spacing: 3px; display: flex; justify-content: center; gap: 5px; }
+        .vander { color: white; }
+        .guard { color: var(--purple); }
+
+        /* UI ELEMENTS */
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--purple), #6a11cb); 
+            color: white; border: 1px solid rgba(255,255,255,0.1); 
+            padding: 16px 30px; border-radius: 14px; 
+            font-weight: 800; cursor: pointer; transition: var(--transition);
+            text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 25px var(--purple-glow); }
+
+        input {
+            width: 100%; padding: 16px; background: rgba(255,255,255,0.03); 
+            border: 1px solid var(--border); color: white; border-radius: 14px; 
+            margin-bottom: 1.5rem; font-family: var(--font-main); outline: none;
+            transition: var(--transition);
+        }
+        input:focus { border-color: var(--purple); background: rgba(157, 80, 187, 0.05); }
+
+        label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+
+        /* DASHBOARD */
+        #app-wrapper { display: none; grid-template-columns: 300px 1fr; min-height: 100vh; }
+        .sidebar { background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 2.5rem; }
+        .nav-item { 
+            background: transparent; border: none; width: 100%;
+            display: flex; align-items: center; gap: 18px; 
+            padding: 14px 20px; border-radius: 14px; color: var(--text-secondary); 
+            font-weight: 700; cursor: pointer; transition: var(--transition);
+            margin-bottom: 8px;
+        }
+        .nav-item.active { background: rgba(157, 80, 187, 0.1); color: white; border-left: 4px solid var(--purple); }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+
+        .content-area { padding: 4rem 6rem; }
+        h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; }
+
+        .stat-card { padding: 2rem; border-left: 4px solid var(--purple); }
+        .stat-card .value { font-size: 2.5rem; font-weight: 900; background: linear-gradient(to right, white, var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 10px; }
+
+        .toast { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background: var(--sidebar-bg); border: 1px solid var(--purple); padding: 15px 30px; border-radius: 12px; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); visibility: hidden; opacity: 0; transition: 0.3s; color: white; font-weight: 700; }
+        .toast.show { visibility: visible; opacity: 1; top: 40px; }
+    </style>
+</head>
 <body class="auth-mode">
     <div class="mesh-background"></div>
 
     <!-- AUTHENTICATION SCREEN -->
-    <div id="auth-screen" class="modal-overlay active">
+    <div id="auth-screen" class="modal-overlay">
         <div class="auth-card glass-card">
             <div class="auth-logo">
                 <i class="fa-solid fa-shield-halved"></i>
                 <div class="logo-text"><span class="vander">VANDER</span><span class="guard">GUARD</span></div>
+                <p style="font-size: 0.7rem; color: var(--purple); letter-spacing: 2px; margin-top: 5px; font-weight: 800;">SINGULARITY V3</p>
             </div>
-            <div class="auth-content">
-                <h2 id="auth-title">Welcome Back</h2>
-                <p id="auth-desc">Please authorize your device to continue.</p>
+            <div class="auth-content" style="margin-top: 2rem;">
+                <h2 style="margin-bottom: 0.5rem;">Access Portal</h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">Authorized Administrators Only.</p>
 
-                <div class="input-container">
-                    <label>USERNAME</label>
-                    <input type="text" id="login-uid" placeholder="VanderElite" style="width:100%; padding:14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); color:white; border-radius:12px; margin-bottom:1rem;">
-                </div>
-                <div class="input-container">
-                    <label>PASSWORD</label>
-                    <input type="password" id="login-pin" placeholder="••••••••" style="width:100%; padding:14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); color:white; border-radius:12px; margin-bottom:2rem;">
-                </div>
+                <label>CRITICAL-UID</label>
+                <input type="text" id="login-uid" placeholder="VanderElite">
+                
+                <label>NEURAL-PIN</label>
+                <input type="password" id="login-pin" placeholder="••••••••">
 
-                <button id="auth-btn" class="btn-primary" style="width:100%;">AUTHORIZE DEVICE</button>
-
-                <div class="auth-footer" style="margin-top:2rem; font-size:0.85rem; color:var(--text-muted);">
-                    <span id="auth-switch-text">New to the platform?</span>
-                    <button id="toggle-auth-mode" style="background:none; border:none; color:var(--purple); font-weight:700; cursor:pointer;">Create Account</button>
-                </div>
+                <button id="auth-btn" class="btn-primary" style="width:100%;">SYNC INTERFACE</button>
             </div>
         </div>
     </div>
 
     <!-- MAIN DASHBOARD -->
-    <div id="app-wrapper" style="display:none;">
+    <div id="app-wrapper">
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    <span>VANDERGUARD</span>
-                </div>
+            <div class="logo" style="display:flex; align-items:center; gap:10px; font-weight:900; font-size:1.4rem; margin-bottom:4rem;">
+                <i class="fa-solid fa-shield-halved" style="color:var(--purple);"></i>
+                <span>VANDERGUARD</span>
             </div>
 
             <div class="sidebar-nav">
-                <div class="nav-section">MAIN</div>
-                <button class="nav-item active" data-tab="dashboard">
-                    <i class="fa-solid fa-grid-2"></i> Dashboard
-                </button>
-                <button class="nav-item" data-tab="key-gen">
-                    <i class="fa-solid fa-sparkles"></i> Key Distribution
-                </button>
-
-                <div class="nav-section">SECURITY</div>
-                <button class="nav-item" data-tab="whitelist">
-                    <i class="fa-solid fa-user-shield"></i> Whitelist
-                </button>
-                <button class="nav-item" data-tab="blacklist">
-                    <i class="fa-solid fa-user-slash"></i> Blacklist
-                </button>
-
-                <div class="nav-section">TOOLS</div>
-                <button class="nav-item" data-tab="integration">
-                    <i class="fa-solid fa-code"></i> Script Portal
-                </button>
-            </div>
-
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div class="avatar" id="user-pfp">V</div>
-                    <div class="details">
-                        <span class="username" id="user-display">Vander_Elite</span>
-                    </div>
-                </div>
-                <button class="logout-btn" id="logout-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer;"><i class="fa-solid fa-power-off"></i></button>
+                <button class="nav-item active" data-tab="dashboard"><i class="fa-solid fa-grid-2"></i> Dashboard</button>
+                <button class="nav-item" data-tab="key-gen"><i class="fa-solid fa-sparkles"></i> Key Engine</button>
+                <button class="nav-item" data-tab="integration"><i class="fa-solid fa-code"></i> Integration</button>
             </div>
         </aside>
 
         <main class="content-area">
-            <!-- DASHBOARD TAB -->
-            <section id="tab-dashboard" class="tab-content active">
-                <div class="content-header" style="margin-bottom:3rem;">
-                    <h1>Network Overview</h1>
-                    <p>Live statistics across your entire script deployment.</p>
-                </div>
+            <section id="tab-dashboard" class="tab-content" style="display:block;">
+                <h1>Neural Overview</h1>
+                <p style="color:var(--text-muted); margin-bottom:3rem;">Autonomous shield status across all sectors.</p>
 
-                <div class="stats-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 3rem;">
-                    <div class="stat-card glass-card" style="padding: 1.8rem;">
-                        <span class="label" style="display:block; font-size:0.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">Whitelisted Users</span>
-                        <span class="value" id="stat-total-users" style="font-size:1.8rem; font-weight:800;">0</span>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 30px;">
+                    <div class="stat-card glass-card">
+                        <label>SYNCED SLAVETS</label>
+                        <span class="value">9,240</span>
                     </div>
-                    <div class="stat-card glass-card" style="padding: 1.8rem;">
-                        <span class="label" style="display:block; font-size:0.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">Active Distribution</span>
-                        <span class="value" id="stat-active-keys" style="font-size:1.8rem; font-weight:800;">0</span>
+                    <div class="stat-card glass-card" style="border-color: var(--cyan);">
+                        <label>ACTIVE PULSE</label>
+                        <span class="value" style="background: linear-gradient(to right, white, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ONLINE</span>
                     </div>
-                    <div class="stat-card glass-card" style="padding: 1.8rem;">
-                        <span class="label" style="display:block; font-size:0.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">Terminated Access</span>
-                        <span class="value" id="stat-terminated" style="font-size:1.8rem; font-weight:800;">0</span>
+                    <div class="stat-card glass-card" style="border-color: var(--red);">
+                        <label>IDS REJECTIONS</label>
+                        <span class="value" style="background: linear-gradient(to right, white, var(--red)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">1.2M</span>
                     </div>
                 </div>
-            </section>
-
-            <!-- KEY GEN TAB -->
-            <section id="tab-key-gen" class="tab-content">
-                <div class="content-header">
-                    <h1>Key Distribution</h1>
-                    <p>Generate isolated keys and keyed loaders for your customers.</p>
-                </div>
-
-                <div class="key-controls-grid" style="display:grid; grid-template-columns: 1fr 1.5fr; gap:30px; margin-top:2rem;">
-                    <div class="key-gen-card glass-card" style="padding:2rem;">
-                        <h3>Generate Access</h3>
-                        <div class="config-form" style="margin-top:1.5rem; display:flex; flex-direction:column; gap:20px;">
-                            <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:10px; font-weight:800; letter-spacing:1px;">TARGET SCRIPT SELECTION</label>
-                                <select id="keygen-target-app" class="glass-select" style="background:rgba(0,0,0,0.3); border-color:rgba(255,255,255,0.08);">
-                                    <option value="none">Select Script...</option>
-                                    <option value="vander_duels">Vander Duels Elite</option>
-                                    <option value="vander_desync">Vander Desync V3</option>
-                                    <option value="nemesis_hub">Nemesis Hub Premium</option>
-                                    <option value="kawatan_hub">Kawatan Hub</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:10px; font-weight:800; letter-spacing:1px;">LICENSE DURATION</label>
-                                <select id="keygen-duration" class="glass-select" style="background:rgba(0,0,0,0.3); border-color:rgba(255,255,255,0.08);">
-                                    <option value="24h">24 Hours</option>
-                                    <option value="1w">1 Week</option>
-                                    <option value="1m">1 Month</option>
-                                    <option value="lifetime">Lifetime</option>
-                                </select>
-                            </div>
-
-                            <div class="batch-config" style="background:rgba(255,255,255,0.02); padding:15px; border-radius:10px; border:1px solid var(--border);">
-                                <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:10px; font-weight:800;">TOTAL KEY COUNT (BATCH)</label>
-                                <div style="display:flex; gap:10px; align-items:center;">
-                                    <input type="number" id="batch-count" value="1" min="1" max="100" style="width:100%; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:white; padding:8px 12px; border-radius:8px; font-size:0.9rem;">
-                                </div>
-                            </div>
-
-                            <button class="btn-primary" id="keygen-generate-btn" style="width:100%; padding:15px; height:unset; font-size:0.9rem;">
-                                <i class="fa-solid fa-bolt"></i> GENERATE MATRIX KEYS
-                            </button>
-                            
-                            <div id="keygen-result" class="output-box" style="display:none; flex-direction:column; gap:10px; align-items:flex-start;">
-                                <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                                    <span id="keygen-result-text" style="font-family:var(--font-mono); font-weight:800; color:var(--purple);">KEY-XXXXX</span>
-                                    <button class="copy-small" onclick="copyText('keygen-result-text')" style="background:none; border:none; color:var(--purple); cursor:pointer;"><i class="fa-solid fa-copy"></i></button>
-                                </div>
-                                <div id="keygen-loader-area" style="display:none; width:100%; border-top:1px solid var(--border); padding-top:10px;">
-                                    <p style="font-size:0.6rem; color:var(--text-muted); font-weight:800;">AUTO-LOADER (KEYED)</p>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                                        <span id="keygen-loader-text" style="font-size:0.7rem; color:var(--text-secondary); word-break:break-all;">loadstring(...)()</span>
-                                        <button class="copy-small" onclick="copyText('keygen-loader-text')" style="background:none; border:none; color:var(--cyan); cursor:pointer;"><i class="fa-solid fa-link"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="key-table-card glass-card" style="padding:2rem;">
-                        <h3>Active Distribution</h3>
-                        <div class="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>KEY</th>
-                                        <th>APP</th>
-                                        <th>EXPIRY</th>
-                                        <th>HWID</th>
-                                        <th>ACTIONS</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="keygen-tbody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- INTEGRATION TAB -->
-            <section id="tab-integration" class="tab-content">
-                <div class="content-header">
-                    <h1>Script Portal</h1>
-                    <p>Wrap your custom Lua code in the Elite Key System.</p>
-                </div>
-
-                <div class="integration-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-top:2rem;">
-                    <div class="loadstring-card glass-card" style="padding:2rem;">
-                        <h3>Vander Guard Wrapping Engine</h3>
-                        <div class="input-group" style="margin-top:1.5rem;">
-                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">SOURCE LIBRARY</label>
-                            <select id="vault-script-selector" class="glass-select">
-                                <option value="raw">Custom Input (Paste Below)</option>
-                                <option value="vander_duels">Vander Duels Elite</option>
-                                <option value="vander_desync">Vander Desync V3</option>
-                                <option value="kawatan_hub">Kawatan Hub</option>
-                            </select>
-                        </div>
-                        <textarea id="vault-input" placeholder="-- Paste your raw Lua script here..."></textarea>
-                        
-                        <div style="margin:20px 0; display:flex; align-items:center; justify-content:space-between;">
-                            <div>
-                                <span style="font-weight:700; color:var(--purple); font-size:0.9rem;">ENFORCE KEY SYSTEM</span>
-                                <p style="font-size:0.65rem; color:var(--text-muted);">Wraps script in isolated auth layer.</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="key-system-toggle">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <div style="margin:20px 0; display:flex; align-items:center; justify-content:space-between;">
-                            <div>
-                                <span style="font-weight:700; color:var(--cyan); font-size:0.9rem;">AUTO OBFUSCATE (ARMOR)</span>
-                                <p style="font-size:0.65rem; color:var(--text-muted);">Protects source using Luarmor pattern.</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="obfuscate-toggle" checked>
-                                <span class="slider round cyan"></span>
-                            </label>
-                        </div>
-
-                        <div id="key-selection-area" style="display:none; margin-bottom:20px;">
-                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:5px;">EMBED LICENSE KEY</label>
-                            <select id="vault-key-select" class="glass-select"></select>
-                        </div>
-
-                        <button class="btn-primary" id="generate-loadstring" style="width:100%;">CREATE SECURE PAYLOAD</button>
-                    </div>
-
-                    <div class="result-card glass-card" style="padding:2rem;">
-                        <h3>Enforcer Result</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">Your secure script is ready for deployment.</p>
-                        
-                        <div id="loadstring-output" style="display:none; margin-top:2rem;">
-                            <div class="output-box">
-                                <span id="loadstring-text" style="font-size:0.75rem; color:var(--cyan);">loadstring(...)()</span>
-                                <button class="copy-small" onclick="copyText('loadstring-text')" style="background:none; border:none; color:var(--cyan); cursor:pointer;"><i class="fa-solid fa-copy"></i></button>
-                            </div>
-                            <div style="margin-top:20px;">
-                                <label style="display:block; font-size:0.6rem; color:var(--text-muted); font-weight:800; margin-bottom:10px;">SOURCE CODE PREVIEW</label>
-                                <div style="background:black; padding:15px; border-radius:10px; border:1px solid var(--border); position:relative;">
-                                    <pre id="wrapped-code-preview" style="font-size:0.7rem; color:#a5d6ff; white-space:pre-wrap; max-height:300px; overflow-y:auto;"></pre>
-                                    <button onclick="copyText('wrapped-code-preview')" style="position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:white; padding:5px 10px; border-radius:6px; font-size:0.6rem; cursor:pointer;">COPY ALL</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="integration-idle" style="padding:4rem; text-align:center; color:var(--text-muted);">
-                            <i class="fa-solid fa-microchip" style="font-size:3rem; margin-bottom:1rem; opacity:0.3;"></i>
-                            <p>Generate a payload to see the secure code here.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- WHITELIST TAB (MOCK FOR COMPLETENESS) -->
-            <section id="tab-whitelist" class="tab-content">
-                <div class="content-header"><h1>Whitelist Manager</h1></div>
-                <div class="glass-card" style="padding:2rem; text-align:center; color:var(--text-muted);">Whitelist Database Service Online</div>
-            </section>
-            
-            <section id="tab-blacklist" class="tab-content">
-                <div class="content-header"><h1>Ban Records</h1></div>
-                <div class="glass-card" style="padding:2rem; text-align:center; color:var(--text-muted);">Blacklist Database Service Online</div>
             </section>
         </main>
     </div>
 
-    <!-- ELITE LICENSE GENERATOR MODAL -->
-    <div id="license-modal" class="modal-overlay">
-        <div class="auth-card glass-card" style="width: 500px; text-align: left; padding: 2.5rem;">
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:1.5rem;">
-                <i class="fa-solid fa-pen-to-square" style="color:var(--purple); font-size:1.2rem;"></i>
-                <h2 style="font-size:1.4rem; font-weight:700;">License Generator</h2>
-            </div>
+    <div id="notification" class="toast">Access Authorized. Syncing...</div>
 
-            <div class="config-form" style="display:flex; flex-direction:column; gap:20px;">
-                <div class="input-group">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:8px;">Target Script</label>
-                    <select id="modal-target-app" class="glass-select" style="background:rgba(0,0,0,0.3); border-color:rgba(255,255,255,0.08);">
-                        <option value="none">Select Script...</option>
-                        <option value="vander_duels">Vander Duels Elite</option>
-                        <option value="vander_desync">Vander Desync V3</option>
-                        <option value="kawatan_hub">Kawatan Hub</option>
-                        <option value="nemesis_hub">Nemesis Hub Premium</option>
-                    </select>
-                </div>
+    <script>
+        /* [ VANDER-SINGULARITY V3 | PREMIUM LOGIC ] */
+        document.addEventListener('DOMContentLoaded', () => {
+            const authScreen = document.getElementById('auth-screen');
+            const appWrapper = document.getElementById('app-wrapper');
+            const authBtn = document.getElementById('auth-btn');
+            const toast = document.getElementById('notification');
 
-                <div class="input-group">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:8px;">Duration</label>
-                    <select id="modal-duration" class="glass-select" style="background:rgba(0,0,0,0.3); border-color:rgba(255,255,255,0.08);">
-                        <option value="24h">24 Hours</option>
-                        <option value="1w">1 Week</option>
-                        <option value="1m">1 Month</option>
-                        <option value="lifetime">Lifetime</option>
-                    </select>
-                </div>
+            authScreen.classList.add('active');
 
-                <div class="input-group">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:8px;">Quantity</label>
-                    <input type="number" id="modal-batch-count" value="1" min="1" max="100" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); color:white; padding:12px; border-radius:8px; font-size:0.9rem;">
-                </div>
+            authBtn.onclick = () => {
+                const uid = document.getElementById('login-uid').value;
+                if(!uid) return;
 
-                <div style="display:flex; gap:15px; margin-top:10px;">
-                    <button id="modal-generate-btn" class="btn-primary" style="flex:2; box-shadow: 0 0 20px var(--purple-glow);">GENERATE MATRIX KEYS</button>
-                    <button id="modal-cancel-btn" class="nav-item" style="flex:1; justify-content:center; background:rgba(255,255,255,0.03);">CANCEL</button>
-                </div>
-            </div>
-        </div>
-    </div>
+                toast.classList.add('show');
+                authBtn.innerText = "AUTHENTICATING...";
+                authBtn.disabled = true;
 
-    <!-- TOAST -->
-    <div id="notification" class="toast">
-        <span id="toast-message">Success!</span>
-    </div>
+                setTimeout(() => {
+                    authScreen.style.display = 'none';
+                    appWrapper.style.display = 'grid';
+                    toast.classList.remove('show');
+                }, 1500);
+            };
 
-    <script src="main.js"></script>
+            // Basic Tab Logic
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.onclick = () => {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    showToast("Switching to Neural Sector: " + item.innerText);
+                };
+            });
+
+            function showToast(m) {
+                toast.innerText = m;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+        });
+    </script>
 </body>
 </html>
