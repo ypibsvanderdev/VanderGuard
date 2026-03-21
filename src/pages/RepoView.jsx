@@ -317,6 +317,14 @@ export default function RepoView() {
               </button>
               <div className="flex gap-2">
                 <Button
+                  onClick={handleSyncToGithub}
+                  disabled={isSyncing}
+                  size="sm"
+                  className="bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#c9d1d9] gap-1.5 text-xs"
+                >
+                  <Github className="w-3.5 h-3.5" /> {isSyncing ? "Syncing..." : "Sync to GitHub"}
+                </Button>
+                <Button
                   onClick={() => setShowAddFile(true)}
                   size="sm"
                   className="bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#c9d1d9] gap-1.5 text-xs"
