@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "@vercel/node@3"
-    }
-  },
   "rewrites": [
     { "source": "/api/test", "destination": "/api/test.js" },
     { "source": "/api/handshake", "destination": "/api/handshake.js" },
@@ -12,7 +7,5 @@
     { "source": "/v4/(.*)", "destination": "/api/v4.js?project=$1" },
     { "source": "/raw", "destination": "/api/raw.js" },
     { "source": "/raw/(.*)", "destination": "/api/raw.js?path=$1" }
-  ],
-  "buildCommand": "",
-  "outputDirectory": "."
+  ]
 }
