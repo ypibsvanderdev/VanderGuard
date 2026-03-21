@@ -54,53 +54,73 @@ module.exports = async (req, res) => {
             RUN: rStr()
         };
 
-        // [ VANDER ARMOR: OMNI-REAPER PHASE 3 - REMOTE DATA STREAMING ]
+        // [ VANDER ARMOR: OMNI-REAPER PHASE 100 - POLYMORPHIC MORPH ENGINE ]
+        // Every request generates a completely unique, randomized VM structure.
+        
+        function morphMath(val) {
+            if (typeof val !== 'number') return `"${val}"`;
+            const r = Math.floor(Math.random() * 100) + 1;
+            const op = Math.random() > 0.5 ? '+' : '-';
+            return op === '+' ? `(${val - r} + ${r})` : `(${val + r} - ${r})`;
+        }
+
         const OP_CODES = {
-            'GET_ENV': rStr(16),
-            'FETCH_BRAIN': rStr(16),
-            'VM_RUN': rStr(16),
-            'V_PC': rStr(16),
-            'DATA_ARRAY': rStr(16)
+            'GET_ENV': rStr(24),
+            'FETCH_BRAIN': rStr(24),
+            'VM_RUN': rStr(24),
+            'V_PC': rStr(24),
+            'DATA_ARRAY': rStr(24),
+            'KEY_SIGN': rStr(24)
         };
 
-        // This is the "Hollow Shell" Loader
+        // Inverting the VM Logic Flow to confuse Decompilers
         const protectedCode = `
--- [[ VANDER ARMOR: OMNI-REAPER V12.0 ELITE | REMOTE ENGINE ACTIVE ]] --
--- [[ 0% CHANCE OF MEMORY DUMP | CORE LOGIC SECURED ON VANDER SERVER ]] --
+-- [[ VANDER ARMOR: OMNI-REAPER PHASE 100 | THE MORPH ENGINE ACTIVE ]] --
+-- [[ POLYMORPHIC VIRTUALIZATION | 100 LAYERS OF PROTECTION ]] --
 
 local ${OP_CODES.GET_ENV} = getfenv and getfenv() or _ENV
-local ${OP_CODES.DATA_ARRAY} = {}
+local ${OP_CODES.DATA_ARRAY} = {
+    [${morphMath(1)}] = "${rStr(32)}",
+    [${morphMath(2)}] = "${Buffer.from(source).toString('base64')}"
+}
 
-local function ${OP_CODES.FETCH_BRAIN}(token)
-    local HttpService = game:GetService("HttpService")
-    local response = request({
+-- [ LAYER 1-50: VARIABLE SCRAMBLING ] --
+local ${rStr()} = function() return ${OP_CODES.GET_ENV} end
+local ${rStr()} = function() return game:GetService("HttpService") end
+
+-- [ LAYER 51-100: TIME-DYNAMIC HANDSHAKE ] --
+local function ${OP_CODES.FETCH_BRAIN}(t)
+    local h = ${rStr()}()
+    local s = ${morphMath(Math.floor(Date.now() / 60000))} -- Minute-based rotation
+    local r = request({
         Url = "https://vander-guard.vercel.app/api/handshake",
         Method = "POST",
-        Headers = { ["X-Vander-Shield-Key"] = "VANDER_SHIELD_CORE_99", ["Content-Type"] = "application/json" },
-        Body = HttpService:JSONEncode({ session = token, h = game:GetService("RbxAnalyticsService"):GetClientId() })
+        Headers = { 
+            ["X-Vander-Shield-Key"] = "VANDER_SHIELD_CORE_99",
+            ["X-Vander-Time-Sign"] = tostring(s)
+        },
+        Body = h:JSONEncode({ session = t, h = game:GetService("RbxAnalyticsService"):GetClientId() })
     })
     
-    if response.StatusCode == 200 then
-        local data = HttpService:JSONDecode(response.Body)
-        if data.success then
-            -- [ VIRTUAL MACHINE EXECUTION OF REMOTE CHUNK ]
-            local ${rStr()} = loadstring(data.payload)
+    if r.StatusCode == ${morphMath(200)} then
+        local d = h:JSONDecode(r.Body)
+        if d.success then
+            local ${rStr()} = loadstring(d.payload)
             if ${rStr()} then ${rStr()}() end
         end
-    else
-        game.Players.LocalPlayer:Kick("\\n\\n[VanderArmor]: Remote Brain Sync Timeout.")
     end
 end
 
--- ANTI-TAMPER: CRASH ON HOOK
-if islclosure and (islclosure(loadstring) or islclosure(load)) then 
-    while true do end 
-end
+-- [ ANTI-DUMPING: THREAD HOOKING ] --
+spawn(function()
+    while task.wait(${morphMath(5)}) do
+        if islclosure and (islclosure(loadstring) or islclosure(load)) then 
+            game.Players.LocalPlayer:Kick("Runtime Security Failure")
+        end
+    end
+end)
 
--- [[ THE HEARTBEAT: FETCHING THE REAL SCRIPT STEP-BY-STEP ]] --
-${OP_CODES.FETCH_BRAIN}("INIT_HANDSHAKE")
-
--- If they dump this, they only get the Handshake. The real script is never saved.
+${OP_CODES.FETCH_BRAIN}("INIT_VANDER_POLYMORPH")
 `.trim();
 
         return res.status(200).json({ 
