@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Star, GitFork, Lock, Plus, File, Code, ChevronDown, ArrowLeft, X, CircleDot, Shield, Zap, Settings } from "lucide-react";
+import { Star, GitFork, Lock, Plus, File, Code, ChevronDown, ArrowLeft, X, CircleDot, Shield, Zap, Settings, Github } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import IssuesTab from "../components/repo/IssuesTab";
