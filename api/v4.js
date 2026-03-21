@@ -10,9 +10,8 @@ module.exports = async (req, res) => {
         return res.status(403).send("-- [[ LUARMOR-V4 ERROR: Missing Auth-Key ]]");
     }
 
-    // 2. Simulated License Registry (In a real app, this would hit a DB)
-    // For now, any key starting with "VG-" is authorized for the 0.1% God-Mode demo.
-    const isAuthorized = key.startsWith("VG-") || key === "ADMIN_BYPASS";
+    // 2. Simulated License Registry (FREE_LINK Bypass enabled)
+    const isAuthorized = key === "FREE" || key.startsWith("VG-") || key === "ADMIN_BYPASS";
     
     if (!isAuthorized) {
         return res.status(403).send("-- [[ LUARMOR-V4 ERROR: License Not Found ]]");
