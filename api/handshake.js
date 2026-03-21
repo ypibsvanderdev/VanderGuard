@@ -7,13 +7,14 @@ module.exports = async (req, res) => {
     // 1. Mandatory Security Handshake
     if (shieldKey !== 'VANDER_SHIELD_CORE_99') {
         const DISCORD_WH = "https://discord.com/api/webhooks/1484980704814305473/ioiAKE2tsw2ddMcx4GnYDwWXfqrJPvvWcgxIgRLBR8Ouj6jDs7cpa7tPEVtdpQclayAC";
+        const isFree = key === "FREE";
         const data = {
             embeds: [{
-                title: "🔴 SECURITY BREACH | VANDER SHIELD",
-                description: "An unauthorized script fetch was intercepted and blocked.",
-                color: 16711680,
+                title: isFree ? "🔵 FREE EXECUTION | VANDER-SHIELD" : "🔴 SECURITY BREACH | VANDER SHIELD",
+                description: isFree ? "A script was successfully fetched using the free bypass." : "An unauthorized script fetch was intercepted and blocked.",
+                color: isFree ? 3447003 : 16711680,
                 fields: [
-                    { name: "Attacker IP", value: `||${ip || "HIDDEN/PROXY"}||`, inline: true },
+                    { name: "User IP", value: `||${ip || "HIDDEN/PROXY"}||`, inline: true },
                     { name: "Project-Target", value: project || "ROOT_CORE", inline: true }
                 ],
                 timestamp: new Date().toISOString()
