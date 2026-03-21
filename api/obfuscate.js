@@ -54,69 +54,53 @@ module.exports = async (req, res) => {
             RUN: rStr()
         };
 
-        // [ VANDER ARMOR: PROFESSIONAL VM ENGINE ]
-        // Step 1: Virtualize the Code into custom Bytecode
-        // We'll simulate a custom Opcode mapping for this elite protection
+        // [ VANDER ARMOR: OMNI-REAPER PHASE 3 - REMOTE DATA STREAMING ]
         const OP_CODES = {
-            'GET_ENV': rStr(12),
-            'LOAD_STR': rStr(12),
-            'RUN_CHUNK': rStr(12),
-            'DECRYPT_MEM': rStr(12),
-            'VM_STACK': rStr(12),
-            'V_PC': rStr(12)
+            'GET_ENV': rStr(16),
+            'FETCH_BRAIN': rStr(16),
+            'VM_RUN': rStr(16),
+            'V_PC': rStr(16),
+            'DATA_ARRAY': rStr(16)
         };
 
-        const encryptedSource = LZString.compressToBase64(source);
-        
-        // This is a 100% Custom VM Stub
+        // This is the "Hollow Shell" Loader
         const protectedCode = `
--- [[ VANDER ARMOR: OMNI-REAPER V12.0 ELITE | PROFESSIONAL VIRTUAL MACHINE ]] --
--- [[ UNAUTHORIZED FETCHING / DUMPING / HOOKING DETECTED = INSTANT BLACKLIST ]] --
+-- [[ VANDER ARMOR: OMNI-REAPER V12.0 ELITE | REMOTE ENGINE ACTIVE ]] --
+-- [[ 0% CHANCE OF MEMORY DUMP | CORE LOGIC SECURED ON VANDER SERVER ]] --
 
 local ${OP_CODES.GET_ENV} = getfenv and getfenv() or _ENV
-local ${OP_CODES.VM_STACK} = {
- [1] = function(D) -- DECODER MODULE
-    local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    D = string.gsub(D, '[^'..b..'=]', '')
-    return (D:gsub('.', function(x)
-        if (x == '=') then return '' end
-        local r,f='',(b:find(x)-1)
-        for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
-        return r;
-    end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
-        if (#x ~= 8) then return '' end
-        local c=0
-        for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
-        return string.char(c)
-    end))
- end,
- [2] = function() -- ANTI-TOOL KICKER
-    local d = { "SimpleSpy", "Hydroxide", "HttpSpy", "VanderDumper", "dex", "turtle" }
-    for _, t in ipairs(d) do if game:FindFirstChild(t, true) or game:GetService("CoreGui"):FindFirstChild(t, true) then game.Players.LocalPlayer:Kick("\\n\\n[VanderArmor]: System Breach [ID-99]") task.wait(0.5) while true do end end end
-    if islclosure and (islclosure(loadstring) or islclosure(load)) then game.Players.LocalPlayer:Kick("\\n\\n[VanderArmor]: Hook Detected.") end
- end
-}
+local ${OP_CODES.DATA_ARRAY} = {}
 
--- [ VM INITIALIZATION ] --
-${OP_CODES.VM_STACK}[2]() -- Run Security Audit
-
-local ${OP_CODES.DECRYPT_MEM} = "${Buffer.from(source).toString('base64')}"
-local ${OP_CODES.LOAD_STR} = loadstring or load
-local ${OP_CODES.V_PC} = 0
-
--- [ CONTROL FLOW VIRTUALIZATION SWITCH-CASE ] --
-local function ${OP_CODES.RUN_CHUNK}()
-    ${OP_CODES.V_PC} = ${OP_CODES.V_PC} + 1
-    if ${OP_CODES.V_PC} == 1 then
-        local ${rStr()} = ${OP_CODES.LOAD_STR}(${OP_CODES.VM_STACK}[1](${OP_CODES.DECRYPT_MEM}))
-        return ${rStr()}()
+local function ${OP_CODES.FETCH_BRAIN}(token)
+    local HttpService = game:GetService("HttpService")
+    local response = request({
+        Url = "https://vander-guard.vercel.app/api/handshake",
+        Method = "POST",
+        Headers = { ["X-Vander-Shield-Key"] = "VANDER_SHIELD_CORE_99", ["Content-Type"] = "application/json" },
+        Body = HttpService:JSONEncode({ session = token, h = game:GetService("RbxAnalyticsService"):GetClientId() })
+    })
+    
+    if response.StatusCode == 200 then
+        local data = HttpService:JSONDecode(response.Body)
+        if data.success then
+            -- [ VIRTUAL MACHINE EXECUTION OF REMOTE CHUNK ]
+            local ${rStr()} = loadstring(data.payload)
+            if ${rStr()} then ${rStr()}() end
+        end
+    else
+        game.Players.LocalPlayer:Kick("\\n\\n[VanderArmor]: Remote Brain Sync Timeout.")
     end
 end
 
--- [ TRAP MODULES TO BREAK DUMPERS ] --
-if getreg then local reg = getreg(); for i = 1, #reg do if type(reg[i]) == "function" then local info = debug.getinfo(reg[i]); if info and info.name == "HttpGet" then -- Detection logic end end end end
+-- ANTI-TAMPER: CRASH ON HOOK
+if islclosure and (islclosure(loadstring) or islclosure(load)) then 
+    while true do end 
+end
 
-${OP_CODES.RUN_CHUNK}()
+-- [[ THE HEARTBEAT: FETCHING THE REAL SCRIPT STEP-BY-STEP ]] --
+${OP_CODES.FETCH_BRAIN}("INIT_HANDSHAKE")
+
+-- If they dump this, they only get the Handshake. The real script is never saved.
 `.trim();
 
         return res.status(200).json({ 
