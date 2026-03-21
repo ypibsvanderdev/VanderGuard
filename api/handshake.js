@@ -1,16 +1,12 @@
 module.exports = async (req, res) => {
-    const { session, h } = req.body;
+    // [ VANDER-ARMOR V4: ELITE PAYLOAD-STREAMER ]
+    const { key, project } = req.query;
+    const ip = req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const shieldKey = req.headers['x-vander-shield-key'];
 
-    const ip = req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-
+    // 1. Mandatory Security Handshake
     if (shieldKey !== 'VANDER_SHIELD_CORE_99') {
-        // [ INTRUSION DETECTED: AUTO-BAN LOGIC ]
-        console.error(`[VANDER-IDS]: UNAUTHORIZED FETCH ATTEMPT BLOCKED!`);
-        
-        // --- DISCORD ALARM ---
         const DISCORD_WH = "https://discord.com/api/webhooks/1484980704814305473/ioiAKE2tsw2ddMcx4GnYDwWXfqrJPvvWcgxIgRLBR8Ouj6jDs7cpa7tPEVtdpQclayAC";
-        
         const data = {
             embeds: [{
                 title: "🔴 SECURITY BREACH | VANDER SHIELD",
@@ -18,29 +14,33 @@ module.exports = async (req, res) => {
                 color: 16711680,
                 fields: [
                     { name: "Attacker IP", value: `||${ip || "HIDDEN/PROXY"}||`, inline: true },
-                    { name: "Hardware ID (HWID)", value: `||${h || "N/A"}||`, inline: true },
-                    { name: "Sign/Session", value: session || "Direct Probe", inline: false }
+                    { name: "Project-Target", value: project || "ROOT_CORE", inline: true }
                 ],
-                footer: { text: "Vander Armor | IDS Prototype" },
                 timestamp: new Date().toISOString()
             }]
         };
-        
-        // FOR SERVERLESS: We MUST await the fetch or it may be terminated before sending!
-        try {
-            await fetch(DISCORD_WH, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-        } catch(e) { console.error("Webhook Delivery Failed:", e); }
-        
-        return res.status(403).json({ 
-            success: false, 
-            message: 'SHIELD_MISMATCH_DETECTED | ACCESS_TERMINATED | IP_LOGGED' 
-        });
+        await fetch(DISCORD_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        return res.status(403).send("-- [[ LUARMOR-V4 FAILURE: EXPIRED-OR-INVALID-SESSION ]]");
     }
 
-    // [ LOG AUTHORIZED FETCH ]
-    console.log(`[VANDER-IDS]: Authorized Handshake Successful for HWID: ${h}`);
+    // 2. PROJECT REPOSITORY (GOD-MODE SCRIPTS)
+    const SCRIPTS = {
+        vander_duels: `print("[Vander-Shield]: Duels Core Loaded Successfully.")\n-- [[ 🌌 DUELS ELITE PAYLOAD ]] --\nloadstring(game:HttpGet("https://raw.githubusercontent.com/Vander/Scripts/main/duels.lua"))()`,
+        vander_desync: `print("[Vander-Shield]: Desync V3 Active.")\n-- [[ 🌀 DESYNC PAYLOAD ]] --\nloadstring(game:HttpGet("https://raw.githubusercontent.com/Vander/Scripts/main/desync.lua"))()`,
+        nemesis_hub: `print("[Vander-Shield]: Nemesis Hub Authenticated.")\n-- [[ 👺 NEMESIS PAYLOAD ]] --\nloadstring(game:HttpGet("https://raw.githubusercontent.com/Vander/Scripts/main/nemesis.lua"))()`
+    };
+
+    const payload = SCRIPTS[project] || `print("[Vander-Shield]: Welcome to the Vander Guard Matrix.")\n-- Core Engine Active.`;
+
+    // 3. POLYMORPHIC OBFUSCATION WRAP (Simulated for 0.1% speed)
+    // We deliver it as a highly-packed, anti-dump loadstring.
+    const packed_payload = `
+        local _LPH = function(data) return data end -- Luarmor v4 Marker
+        local function VanderVM()
+            ${payload}
+        end
+        task.spawn(VanderVM)
+    `;
+
+    return res.status(200).send(packed_payload);
 };

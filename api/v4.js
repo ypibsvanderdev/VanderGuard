@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
             
             -- Stage 2: Encrypted Bytecode Streaming
             local response = req({
-                Url = "https://vander-guard.vercel.app/api/handshake?key=" .. Key .. "&h=" .. TimeHash,
+                Url = "https://vander-guard.vercel.app/api/handshake?project=${project}&key=" .. Key .. "&h=" .. TimeHash,
                 Method = "GET",
                 Headers = {
                     ["X-Vander-Shield-Key"] = "VANDER_SHIELD_CORE_99",
