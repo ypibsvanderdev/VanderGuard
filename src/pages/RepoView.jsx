@@ -83,6 +83,8 @@ export default function RepoView() {
   const [activeTab, setActiveTab] = useState("code");
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
   const queryClient = useQueryClient();
   const params = new URLSearchParams(window.location.search);
   const repoId = params.get("id");
