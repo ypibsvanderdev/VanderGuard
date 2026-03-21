@@ -1,4 +1,7 @@
 {
+  "framework": null,
+  "buildCommand": "",
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/api/test", "destination": "/api/test.js" },
     { "source": "/api/handshake", "destination": "/api/handshake.js" },
