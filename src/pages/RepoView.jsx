@@ -123,6 +123,14 @@ export default function RepoView() {
     window.location.href = createPageUrl("Dashboard");
   };
 
+  const handleSyncToGithub = async () => {
+    setIsSyncing(true);
+    setSyncResult(null);
+    const { data } = await base44.functions.invoke('syncToGithub', { repoId, repoName: repo.name });
+    setSyncResult(data);
+    setIsSyncing(false);
+  };
+
   const username = user?.email?.split("@")[0] || "user";
   const commitHash = repo ? repo.id?.substring(0, 7) : "0000000";
 
