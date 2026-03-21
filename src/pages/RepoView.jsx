@@ -371,6 +371,13 @@ export default function RepoView() {
               )}
             </div>
 
+            {syncResult && (
+              <div className={`mb-4 px-4 py-3 rounded-lg border text-sm flex items-center gap-2 ${syncResult.error ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
+                <Github className="w-4 h-4 shrink-0" />
+                {syncResult.error ? `Sync failed: ${syncResult.error}` : `Synced ${syncResult.synced} file(s) to GitHub${syncResult.failed > 0 ? ` (${syncResult.failed} failed)` : ''}`}
+              </div>
+            )}
+
             <Link to={createPageUrl("Dashboard")} className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-[#c9d1d9] border border-[#30363d] rounded-lg px-3 py-1.5">
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
             </Link>
