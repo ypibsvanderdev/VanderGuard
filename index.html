@@ -3,248 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUARMOR V4 | THE ULTIMATE PROTECTION</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <title>LUARMOR V4 | SUPREMACY EDITION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css">
     <style>
-        /* [ LUARMOR V4 CLONE | PREMIUM CSS ] */
+        /* [ VANDER-ARMOR V4 | SUPREMACY EDITION ] */
         :root {
-            --bg-main: #0a0b10;
-            --sidebar-bg: #0e0f14;
-            --card-bg: #14151a;
-            --border: #1d1e26;
+            --bg-main: #06070a;
+            --sidebar-bg: rgba(14, 15, 20, 0.85);
+            --card-bg: rgba(20, 21, 26, 0.7);
+            --border: rgba(255, 255, 255, 0.05);
             --blue: #0091ff;
-            --blue-glow: rgba(0, 145, 255, 0.4);
+            --blue-glow: rgba(0, 145, 255, 0.3);
             --red: #ff3e3e;
-            --red-glow: rgba(255, 62, 62, 0.3);
             --text-primary: #ffffff;
             --text-secondary: #94a3b8;
-            --text-muted: #4e5668;
-            --font-main: 'Inter', sans-serif;
+            --text-muted: #475569;
+            --font-main: 'Outfit', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
-            --transition: all 0.2s ease-in-out;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; outline:none; }
         body { background-color: var(--bg-main); color: var(--text-primary); font-family: var(--font-main); min-height: 100vh; overflow: hidden; }
 
-        .auth-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1e2e 0%, #0a0b10 100%); z-index: 1000; }
-        .auth-card { width: 400px; padding: 40px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-        .auth-logo { text-align: center; margin-bottom: 30px; }
-        .auth-logo img { width: 60px; height: 60px; border-radius: 14px; box-shadow: 0 0 15px var(--blue-glow); }
-        .auth-logo h1 { font-size: 1.5rem; margin-top: 15px; letter-spacing: 1px; }
+        /* DYNAMIC MESH BG */
+        canvas#mesh { position: fixed; inset: 0; z-index: -1; opacity: 0.15; filter: blur(50px); animation: drift 20s infinite alternate; }
+        @keyframes drift { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.2) translate(50px, 30px); } }
+
+        .mesh-static { position: fixed; inset: 0; z-index: -2; background: url('/bg.png') center/cover no-repeat; opacity: 0.3; filter: grayscale(1) brightness(0.2); }
+
+        /* AUTH */
+        .auth-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #11141d 0%, #06070a 100%); z-index: 1000; }
+        .auth-card { width: 440px; padding: 50px; border-radius: 20px; background: var(--card-bg); border: 1px solid var(--border); backdrop-filter: blur(20px); box-shadow: 0 20px 80px rgba(0,0,0,0.8); }
+        .auth-logo { text-align: center; margin-bottom: 40px; }
+        .auth-logo img { width: 80px; height: 80px; border-radius: 20px; box-shadow: 0 0 30px var(--blue-glow); margin-bottom: 15px; }
+        .auth-logo h1 { font-size: 1.8rem; letter-spacing: 2px; font-weight: 900; }
+
+        .input-group { margin-bottom: 25px; }
+        .input-group label { display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; height: 50px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: white; padding: 0 20px; font-size: 0.95rem; transition: var(--transition); }
+        .input-group textarea { height: 350px; padding: 20px; font-family: var(--font-mono); line-height: 1.6; }
+        .input-group input:focus, .input-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 15px var(--blue-glow); }
+
+        .btn-auth { width: 100%; height: 50px; background: var(--blue); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: var(--transition); letter-spacing: 1px; }
+        .btn-auth:hover { background: #007ce0; transform: translateY(-2px); box-shadow: 0 10px 40px var(--blue-glow); }
+
+        /* DASHBOARD */
+        #app { display: none; height: 100vh; grid-template-columns: 280px 1fr; }
         
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
-        .input-group input, .input-group select, .input-group textarea { width: 100%; height: 45px; background: #0a0b10; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 0 15px; font-weight: 500; outline: none; transition: var(--transition); }
-        .input-group textarea { height: 200px; padding: 15px; font-family: var(--font-mono); resize: none; font-size: 0.85rem; }
-        .input-group input:focus, .input-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 10px rgba(0, 145, 255, 0.1); }
+        .sidebar { background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 40px 25px; display: flex; flex-direction: column; backdrop-filter: blur(30px); }
+        .sidebar-brand { display: flex; align-items: center; gap: 15px; font-weight: 900; font-size: 1.25rem; letter-spacing: 1px; margin-bottom: 60px; }
+        .sidebar-brand img { width: 40px; height: 40px; border-radius: 10px; }
 
-        .btn-auth { width: 100%; height: 45px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); margin-top: 10px; }
-        .btn-auth:hover { background: #007ce0; box-shadow: 0 0 20px var(--blue-glow); }
+        .nav-item { display: flex; align-items: center; gap: 18px; padding: 15px 20px; border-radius: 12px; color: var(--text-secondary); cursor: pointer; border: none; background: transparent; width: 100%; margin-bottom: 8px; font-size: 0.95rem; font-weight: 600; transition: var(--transition); }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.03); color: var(--blue); }
+        .nav-item i { font-size: 1.2rem; filter: drop-shadow(0 0 5px var(--blue-glow)); }
 
-        #app { display: none; height: 100vh; grid-template-columns: 260px 1fr; }
-        .sidebar { background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; }
-        .sidebar-brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.1rem; margin-bottom: 40px; }
-        .sidebar-brand img { width: 32px; height: 32px; border-radius: 6px; }
+        .content { padding: 60px 80px; overflow-y: auto; scrollbar-width: none; }
+        .tab-content { display: none; transform: translateY(20px); opacity: 0; transition: all 0.5s ease-out; }
+        .tab-content.active { display: block; transform: translateY(0); opacity: 1; }
 
-        .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 8px; color: var(--text-secondary); cursor: pointer; border: none; background: transparent; width: 100%; text-align: left; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; transition: var(--transition); }
-        .nav-item:hover { background: #1a1b21; color: white; }
-        .nav-item.active { background: #1a1b21; color: var(--blue); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; }
+        .header h2 { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
 
-        .content { padding: 40px 60px; overflow-y: auto; height: 100vh; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; margin-bottom: 50px; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 20px; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+        .stat-card::after { content:''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent, rgba(255,255,255,0.02)); }
+        .stat-card span { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 800; letter-spacing: 1.5px; margin-bottom: 20px; }
+        .stat-card h3 { font-size: 2rem; font-weight: 900; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .header h2 { font-size: 1.8rem; font-weight: 800; }
+        .project-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 40px; margin-bottom: 30px; backdrop-filter: blur(10px); }
+        .project-card h3 { font-size: 1.4rem; margin-bottom: 30px; font-weight: 800; }
         
-        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
-        .stat-card { background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 12px; }
-        .stat-card span { display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
-        .stat-card h3 { font-size: 1.6rem; font-weight: 900; }
-        
-        .project-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 20px; }
-        .project-card table { width: 100%; border-collapse: collapse; }
-        .project-card th { text-align: left; font-size: 0.7rem; color: var(--text-muted); padding: 0 15px 15px 15px; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        .project-card td { padding: 20px 15px; font-size: 0.9rem; border-bottom: 1px solid #1a1b21; }
-        .badge { padding: 5px 10px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
-        .badge.blue { background: rgba(0, 145, 255, 0.1); color: var(--blue); }
-        
-        .btn-action { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-        .btn-secondary { background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; }
-        .btn-danger { background: rgba(255, 62, 62, 0.1); color: var(--red); border: 1px solid var(--red); padding: 8px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.7rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-size: 0.75rem; color: var(--text-muted); font-weight: 800; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        td { padding: 25px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
 
-        .luc-icon { color: var(--blue); font-size: 1.2rem; }
-        #toast { position: fixed; bottom: 30px; right: 30px; background: #0091ff; color: white; padding: 15px 25px; border-radius: 8px; font-weight: 700; box-shadow: 0 10px 30px var(--blue-glow); display: none; transition: 0.3s; z-index: 10000; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 40px; }
-        .modal-content { background: var(--card-bg); border: 1px solid var(--blue); border-radius: 12px; width: 800px; padding: 40px; }
+        .btn-action { background: var(--blue); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: var(--transition); }
+        .btn-action:hover { transform: scale(1.05); box-shadow: 0 5px 20px var(--blue-glow); }
+        .btn-secondary { background: rgba(255,255,255,0.03); color: white; border: 1px solid var(--border); padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+        .btn-secondary:hover { background: var(--blue); border-color: var(--blue); }
+        .btn-danger { background: rgba(255, 62, 62, 0.05); color: var(--red); border: 1px solid rgba(255, 62, 62, 0.2); padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: var(--transition); font-size: 0.8rem; }
+        .btn-danger:hover { background: var(--red); color: white; box-shadow: 0 0 20px rgba(255, 62, 62, 0.3); }
+
+        .badge { padding: 6px 14px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; background: rgba(0, 145, 255, 0.1); color: var(--blue); }
+
+        #toast { position: fixed; bottom: 40px; right: 40px; background: var(--blue); color: white; padding: 18px 30px; border-radius: 16px; font-weight: 800; box-shadow: 0 15px 40px var(--blue-glow); display: none; z-index: 10000; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(10px); }
+        .modal-content { background: #0e0f14; border: 1px solid var(--blue); border-radius: 24px; width: 900px; padding: 50px; }
     </style>
 </head>
 <body>
 
+    <div class="mesh-static"></div>
     <div id="auth" class="auth-container">
         <div class="auth-card">
-            <div class="auth-logo"><img src="/logo.png" alt="Logo"><h1>LUARMOR <span style="color:var(--blue)">V4</span></h1><p style="color:var(--text-muted); font-size:0.8rem; margin-top:5px;">Professional Script Protection</p></div>
-            <div class="input-group"><label>API KEY</label><input type="password" id="api-key" value="VANDER-SHIELD-GOD-MODE-ADMIN"></div>
-            <button class="btn-auth" id="login-btn">LOGIN TO DASHBOARD</button>
+            <div class="auth-logo"><img src="/logo.png" alt="Logo"><h1>LUARMOR <span style="color:var(--blue)">V4</span></h1><p style="color:var(--text-muted); font-size:0.85rem; margin-top:10px; font-weight:600;">SUPREMACY EDITION</p></div>
+            <div class="input-group"><label>AUTHORIZATION TOKEN</label><input type="password" id="api-key" value="VANDER-SHIELD-GOD-MODE-ADMIN"></div>
+            <button class="btn-auth" id="login-btn">ENTER VANDER-SHELL</button>
         </div>
     </div>
 
     <div id="app">
         <aside class="sidebar">
             <div class="sidebar-brand"><img src="/logo.png" alt="Logo"><span>LUARMOR</span></div>
-            <button class="nav-item active" data-tab="dashboard"><i class="fa-solid fa-home luc-icon"></i> Dashboard</button>
-            <button class="nav-item" data-tab="projects"><i class="fa-solid fa-code luc-icon"></i> Projects</button>
-            <button class="nav-item" data-tab="licenses"><i class="fa-solid fa-key luc-icon"></i> Licenses</button>
-            <button class="nav-item" data-tab="customers"><i class="fa-solid fa-users luc-icon"></i> Customers</button>
+            <button class="nav-item active" data-tab="dashboard"><i class="fa-solid fa-grid-2 luc-icon"></i> Overlook</button>
+            <button class="nav-item" data-tab="projects"><i class="fa-solid fa-brackets-curly luc-icon"></i> Arsenal</button>
+            <button class="nav-item" data-tab="licenses"><i class="fa-solid fa-key-skeleton luc-icon"></i> Licenses</button>
+            <button class="nav-item" data-tab="customers"><i class="fa-solid fa-radar luc-icon"></i> IDS Feed</button>
             <div style="flex:1"></div>
-            <button class="nav-item" style="color:var(--red)"><i class="fa-solid fa-power-off"></i> Logout</button>
+            <button class="nav-item" style="color:var(--red)"><i class="fa-solid fa-power-off"></i> Terminate</button>
         </aside>
 
         <main class="content">
             <section id="tab-dashboard" class="tab-content active">
-                <div class="header"><h2>Network Overview</h2><button class="btn-action" onclick="switchTab('projects')"><i class="fa-solid fa-plus"></i> NEW PROJECT</button></div>
+                <div class="header"><h2>Network Status</h2><button class="btn-action" onclick="switchTab('projects')"><i class="fa-solid fa-sparkles"></i> INITIALIZE NEW SHIELD</button></div>
                 <div class="stats-row">
                     <div class="stat-card"><span>EXECUTIONS</span><h3>2,548,192</h3></div>
-                    <div class="stat-card"><span>LIVE USERS</span><h3>8,421</h3></div>
-                    <div class="stat-card"><span>LICENSES</span><h3 id="stat-licenses">15,240</h3></div>
-                    <div class="stat-card"><span>HEALTH</span><h3 style="color:#00ff66">STABLE</h3></div>
+                    <div class="stat-card"><span>LIVE SESSIONS</span><h3>8,421</h3></div>
+                    <div class="stat-card"><span>ACTIVE CODES</span><h3 id="stat-licenses">15,240</h3></div>
+                    <div class="stat-card"><span>CORE HEALTH</span><h3 style="color:#00ff66">PEAK</h3></div>
                 </div>
-                <div class="project-card">
-                    <h3>Active Security Projects</h3>
-                    <table style="margin-top:20px;">
-                        <thead><tr><th>PROJECT</th><th>STATUS</th><th>CODE</th><th>DISTRIBUTION</th></tr></thead>
-                        <tbody id="dash-project-list"></tbody>
-                    </table>
+                <div class="project-card" style="border-left: 5px solid var(--blue); background: linear-gradient(90deg, rgba(0, 145, 255, 0.05), transparent);">
+                    <h3 style="color:var(--blue); font-size: 1rem;"><i class="fa-solid fa-shield-check"></i> SUPREMACY GUIDE</h3>
+                    <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:10px;">To arm a project: 1. Deploy code in **Arsenal**. 2. Generate key in **Licenses**. 3. Deploy Loader in-game.</p>
                 </div>
+                <div class="project-card"><h3>Elite Projects</h3><table style="margin-top:20px;"><thead><tr><th>NAME</th><th>THREAT LEVEL</th><th>VERSION</th><th>ACTION</th></tr></thead><tbody id="dash-project-list"></tbody></table></div>
             </section>
 
             <section id="tab-projects" class="tab-content">
-                <div class="header"><h2>Project Management</h2></div>
+                <div class="header"><h2>Script Arsenal</h2></div>
                 <div class="project-card">
-                    <h3>Create New Shield</h3>
-                    <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:20px; margin-top:20px;">
-                        <div class="input-group"><label>SHIELD NAME</label><input type="text" id="new-project-name" placeholder="Vander Script Hub"></div>
-                        <div class="input-group" style="display:flex; align-items:flex-end;"><button class="btn-action" id="create-project-btn" style="height:45px; width:100%;">INITIALIZE</button></div>
+                    <h3>Forge New Shield</h3>
+                    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:30px; margin-top:20px;">
+                        <div class="input-group"><label>SHIELD NAME</label><input type="text" id="new-project-name" placeholder="E.g. Vander Duels X"></div>
+                        <div class="input-group" style="display:flex; align-items:flex-end;"><button class="btn-action" id="create-project-btn" style="height:50px; width:100%;">FORGE PROJECT</button></div>
                     </div>
                 </div>
-                <div class="project-card"><h3>Shield Registry</h3><table style="margin-top:20px;"><thead><tr><th>NAME</th><th>TYPE</th><th>VERSION</th><th>ACTION</th></tr></thead><tbody id="manage-project-list"></tbody></table></div>
+                <div class="project-card"><h3>Project Registry</h3><table style="margin-top:20px;"><thead><tr><th>NAME</th><th>TIER</th><th>BUILD</th><th>ACTION</th></tr></thead><tbody id="manage-project-list"></tbody></table></div>
             </section>
 
             <section id="tab-licenses" class="tab-content">
-                <div class="header"><h2>License Engine</h2></div>
+                <div class="header"><h2>License Matrix</h2></div>
                 <div class="project-card">
-                    <h3>Batch Generator</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 0.5fr; gap:20px; margin-top:20px;">
-                        <div class="input-group"><label>SHIELD TARGET</label><select id="license-project-select"></select></div>
-                        <div class="input-group"><label>DURATION</label><select id="license-duration"><option>24 Hours</option><option selected>Lifetime</option></select></div>
-                        <div class="input-group" style="display:flex; align-items:flex-end;"><button class="btn-action" id="gen-key-btn" style="height:45px; width:100%;">GENERATE</button></div>
+                    <h3>Batch Code Generator</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 0.5fr; gap:30px; margin-top:20px;">
+                        <div class="input-group"><label>TARGET SHIELD</label><select id="license-project-select"></select></div>
+                        <div class="input-group"><label>DURATION</label><select id="license-duration"><option selected>LIFETIME ACCESS</option><option>24 HOUR TRIAL</option></select></div>
+                        <div class="input-group" style="display:flex; align-items:flex-end;"><button class="btn-action" id="gen-key-btn" style="height:50px; width:100%;">GENERATE</button></div>
                     </div>
                 </div>
-                <div class="project-card"><h3>Active Licenses</h3><table style="margin-top:20px;"><thead><tr><th>LICENSE KEY</th><th>SHIELD</th><th>EXPIRY</th><th>ACTION</th></tr></thead><tbody id="license-list"></tbody></table></div>
+                <div class="project-card"><h3>Active Intelligence</h3><table id="lic-table" style="margin-top:20px;"><thead><tr><th>CODE</th><th>PROJECT</th><th>STATUS</th><th>LOADER</th></tr></thead><tbody id="license-list"></tbody></table></div>
             </section>
-
-            <section id="tab-customers" class="tab-content"><div class="header"><h2>Customer Database</h2></div><div class="project-card"><p style="color:var(--text-muted)">IDS Sync established.</p></div></section>
         </main>
     </div>
 
     <div id="editor-modal" class="modal">
         <div class="modal-content">
-            <h2 id="editor-title">Edit Script</h2>
-            <div class="input-group"><label>SOURCE (LUA)</label><textarea id="editor-payload"></textarea></div>
-            <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-action" id="save-project-btn" style="flex:1">DEPLOY</button><button class="btn-secondary" onclick="closeEditor()">CANCEL</button></div>
+            <h2 id="editor-title" style="font-weight:900;">Script Deployment</h2>
+            <div class="input-group" style="margin-top:30px;"><label>SOURCE PAYLOAD (LUA)</label><textarea id="editor-payload" spellcheck="false"></textarea></div>
+            <div style="display:flex; gap:15px; margin-top:30px;"><button class="btn-action" id="save-project-btn" style="flex:1">PUSH TO CLOUD</button><button class="btn-secondary" onclick="closeEditor()">REVERT</button></div>
         </div>
     </div>
 
-    <div id="toast">Success.</div>
+    <div id="toast">Vander-Shield Operational.</div>
 
     <script>
-        let projects = JSON.parse(localStorage.getItem('vander_projects')) || [
-            { id: 'vander_duels', name: 'Vander Duels Elite', keys: 9240, version: 'v5.9.2', code: '-- [[ DUELS ELITE ]]' },
-            { id: 'vander_desync', name: 'Vander Desync V3', keys: 4420, version: 'v3.1.0', code: '-- [[ DESYNC V3 ]]' }
+        let projects = JSON.parse(localStorage.getItem('v_sup_p')) || [
+            { id: 'vander_duels', name: 'Vander Duels Elite', keys: 9240, version: 'v5.9.2', code: '-- [[ DUELS SUPREMACY ]]' },
+            { id: 'vander_desync', name: 'Vander Desync V3', keys: 4420, version: 'v3.1.0', code: '-- [[ DESYNC SUPREMACY ]]' }
         ];
-        let licenses = JSON.parse(localStorage.getItem('vander_licenses')) || [];
+        let licenses = JSON.parse(localStorage.getItem('v_sup_l')) || [];
         let activeEditId = null;
 
-        function saveState() {
-            localStorage.setItem('vander_projects', JSON.stringify(projects));
-            localStorage.setItem('vander_licenses', JSON.stringify(licenses));
-        }
+        function save() { localStorage.setItem('v_sup_p', JSON.stringify(projects)); localStorage.setItem('v_sup_l', JSON.stringify(licenses)); }
 
         document.getElementById('login-btn').onclick = () => {
-            showToast("Syncing Luarmor V4 Core...");
-            setTimeout(() => { document.getElementById('auth').style.display = 'none'; document.getElementById('app').style.display = 'grid'; initApp(); }, 800);
+            showToast("Initializing Neural Handshake...");
+            setTimeout(() => { document.getElementById('auth').style.display='none'; document.getElementById('app').style.display='grid'; init(); }, 1200);
         };
 
-        function switchTab(tabId) {
+        function switchTab(id) {
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.querySelectorAll('[data-tab="'+tabId+'"]').forEach(i => i.classList.add('active'));
+            document.querySelector('[data-tab="'+id+'"]').classList.add('active');
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-'+tabId).classList.add('active');
+            setTimeout(() => document.getElementById('tab-'+id).classList.add('active'), 50);
         }
 
-        document.querySelectorAll('.nav-item').forEach(item => { item.onclick = () => switchTab(item.getAttribute('data-tab')); });
+        document.querySelectorAll('.nav-item').forEach(i => i.onclick=()=>switchTab(i.dataset.tab));
 
-        function initApp() { renderProjects(); renderLicenses(); }
+        function init() { renderP(); renderL(); }
 
-        function renderProjects() {
-            const dashList = document.getElementById('dash-project-list');
-            const manageList = document.getElementById('manage-project-list');
-            const selectList = document.getElementById('license-project-select');
-            
-            dashList.innerHTML = projects.map(p => `<tr><td><b>${p.name}</b></td><td><span class="badge blue">ACTIVE</span></td><td><button class="btn-secondary" onclick="openEditor('${p.id}')">SOURCE</button></td><td><button class="btn-secondary" onclick="copyFreeLoader('${p.id}')"><i class="fa-solid fa-link"></i> FREE LINK</button></td></tr>`).join('');
-            manageList.innerHTML = projects.map(p => `<tr><td>${p.name}</td><td><span class="badge blue">V4-SHIELD</span></td><td>${p.version}</td><td><button class="btn-danger" onclick="deleteProject('${p.id}')">PERISH</button></td></tr>`).join('');
-            selectList.innerHTML = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        function renderP() {
+            const dl = document.getElementById('dash-project-list'), ml = document.getElementById('manage-project-list'), sl = document.getElementById('license-project-select');
+            dl.innerHTML = projects.map(p => `<tr><td><b>${p.name}</b></td><td><span class="badge">EXTREME</span></td><td>${p.version}</td><td style="display:flex; gap:10px;"><button class="btn-secondary" onclick="openEditor('${p.id}')">EDIT</button><button class="btn-secondary" onclick="copyLoader('${p.id}', 'FREE')">FREE LINK</button></td></tr>`).join('');
+            ml.innerHTML = projects.map(p => `<tr><td>${p.name}</td><td><span class="badge">V4 SUPREME</span></td><td>B-${Math.random().toString(36).substr(7).toUpperCase()}</td><td><button class="btn-danger" onclick="delP('${p.id}')">PERISH</button></td></tr>`).join('');
+            sl.innerHTML = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
         }
 
         document.getElementById('create-project-btn').onclick = () => {
-            const name = document.getElementById('new-project-name').value;
-            if(!name) return;
-            const id = name.toLowerCase().replace(/ /g, '_');
-            projects.push({ id, name, keys: 0, version: 'v1.0.0', code: '-- [[ NEW PROJECT ]]' });
-            document.getElementById('new-project-name').value = '';
-            initApp(); saveState(); showToast("Shield Initialized.");
+            const n = document.getElementById('new-project-name').value; if(!n) return;
+            const id = n.toLowerCase().replace(/ /g,'_');
+            projects.push({ id, name: n, keys: 0, version: 'v1.0.0', code: '-- [[ PAYLOAD STANDBY ]]' });
+            document.getElementById('new-project-name').value=''; init(); save(); showToast("Forge Successful.");
         };
 
-        window.openEditor = (id) => {
-            activeEditId = id; const p = projects.find(p => p.id === id);
-            document.getElementById('editor-title').innerText = "Edit: " + p.name;
-            document.getElementById('editor-payload').value = p.code || '';
-            document.getElementById('editor-modal').style.display = 'flex';
-        };
-
-        window.closeEditor = () => { document.getElementById('editor-modal').style.display = 'none'; };
-
+        window.openEditor = (id) => { activeEditId = id; const p = projects.find(p=>p.id===id); document.getElementById('editor-title').innerText=p.name; document.getElementById('editor-payload').value=p.code; document.getElementById('editor-modal').style.display='flex'; };
+        window.closeEditor = () => document.getElementById('editor-modal').style.display='none';
+        
         document.getElementById('save-project-btn').onclick = () => {
-            const i = projects.findIndex(p => p.id === activeEditId);
-            projects[i].code = document.getElementById('editor-payload').value;
-            saveState(); initApp(); closeEditor(); showToast("Changes Deployed.");
+            const i = projects.findIndex(p=>p.id===activeEditId); projects[i].code=document.getElementById('editor-payload').value;
+            save(); init(); closeEditor(); showToast("Intelligence Deployed.");
         };
 
         document.getElementById('gen-key-btn').onclick = () => {
             const pId = document.getElementById('license-project-select').value;
-            const dur = document.getElementById('license-duration').value;
-            const key = "VG-" + Math.floor(Math.random() * 9000000 + 1000000).toString(16).toUpperCase();
-            licenses.unshift({ key, project: pId, expiry: dur });
-            renderLicenses(); saveState(); showToast("License Gen: " + key);
+            const key = "VG-" + Math.floor(Math.random()*16777215).toString(16).toUpperCase();
+            licenses.unshift({ key, project: pId, expiry: 'LIFETIME' });
+            renderL(); save(); showToast("Matrix Key Captured: "+key);
         };
 
-        function renderLicenses() {
-            const list = document.getElementById('license-list');
-            list.innerHTML = licenses.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:var(--text-muted)">Empty.</td></tr>' :
-                licenses.map(l => {
-                    const loader = `loadstring(game:HttpGet("https://vander-guard.vercel.app/v4?project=${l.project}&key=${l.key}"))()`;
-                    return `<tr><td style="font-family:var(--font-mono); color:var(--blue)">${l.key}</td><td>${l.project}</td><td>${l.expiry}</td><td style="display:flex; gap:5px;"><button class="btn-secondary" onclick="copyToClipboard('${loader}')">COPY</button><button class="btn-danger" onclick="deleteLicense('${l.key}')">PERISH</button></td></tr>`;
+        function renderL() {
+            const l = document.getElementById('license-list');
+            l.innerHTML = licenses.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:var(--text-muted)">Matrix Empty.</td></tr>' :
+                licenses.map(lic => {
+                    return `<tr><td style="color:var(--blue); font-family:var(--font-mono); font-weight:800;">${lic.key}</td><td>${lic.project}</td><td><span class="badge">ACTIVE</span></td><td style="display:flex; gap:10px;"><button class="btn-secondary" onclick="copyLoader('${lic.project}','${lic.key}')">LOADER</button><button class="btn-danger" onclick="delL('${lic.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 }).join('');
         }
 
-        window.deleteLicense = (key) => { licenses = licenses.filter(l => l.key !== key); renderLicenses(); saveState(); showToast("License Revoked."); };
-        window.deleteProject = (id) => { projects = projects.filter(p => p.id !== id); initApp(); saveState(); showToast("Shield Purged."); };
-        window.copyFreeLoader = (pId) => { copyToClipboard(`loadstring(game:HttpGet("https://vander-guard.vercel.app/v4?project=${pId}&key=FREE"))()`); showToast("Free Link Copied."); };
+        window.delL=(k)=>{ licenses=licenses.filter(l=>l.key!==k); renderL(); save(); showToast("License Purged."); };
+        window.delP=(id)=>{ projects=projects.filter(p=>p.id!==id); init(); save(); showToast("Arsenal Purged."); };
+        window.copyLoader=(p,k)=>{ const l=`loadstring(game:HttpGet("https://vander-guard.vercel.app/v4?project=${p}&key=${k}"))()`; navigator.clipboard.writeText(l).then(()=>showToast("Vector Captured.")); };
 
-        function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
-        function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => showToast("Copied.")); }
+        function showToast(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
     </script>
 </body>
 </html>
