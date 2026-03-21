@@ -4,10 +4,10 @@
 */
 
 :root {
-    --bg-main: #06070a;
-    --sidebar-bg: #0a0b10;
-    --card-bg: rgba(20, 22, 30, 0.6);
-    --border: rgba(255, 255, 255, 0.05);
+    --bg-main: #020204;
+    --sidebar-bg: #050508;
+    --card-bg: rgba(10, 11, 16, 0.7);
+    --border: rgba(157, 80, 187, 0.15);
 
     --purple: #9d50bb;
     --purple-glow: rgba(157, 80, 187, 0.4);
@@ -48,9 +48,16 @@ body {
     width: 100%;
     height: 100%;
     z-index: -1;
-    background:
-        radial-gradient(circle at 10% 10%, rgba(157, 80, 187, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 90% 90%, rgba(0, 242, 255, 0.08) 0%, transparent 40%);
+    background: url('vander_guard_bg_1774121380017.png') no-repeat center center fixed;
+    background-size: cover;
+    filter: brightness(0.4) saturate(1.2);
+}
+
+.mesh-background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 0%, var(--bg-main) 100%);
 }
 
 /* --- GLASS MORPHISM --- */
